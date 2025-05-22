@@ -86,8 +86,6 @@ try {
     $subFolder = (Get-ChildItem $templateFolder).Name
     $alpacaSource = Join-Path (Join-Path $templateFolder $subFolder) '.alpaca'
     $alpacaDest = Join-Path $ENV:GITHUB_WORKSPACE '.alpaca'
-    Write-Host "Source: $alpacaSource"
-    Write-Host "Destination: $alpacaDest"
 
     if (-Not (Test-Path $alpacaSource)) {
         OutputNotice -message "No COSMO Alpaca related files found in the template repository, nothing to update."
