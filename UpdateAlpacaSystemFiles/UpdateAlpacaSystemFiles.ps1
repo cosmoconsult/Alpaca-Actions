@@ -110,7 +110,7 @@ try {
             $destFile = Join-Path $alpacaDest $file.FullName.Substring($alpacaSource.Length + 1)
             # Ensure the destination directory exists
             $destDir = Split-Path $destFile -Parent
-            if (-not (Test-Path $destDir)) {
+            if (-not (Test-Path -PathType Container $destDir)) {
                 New-Item -Path $destDir -ItemType Directory -Force -ErrorAction Stop | Out-Null
             }
             Copy-Item -Path $file.FullName -Destination $destFile -Force -ErrorAction Stop
