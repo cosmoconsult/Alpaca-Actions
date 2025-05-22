@@ -86,6 +86,8 @@ try {
     $subFolder = (Get-ChildItem $templateFolder).Name
     $alpacaSource = Join-Path (Join-Path $templateFolder $subFolder) '.alpaca'
     $alpacaDest = Join-Path (Get-Location).Path '.alpaca'
+    Write-Host "Source: $alpacaSource"
+    Write-Host "Destination: $alpacaDest"
 
     if (-Not (Test-Path $alpacaSource)) {
         OutputNotice -message "No COSMO Alpaca related files found in the template repository, nothing to update."
@@ -99,7 +101,9 @@ try {
         # Copy new files from source to destination without overwriting existing configs (*.json files)
         $filesToCopy = Get-ChildItem -Path $alpacaSource -Recurse -Exclude "*.json" -ErrorAction Stop
         foreach ($file in $filesToCopy) {
+            Write-Host "Updating file: $($file.FullName)"
             $destFile = Join-Path $alpacaDest $file.FullName.Substring($alpacaSource.Length + 1)
+            Write-Host " - to Destination file: $destFile"
             Copy-Item -Path $file.FullName -Destination $destFile -Force -ErrorAction Stop
         }   
     }
