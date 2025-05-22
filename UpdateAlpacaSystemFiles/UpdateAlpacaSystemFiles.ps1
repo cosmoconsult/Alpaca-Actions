@@ -119,14 +119,23 @@ try {
             Copy-Item -Path $file.FullName -Destination $destFile -Force -ErrorAction Stop
         }
 
-        Write-Host "Validating files update..."
+        Write-Host "Validating updated files..."
         $sourceFiles = @(Get-ChildItem -Path $alpacaSource -Recurse -File -Exclude "*.json" -ErrorAction Stop | ForEach-Object { $_.FullName.Substring($alpacaSource.Length + 1) })
         $destFiles = @(Get-ChildItem -Path $alpacaDest -Recurse -File -Exclude "*.json" -ErrorAction Stop | ForEach-Object { $_.FullName.Substring($alpacaDest.Length + 1) })
-    
-        $extraFiles = $destFiles | Where-Object { $sourceFiles -notcontains $_ }
+        Write-Host "Source files: $($sourceFiles.Count)"
+        Write-Host "Destination files: $($destFiles.Count)"
+
+        # Add debug output to see what files are in each location
+        Write-Host "Source files: $($sourceFiles -join ',\n ')"
+        Write-Host "Destination files: $($destFiles -join ',\n ')"
+        
+        $extraFiles = @($destFiles | Where-Object { $sourceFiles -notcontains $_ })
         foreach ($extraFile in $extraFiles) {
-            Write-Host "Removing extra file: $extraFile"
-            Remove-Item -Path (Join-Path $alpacaDest $extraFile) -Force -ErrorAction Stop
+            $fullPath = Join-Path $alpacaDest $extraFile
+            Write-Host "Removing extra file: $extraFile (Full path: $fullPath)"
+            if (Test-Path $fullPath) {
+                Remove-Item -Path $fullPath -Force -ErrorAction Stop
+            }
         }
     }
     else {
