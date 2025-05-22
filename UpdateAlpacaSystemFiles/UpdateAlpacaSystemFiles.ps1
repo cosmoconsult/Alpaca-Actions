@@ -117,7 +117,7 @@ try {
         }
 
         Write-Host "Updating Git index..."
-        # Remove files that are tracked but don't exist anymore
+        # Remove files that are tracked but don't exist anymore (workaround as `git add` in `CommitFromNewFolder` doesn't recognize deleted files)
         $existingAlpacaFiles = Get-ChildItem -Path $alpacaDest -Recurse -File | ForEach-Object { $_.FullName }
         $trackedAlpacaFiles = invoke-git -returnValue ls-files '.alpaca'
         foreach ($trackedFile in $trackedAlpacaFiles) {
