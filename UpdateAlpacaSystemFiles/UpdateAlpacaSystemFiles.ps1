@@ -85,7 +85,7 @@ try {
     Write-Host "Updating Files..."
     $subFolder = (Get-ChildItem $templateFolder).Name
     $alpacaSource = Join-Path (Join-Path $templateFolder $subFolder) '.alpaca'
-    $alpacaDest = Join-Path (Get-Location).Path '.alpaca'
+    $alpacaDest = Join-Path $ENV:GITHUB_WORKSPACE '.alpaca'
 
     if (-Not (Test-Path $alpacaSource)) {
         OutputNotice -message "No COSMO Alpaca related files found in the template repository, nothing to update."
@@ -94,14 +94,38 @@ try {
 
     if (Test-Path $alpacaDest) {
         # Delete all files in destination except configs (*.json files)
-        Get-ChildItem -Path $alpacaDest -Recurse -Exclude "*.json" | Remove-Item -Force -ErrorAction Stop
+        Get-ChildItem -Path $alpacaDest -Recurse -File -Exclude "*.json" -ErrorAction Stop | Remove-Item -Force -ErrorAction Stop
+        # Then delete directories (from deepest to shallowest to avoid dependency issues)
+        $dirsToRemove = Get-ChildItem -Path $alpacaDest -Recurse -Directory -ErrorAction Stop | Sort-Object -Property { $_.FullName.Length } -Descending
+        foreach ($dir in $dirsToRemove) {
+            # Only delete empty directories
+            if (@(Get-ChildItem -Path $dir.FullName -ErrorAction Stop).Count -eq 0) {
+                Remove-Item -Path $dir.FullName -Force -ErrorAction Stop
+            }
+        }
 
         # Copy new files from source to destination without overwriting existing configs (*.json files)
-        $filesToCopy = Get-ChildItem -Path $alpacaSource -Recurse -Exclude "*.json" -ErrorAction Stop
+        $filesToCopy = Get-ChildItem -Path $alpacaSource -Recurse -File -Exclude "*.json" -ErrorAction Stop
         foreach ($file in $filesToCopy) {
             $destFile = Join-Path $alpacaDest $file.FullName.Substring($alpacaSource.Length + 1)
+            # Ensure the destination directory exists
+            $destDir = Split-Path $destFile -Parent
+            if (-not (Test-Path -PathType Container $destDir)) {
+                New-Item -Path $destDir -ItemType Directory -Force -ErrorAction Stop | Out-Null
+            }
             Copy-Item -Path $file.FullName -Destination $destFile -Force -ErrorAction Stop
-        }   
+        }
+
+        Write-Host "Updating Git index..."
+        # Remove files that are tracked but don't exist anymore (workaround as `git add` in `CommitFromNewFolder` doesn't recognize deleted files)
+        $existingAlpacaFiles = Get-ChildItem -Path $alpacaDest -Recurse -File | ForEach-Object { $_.FullName }
+        $trackedAlpacaFiles = invoke-git -returnValue ls-files '.alpaca'
+        foreach ($trackedFile in $trackedAlpacaFiles) {
+            $fullPath = Join-Path $ENV:GITHUB_WORKSPACE $trackedFile
+            if (-not ($existingAlpacaFiles -contains $fullPath)) {
+                invoke-git rm $trackedFile --quiet
+            }
+        }
     }
     else {
         # Copy everything if destination does not exist
