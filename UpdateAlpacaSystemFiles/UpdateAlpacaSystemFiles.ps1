@@ -100,12 +100,28 @@ try {
 
         # Copy new files from source to destination without overwriting existing configs (*.json files)
         $filesToCopy = Get-ChildItem -Path $alpacaSource -Recurse -Exclude "*.json" -ErrorAction Stop
-        foreach ($file in $filesToCopy) {
-            Write-Host "Updating file: $($file.FullName)"
-            $destFile = Join-Path $alpacaDest $file.FullName.Substring($alpacaSource.Length + 1)
-            Write-Host " - to Destination file: $destFile"
-            Copy-Item -Path $file.FullName -Destination $destFile -Force -ErrorAction Stop
-        }   
+        if ($filesToCopy) {
+            foreach ($file in $filesToCopy) {
+                Write-Host "Updating: $($file.FullName)"
+                $destFile = Join-Path $alpacaDest $file.FullName.Substring($alpacaSource.Length + 1)
+            
+                # Ensure the destination directory exists
+                $destDir = Split-Path $destFile -Parent
+                if (-not (Test-Path $destDir)) {
+                    Write-Host "Creating directory: $destDir"
+                    New-Item -Path $destDir -ItemType Directory -Force -ErrorAction Stop
+                }
+                
+                # Only copy if it's a file
+                if ($file -is [System.IO.FileInfo]) {
+                    Write-Host "Copying file: $($file.FullName) to $destFile"
+                    Copy-Item -Path $file.FullName -Destination $destFile -Force -ErrorAction Stop
+                }
+            }
+        }
+        else {
+            Write-Host "No files to copy from source."
+        }
     }
     else {
         # Copy everything if destination does not exist
