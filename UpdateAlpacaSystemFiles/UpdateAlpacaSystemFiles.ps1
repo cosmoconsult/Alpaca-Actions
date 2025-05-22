@@ -122,34 +122,29 @@ try {
         Write-Host "Validating updated files..."
         $sourceFiles = @(Get-ChildItem -Path $alpacaSource -Recurse -File -Exclude "*.json" -ErrorAction Stop | ForEach-Object { $_.FullName.Substring($alpacaSource.Length + 1) })
         $destFiles = @(Get-ChildItem -Path $alpacaDest -Recurse -File -Exclude "*.json" -ErrorAction Stop | ForEach-Object { $_.FullName.Substring($alpacaDest.Length + 1) })
-        Write-Host "Source files: $($sourceFiles.Count)"
-        Write-Host "Destination files: $($destFiles.Count)"
-
-        # Add debug output to see what files are in each location
-        Write-Host "Source files: $($sourceFiles -join ',\n ')"
-        Write-Host "Destination files: $($destFiles -join ',\n ')"
-        
-        $extraFiles = @($destFiles | Where-Object { $sourceFiles -notcontains $_ })
-        foreach ($extraFile in $extraFiles) {
-            $fullPath = Join-Path $alpacaDest $extraFile
-            Write-Host "Removing extra file: $extraFile (Full path: $fullPath)"
-            if (Test-Path $fullPath) {
-                Remove-Item -Path $fullPath -Force -ErrorAction Stop
-            }
+        Write-Host "Source files:"
+        foreach ($sourceFile in $sourceFiles) {
+            Write-Host " - $sourceFile"
         }
-
-        Write-Host "All Git tracked files:"
-        invoke-git -returnValue ls-files | ForEach-Object { Write-Host "  $_" }
-
-        Write-Host "Files with changes:"
-        invoke-git -returnValue status --porcelain | ForEach-Object { Write-Host "  $_" }
-
-        $deletedFiles = invoke-git -returnValue ls-files --deleted
-        if ($deletedFiles) {
-            Write-Host "Found deleted files: $deletedFiles"
-            foreach ($file in $deletedFiles) {
-                Write-Host "Staging deleted file: $file"
-                invoke-git rm $file
+        Write-Host "Destination files:"
+        foreach ($destFile in $destFiles) {
+            Write-Host " - $destFile"
+        }
+        
+        Write-Host "Ensuring Git index matches actual files..."
+        
+        # Get the list of files that currently exist in .alpaca
+        $existingAlpacaFiles = Get-ChildItem -Path $alpacaDest -Recurse -File | ForEach-Object { $_.FullName }
+        
+        # Get all Git tracked files in .alpaca
+        $trackedAlpacaFiles = invoke-git -returnValue ls-files .alpaca
+        
+        # Remove files that are tracked but don't exist anymore
+        foreach ($trackedFile in $trackedAlpacaFiles) {
+            $fullPath = Join-Path $ENV:GITHUB_WORKSPACE $trackedFile
+            if (-not ($existingAlpacaFiles -contains $fullPath)) {
+                Write-Host "Removing tracked file that no longer exists: $trackedFile"
+                invoke-git rm $trackedFile
             }
         }
     }
