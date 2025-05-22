@@ -100,6 +100,7 @@ try {
         foreach ($dir in $dirsToRemove) {
             # Only delete empty directories
             if (@(Get-ChildItem -Path $dir.FullName -ErrorAction Stop).Count -eq 0) {
+                Write-Host "Deleting empty directory: $($dir.FullName)"
                 Remove-Item -Path $dir.FullName -Force -ErrorAction Stop
             }
         }
@@ -111,8 +112,10 @@ try {
             # Ensure the destination directory exists
             $destDir = Split-Path $destFile -Parent
             if (-not (Test-Path -PathType Container $destDir)) {
+                Write-Host "Creating directory: $destDir"
                 New-Item -Path $destDir -ItemType Directory -Force -ErrorAction Stop | Out-Null
             }
+            Write-Host "Copying file: $($file.FullName) to $destFile"
             Copy-Item -Path $file.FullName -Destination $destFile -Force -ErrorAction Stop
         }
     }
