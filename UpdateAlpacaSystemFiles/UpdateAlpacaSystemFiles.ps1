@@ -116,7 +116,7 @@ try {
             # Ensure the destination directory exists
             $destDir = Split-Path $destFile -Parent
             if (-not (Test-Path $destDir)) {
-                New-Item -Path $destDir -ItemType Directory -Force -ErrorAction Stop
+                New-Item -Path $destDir -ItemType Directory -Force -ErrorAction Stop | Out-Null
             }
             # Only copy if it's a file
             if ($file -is [System.IO.FileInfo]) {
@@ -134,17 +134,6 @@ try {
     }
 }
 catch {
-    Write-Host "ERROR DETAILS:" -ForegroundColor Red
-    Write-Host "Exception Message: $($_.Exception.Message)" -ForegroundColor Red
-    Write-Host "Exception Type: $($_.Exception.GetType().FullName)" -ForegroundColor Red
-    Write-Host "Stack Trace:" -ForegroundColor Red
-    Write-Host $_.ScriptStackTrace -ForegroundColor Red
-    
-    # Additional details that might be helpful
-    Write-Host "Position Message: $($_.PositionMessage)" -ForegroundColor Red
-    Write-Host "CategoryInfo: $($_.CategoryInfo)" -ForegroundColor Red
-
-
     if ($directCommit) {
         throw "Failed to update COSMO Alpaca System Files. Make sure that the personal access token, defined in the secret called GhTokenWorkflow, is not expired and it has permission to update workflows. Read https://github.com/microsoft/AL-Go/blob/main/Scenarios/GhTokenWorkflow.md for more information. (Error was $($_.Exception.Message))"
     }
