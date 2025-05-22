@@ -94,13 +94,25 @@ try {
 
     if (Test-Path $alpacaDest) {
         # Delete all files in destination except configs (*.json files)
-        Get-ChildItem -Path $alpacaDest -Recurse -File -Exclude "*.json" -ErrorAction Stop | Remove-Item -Force -ErrorAction Stop
+        $filesToRemove = @(Get-ChildItem -Path $alpacaDest -Recurse -File -Exclude "*.json" -ErrorAction Stop)
+        foreach ($file in $filesToRemove) {
+            $relativePath = $file.FullName.Substring($ENV:GITHUB_WORKSPACE.Length).TrimStart([IO.Path]::DirectorySeparatorChar).Replace([IO.Path]::DirectorySeparatorChar, "/")
+            Write-Host "Removing file: $relativePath"
+            try {
+                # First try git rm which handles both filesystem and git tracking
+                invoke-git rm $relativePath
+            }
+            catch {
+                # If git rm fails (e.g., file not tracked), just remove the file from filesystem
+                Write-Host " - not tracked by git, removing from filesystem only: $($file.FullName)"
+                Remove-Item -Path $file.FullName -Force -ErrorAction Stop
+            }
+        }
         # Then delete directories (from deepest to shallowest to avoid dependency issues)
         $dirsToRemove = Get-ChildItem -Path $alpacaDest -Recurse -Directory -ErrorAction Stop | Sort-Object -Property { $_.FullName.Length } -Descending
         foreach ($dir in $dirsToRemove) {
             # Only delete empty directories
             if (@(Get-ChildItem -Path $dir.FullName -ErrorAction Stop).Count -eq 0) {
-                Write-Host "Deleting empty directory: $($dir.FullName)"
                 Remove-Item -Path $dir.FullName -Force -ErrorAction Stop
             }
         }
@@ -112,40 +124,9 @@ try {
             # Ensure the destination directory exists
             $destDir = Split-Path $destFile -Parent
             if (-not (Test-Path -PathType Container $destDir)) {
-                Write-Host "Creating directory: $destDir"
                 New-Item -Path $destDir -ItemType Directory -Force -ErrorAction Stop | Out-Null
             }
-            Write-Host "Copying file: $($file.FullName) to $destFile"
             Copy-Item -Path $file.FullName -Destination $destFile -Force -ErrorAction Stop
-        }
-
-        Write-Host "Validating updated files..."
-        $sourceFiles = @(Get-ChildItem -Path $alpacaSource -Recurse -File -Exclude "*.json" -ErrorAction Stop | ForEach-Object { $_.FullName.Substring($alpacaSource.Length + 1) })
-        $destFiles = @(Get-ChildItem -Path $alpacaDest -Recurse -File -Exclude "*.json" -ErrorAction Stop | ForEach-Object { $_.FullName.Substring($alpacaDest.Length + 1) })
-        Write-Host "Source files:"
-        foreach ($sourceFile in $sourceFiles) {
-            Write-Host " - $sourceFile"
-        }
-        Write-Host "Destination files:"
-        foreach ($destFile in $destFiles) {
-            Write-Host " - $destFile"
-        }
-        
-        Write-Host "Ensuring Git index matches actual files..."
-        
-        # Get the list of files that currently exist in .alpaca
-        $existingAlpacaFiles = Get-ChildItem -Path $alpacaDest -Recurse -File | ForEach-Object { $_.FullName }
-        
-        # Get all Git tracked files in .alpaca
-        $trackedAlpacaFiles = invoke-git -returnValue ls-files .alpaca
-        
-        # Remove files that are tracked but don't exist anymore
-        foreach ($trackedFile in $trackedAlpacaFiles) {
-            $fullPath = Join-Path $ENV:GITHUB_WORKSPACE $trackedFile
-            if (-not ($existingAlpacaFiles -contains $fullPath)) {
-                Write-Host "Removing tracked file that no longer exists: $trackedFile"
-                invoke-git rm $trackedFile
-            }
         }
     }
     else {
