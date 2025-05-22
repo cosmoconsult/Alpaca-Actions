@@ -96,7 +96,7 @@ try {
         # Delete all files in destination except configs (*.json files)
         Get-ChildItem -Path $alpacaDest -Recurse -File -Exclude "*.json" -ErrorAction Stop | Remove-Item -Force -ErrorAction Stop
         # Then delete directories (from deepest to shallowest to avoid dependency issues)
-        $dirsToRemove = Get-ChildItem -Path $alpacaDest -Recurse -Directory -ErrorAction Stop | Sort-Object -Property FullName -Descending
+        $dirsToRemove = Get-ChildItem -Path $alpacaDest -Recurse -Directory -ErrorAction Stop | Sort-Object -Property { $_.FullName.Split([IO.Path]::DirectorySeparatorChar).Count } -Descending
         foreach ($dir in $dirsToRemove) {
             # Only delete empty directories
             if (@(Get-ChildItem -Path $dir.FullName -ErrorAction Stop).Count -eq 0) {
