@@ -85,7 +85,7 @@ try {
     Write-Host "Updating Files..."
     $subFolder = (Get-ChildItem $templateFolder).Name
     $alpacaSource = Join-Path (Join-Path $templateFolder $subFolder) '.alpaca'
-    $alpacaDest = Join-Path (Get-Location).Path '.alpaca'
+    $alpacaDest = Join-Path $ENV:GITHUB_WORKSPACE '.alpaca'
     Write-Host "Source: $alpacaSource"
     Write-Host "Destination: $alpacaDest"
 
@@ -93,34 +93,33 @@ try {
         OutputNotice -message "No COSMO Alpaca related files found in the template repository, nothing to update."
         exit 0
     }
-
     if (Test-Path $alpacaDest) {
         # Delete all files in destination except configs (*.json files)
         Get-ChildItem -Path $alpacaDest -Recurse -Exclude "*.json" | Remove-Item -Force -ErrorAction Stop
 
         # Copy new files from source to destination without overwriting existing configs (*.json files)
         $filesToCopy = Get-ChildItem -Path $alpacaSource -Recurse -Exclude "*.json" -ErrorAction Stop
-        if ($filesToCopy) {
-            foreach ($file in $filesToCopy) {
-                Write-Host "Updating: $($file.FullName)"
-                $destFile = Join-Path $alpacaDest $file.FullName.Substring($alpacaSource.Length + 1)
-            
-                # Ensure the destination directory exists
-                $destDir = Split-Path $destFile -Parent
-                if (-not (Test-Path $destDir)) {
-                    Write-Host "Creating directory: $destDir"
-                    New-Item -Path $destDir -ItemType Directory -Force -ErrorAction Stop
-                }
-                
-                # Only copy if it's a file
-                if ($file -is [System.IO.FileInfo]) {
-                    Write-Host "Copying file: $($file.FullName) to $destFile"
-                    Copy-Item -Path $file.FullName -Destination $destFile -Force -ErrorAction Stop
-                }
-            }
-        }
-        else {
-            Write-Host "No files to copy from source."
+        foreach ($file in $filesToCopy) {
+            Write-Host "Updating file: $($file.FullName)"
+            $destFile = Join-Path $alpacaDest $file.FullName.Substring($alpacaSource.Length + 1)
+            Write-Host " - to Destination file: $destFile"
+            Copy-Item -Path $file.FullName -Destination $destFile -Force -ErrorAction Stop
+
+            #Write-Host "Updating: $($file.FullName)"
+            #$destFile = Join-Path $alpacaDest $file.FullName.Substring($alpacaSource.Length + 1)
+            #
+            ## Ensure the destination directory exists
+            #$destDir = Split-Path $destFile -Parent
+            #if (-not (Test-Path $destDir)) {
+            #    Write-Host "Creating directory: $destDir"
+            #    New-Item -Path $destDir -ItemType Directory -Force -ErrorAction Stop
+            #}
+            #    
+            ## Only copy if it's a file
+            #if ($file -is [System.IO.FileInfo]) {
+            #    Write-Host "Copying file: $($file.FullName) to $destFile"
+            #    Copy-Item -Path $file.FullName -Destination $destFile -Force -ErrorAction Stop
+            #}
         }
     }
     else {
