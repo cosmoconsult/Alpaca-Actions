@@ -117,14 +117,13 @@ try {
         }
 
         Write-Host "Updating Git index..."
-        $existingAlpacaFiles = Get-ChildItem -Path $alpacaDest -Recurse -File | ForEach-Object { $_.FullName }
-        $trackedAlpacaFiles = invoke-git -returnValue ls-files .alpaca
         # Remove files that are tracked but don't exist anymore
+        $existingAlpacaFiles = Get-ChildItem -Path $alpacaDest -Recurse -File | ForEach-Object { $_.FullName }
+        $trackedAlpacaFiles = invoke-git -returnValue ls-files '.alpaca' | Out-Null
         foreach ($trackedFile in $trackedAlpacaFiles) {
             $fullPath = Join-Path $ENV:GITHUB_WORKSPACE $trackedFile
             if (-not ($existingAlpacaFiles -contains $fullPath)) {
-                Write-Host "Removing tracked file that no longer exists: $trackedFile"
-                invoke-git rm $trackedFile
+                invoke-git rm $trackedFile | Out-Null
             }
         }
     }
