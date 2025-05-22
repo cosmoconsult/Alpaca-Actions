@@ -96,20 +96,25 @@ try {
 
     if (Test-Path $alpacaDest) {
         # Delete all files in destination except configs (*.json files)
-        $filesToRemove = Get-ChildItem -Path $alpacaDest -Recurse -Exclude "*.json" -ErrorAction SilentlyContinue
-        Write-Host "Found the following existing Alpaca files in destination directory:"
+        $filesToRemove = Get-ChildItem -Path $alpacaDest -Recurse -Exclude "*.json" -ErrorAction Stop
+        Write-Host "Found the following content in Alpaca destination directory:"
         $filesToRemove | ForEach-Object { Write-Host " - $($_.FullName)" }
 
         if ($filesToRemove) {
-            $filesToRemove | Remove-Item -Force -ErrorAction Stop
-            Write-Host "Removed existing non-JSON files from destination directory."
-        }
-        else {
-            Write-Host "No non-JSON files found in destination directory."
+            # Delete files first
+            $filesToRemove | Where-Object { $_ -is [System.IO.FileInfo] } | Remove-Item -Force -ErrorAction Stop
+            # Then delete directories (from deepest to shallowest to avoid dependency issues)
+            $dirsToRemove = $filesToRemove | Where-Object { $_ -is [System.IO.DirectoryInfo] } | Sort-Object -Property FullName -Descending
+            foreach ($dir in $dirsToRemove) {
+                # Only remove empty directories
+                if ((Get-ChildItem -Path $dir.FullName -ErrorAction Stop).Count -eq 0) {
+                    Remove-Item -Path $dir.FullName -Force -ErrorAction Stop
+                }
+            }
         }
 
         # Copy new files from source to destination without overwriting existing configs (*.json files)
-        $filesToCopy = Get-ChildItem -Path $alpacaSource -Recurse -Exclude "*.json" -ErrorAction SilentlyContinue
+        $filesToCopy = Get-ChildItem -Path $alpacaSource -Recurse -Exclude "*.json" -ErrorAction Stop
         foreach ($file in $filesToCopy) {
             Write-Host "Updating: $($file.FullName)"
             $destFile = Join-Path $alpacaDest $file.FullName.Substring($alpacaSource.Length + 1)
