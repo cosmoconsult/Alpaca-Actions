@@ -96,10 +96,20 @@ try {
 
     if (Test-Path $alpacaDest) {
         # Delete all files in destination except configs (*.json files)
-        Get-ChildItem -Path $alpacaDest -Recurse -Exclude "*.json" | Remove-Item -Force -ErrorAction Stop
+        $filesToRemove = Get-ChildItem -Path $alpacaDest -Recurse -Exclude "*.json" -ErrorAction SilentlyContinue
+        Write-Host "Found the following existing Alpaca files in destination directory:"
+        $filesToRemove | ForEach-Object { Write-Host " - $($_.FullName)" }
+
+        if ($filesToRemove) {
+            $filesToRemove | Remove-Item -Force -ErrorAction Stop
+            Write-Host "Removed existing non-JSON files from destination directory."
+        }
+        else {
+            Write-Host "No non-JSON files found in destination directory."
+        }
 
         # Copy new files from source to destination without overwriting existing configs (*.json files)
-        $filesToCopy = Get-ChildItem -Path $alpacaSource -Recurse -Exclude "*.json" -ErrorAction Stop
+        $filesToCopy = Get-ChildItem -Path $alpacaSource -Recurse -Exclude "*.json" -ErrorAction SilentlyContinue
         foreach ($file in $filesToCopy) {
             Write-Host "Updating: $($file.FullName)"
             $destFile = Join-Path $alpacaDest $file.FullName.Substring($alpacaSource.Length + 1)
