@@ -137,6 +137,15 @@ try {
                 Remove-Item -Path $fullPath -Force -ErrorAction Stop
             }
         }
+
+        $deletedFiles = invoke-git -returnValue ls-files --deleted
+        if ($deletedFiles) {
+            Write-Host "Found deleted files: $deletedFiles"
+            foreach ($file in $deletedFiles) {
+                Write-Host "Staging deleted file: $file"
+                invoke-git rm $file
+            }
+        }
     }
     else {
         # Copy everything if destination does not exist
