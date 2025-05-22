@@ -118,6 +118,16 @@ try {
             Write-Host "Copying file: $($file.FullName) to $destFile"
             Copy-Item -Path $file.FullName -Destination $destFile -Force -ErrorAction Stop
         }
+
+        Write-Host "Validating files update..."
+        $sourceFiles = @(Get-ChildItem -Path $alpacaSource -Recurse -File -Exclude "*.json" -ErrorAction Stop | ForEach-Object { $_.FullName.Substring($alpacaSource.Length + 1) })
+        $destFiles = @(Get-ChildItem -Path $alpacaDest -Recurse -File -Exclude "*.json" -ErrorAction Stop | ForEach-Object { $_.FullName.Substring($alpacaDest.Length + 1) })
+    
+        $extraFiles = $destFiles | Where-Object { $sourceFiles -notcontains $_ }
+        foreach ($extraFile in $extraFiles) {
+            Write-Host "Removing extra file: $extraFile"
+            Remove-Item -Path (Join-Path $alpacaDest $extraFile) -Force -ErrorAction Stop
+        }
     }
     else {
         # Copy everything if destination does not exist
