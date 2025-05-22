@@ -138,6 +138,12 @@ try {
             }
         }
 
+        Write-Host "All Git tracked files:"
+        invoke-git -returnValue ls-files | ForEach-Object { Write-Host "  $_" }
+
+        Write-Host "Files with changes:"
+        invoke-git -returnValue status --porcelain | ForEach-Object { Write-Host "  $_" }
+
         $deletedFiles = invoke-git -returnValue ls-files --deleted
         if ($deletedFiles) {
             Write-Host "Found deleted files: $deletedFiles"
