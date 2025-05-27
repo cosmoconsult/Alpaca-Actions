@@ -85,7 +85,7 @@ try {
     Write-Host "Updating Files..."
     $subFolder = (Get-ChildItem $templateFolder).Name
     $alpacaSource = Join-Path (Join-Path $templateFolder $subFolder) '.alpaca'
-    $alpacaDest = Join-Path $ENV:GITHUB_WORKSPACE '.alpaca'
+    $alpacaDest = Join-Path (Get-Location) '.alpaca'
 
     if (-Not (Test-Path $alpacaSource)) {
         OutputNotice -message "No COSMO Alpaca related files found in the template repository, nothing to update."
@@ -114,17 +114,6 @@ try {
                 New-Item -Path $destDir -ItemType Directory -Force -ErrorAction Stop | Out-Null
             }
             Copy-Item -Path $file.FullName -Destination $destFile -Force -ErrorAction Stop
-        }
-
-        Write-Host "Updating Git index..."
-        # Remove files that are tracked but don't exist anymore (workaround as `git add` in `CommitFromNewFolder` doesn't recognize deleted files)
-        $existingAlpacaFiles = Get-ChildItem -Path $alpacaDest -Recurse -File | ForEach-Object { $_.FullName }
-        $trackedAlpacaFiles = invoke-git -returnValue ls-files '.alpaca'
-        foreach ($trackedFile in $trackedAlpacaFiles) {
-            $fullPath = Join-Path $ENV:GITHUB_WORKSPACE $trackedFile
-            if (-not ($existingAlpacaFiles -contains $fullPath)) {
-                invoke-git rm $trackedFile --quiet
-            }
         }
     }
     else {
