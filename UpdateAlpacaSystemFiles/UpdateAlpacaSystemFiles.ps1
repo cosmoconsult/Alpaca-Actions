@@ -62,7 +62,7 @@ if ($repoSettings.templateUrl -ne $env:templateUrl -or $templateSha -eq '') {
     $downloadLatest = $true
 }
 
-$templateFolder = DownloadTemplateRepository -headers $headers -templateUrl $templateUrl -templateSha ([ref]$templateSha) -downloadLatest $downloadLatest
+$templateFolder = DownloadTemplateRepository -token $token -templateUrl $templateUrl -templateSha ([ref]$templateSha) -downloadLatest $downloadLatest
 Write-Host "Template Folder: $templateFolder"
 $templateOwner = $templateUrl.Split('/')[3]
 $templateInfo = "$templateOwner/$($templateUrl.Split('/')[4])"
