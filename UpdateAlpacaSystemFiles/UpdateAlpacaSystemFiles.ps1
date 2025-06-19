@@ -19,25 +19,20 @@ if (-not $token) {
 else {
     # token comes from a secret, base 64 encoded
     $token = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($token))
-    $env:GITHUB_TOKEN = $token
-}
-$headers = @{
-    "Accept"        = "application/vnd.github+json"
-    "Authorization" = "Bearer $token"
 }
 
 Write-Host "Download and Import AL-Go Helpers"
 $helperFiles = @{  
-    "AL-Go-Helper.ps1"                    = "https://raw.githubusercontent.com/freddydk/AL-Go/customize/Actions/AL-Go-Helper.ps1"
-    "Github-Helper.psm1"                  = "https://raw.githubusercontent.com/freddydk/AL-Go/customize/Actions/Github-Helper.psm1"
-    "CheckForUpdates.HelperFunctions.ps1" = "https://raw.githubusercontent.com/freddydk/AL-Go/customize/Actions/CheckForUpdates/CheckForUpdates.HelperFunctions.ps1"
-    "settings.schema.json"                = "https://raw.githubusercontent.com/freddydk/AL-Go/customize/Actions/settings.schema.json"
+    "AL-Go-Helper.ps1"                    = "https://raw.githubusercontent.com/cosmoconsult/AL-Go/main/Actions/AL-Go-Helper.ps1"
+    "Github-Helper.psm1"                  = "https://raw.githubusercontent.com/cosmoconsult/AL-Go/main/Actions/Github-Helper.psm1"
+    "CheckForUpdates.HelperFunctions.ps1" = "https://raw.githubusercontent.com/cosmoconsult/AL-Go/main/Actions/CheckForUpdates/CheckForUpdates.HelperFunctions.ps1"
+    "settings.schema.json"                = "https://raw.githubusercontent.com/cosmoconsult/AL-Go/main/Actions/settings.schema.json"
 }
 foreach ($file in $helperFiles.Keys) {
     $url = $helperFiles[$file]
     $dest = Join-Path $PSScriptRoot $file
     try {
-        Invoke-RestMethod -Uri $url -Headers $headers -OutFile $dest -ErrorAction Stop
+        Invoke-RestMethod -Uri $url -Headers @{ "Authorization" = "token $(gh auth token)" } -OutFile $dest -ErrorAction Stop
     }
     catch {
         throw "Failed to download ${file} from ${url}: " + $_.Exception.Message
