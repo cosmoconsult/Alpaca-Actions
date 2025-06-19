@@ -67,6 +67,7 @@ try {
     $branchSHA = RunAndCheck git rev-list -n 1 $updateBranch '--'
     $commitMessage = "[$($updateBranch)@$($branchSHA.SubString(0,7))] Update COSMO Alpaca System Files from $templateInfo - $($templateSha.SubString(0,7)) [skip ci]"
 
+    $env:GH_TOKEN = $token
     $existingPullRequest = (gh api --paginate "/repos/$env:GITHUB_REPOSITORY/pulls?base=$updateBranch" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" | ConvertFrom-Json) | Where-Object { $_.title -eq $commitMessage } | Select-Object -First 1
     if ($existingPullRequest) {
         OutputWarning "Pull request already exists for $($commitMessage): $($existingPullRequest.html_url)."
