@@ -23,10 +23,10 @@ else {
 
 Write-Host "Download and Import AL-Go Helpers"
 $helperFiles = @{  
-    "AL-Go-Helper.ps1"                    = "https://raw.githubusercontent.com/cosmoconsult/AL-Go/main/Actions/AL-Go-Helper.ps1"
-    "Github-Helper.psm1"                  = "https://raw.githubusercontent.com/cosmoconsult/AL-Go/main/Actions/Github-Helper.psm1"
-    "CheckForUpdates.HelperFunctions.ps1" = "https://raw.githubusercontent.com/cosmoconsult/AL-Go/main/Actions/CheckForUpdates/CheckForUpdates.HelperFunctions.ps1"
-    "settings.schema.json"                = "https://raw.githubusercontent.com/cosmoconsult/AL-Go/main/Actions/settings.schema.json"
+    "AL-Go-Helper.ps1"                    = "https://raw.githubusercontent.com/microsoft/AL-Go/ab2f5319ed073c542e03914f8ae6c0fda029ee1e/Actions/AL-Go-Helper.ps1"
+    "Github-Helper.psm1"                  = "https://raw.githubusercontent.com/microsoft/AL-Go/ab2f5319ed073c542e03914f8ae6c0fda029ee1e/Actions/Github-Helper.psm1"
+    "CheckForUpdates.HelperFunctions.ps1" = "https://raw.githubusercontent.com/microsoft/AL-Go/ab2f5319ed073c542e03914f8ae6c0fda029ee1e/Actions/CheckForUpdates/CheckForUpdates.HelperFunctions.ps1"
+    "settings.schema.json"                = "https://raw.githubusercontent.com/microsoft/AL-Go/ab2f5319ed073c542e03914f8ae6c0fda029ee1e/Actions/settings.schema.json"
 }
 foreach ($file in $helperFiles.Keys) {
     $url = $helperFiles[$file]
