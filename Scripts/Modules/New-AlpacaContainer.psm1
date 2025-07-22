@@ -19,7 +19,7 @@ function New-AlpacaContainer {
 
     Write-Host "Creating container for project '$Project' of '$owner/$repository' on ref '$branch'"
 
-    $headers = Get-AlpacaAuthenticationHeaders -token $Token -owner $owner -repository $repository
+    $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
     $headers.add("Content-Type", "application/json")
 
     $config = Get-AlpacaConfigNameForWorkflowName 
@@ -27,7 +27,7 @@ function New-AlpacaContainer {
     $QueryParams = @{
         "api-version" = "0.12"
     }
-    $apiUrl = Get-AlpacaEndpointUrlWithParam -controller "Container" -endpoint "GitHub/Build" -QueryParams $QueryParams
+    $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "GitHub/Build" -QueryParams $QueryParams
 
     $request = @{
         source = @{

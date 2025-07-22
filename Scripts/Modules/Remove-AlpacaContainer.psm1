@@ -13,12 +13,12 @@ function Remove-AlpacaContainer {
 
     Write-Host "Deleting Container '$($Container.Id)' of project '$($Container.Project)'"
 
-    $headers = Get-AlpacaAuthenticationHeaders -token $Token -owner $owner -repository $repository
+    $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
 
     $QueryParams = @{
         "api-version" = "0.12"
     }        
-    $apiUrl = Get-AlpacaEndpointUrlWithParam -controller "Container" -ressource $Container.Id -QueryParams $QueryParams
+    $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Ressource $Container.Id -QueryParams $QueryParams
     
     Invoke-RestMethod $apiUrl -Method 'DELETE' -Headers $headers -AllowInsecureRedirect | Out-Null
 

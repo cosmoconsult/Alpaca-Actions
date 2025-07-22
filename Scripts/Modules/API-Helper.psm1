@@ -52,7 +52,6 @@ function Get-AlpacaEndpointUrlWithParam {
     }
     return $url
 }
-
 Export-ModuleMember -Function Get-AlpacaEndpointUrlWithParam
 
 function Get-AlpacaAuthenticationHeaders {
@@ -71,7 +70,6 @@ function Get-AlpacaAuthenticationHeaders {
     }
     return $headers
 }
-
 Export-ModuleMember -Function Get-AlpacaAuthenticationHeaders
 
 function Get-AlpacaConfigNameForWorkflowName {
@@ -81,5 +79,4 @@ function Get-AlpacaConfigNameForWorkflowName {
         default { return "current" }
     }
 }
-
 Export-ModuleMember -Function Get-AlpacaConfigNameForWorkflowName

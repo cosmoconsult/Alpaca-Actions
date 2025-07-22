@@ -50,14 +50,14 @@ function Wait-AlpacaContainerReady {
             $repository = $repository.replace("/", "")
 
             
-            $headers = Get-AlpacaAuthenticationHeaders -token $Token -owner $owner -repository $repository
+            $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
             $headers.add("accept","application/text")
 
             $QueryParams = @{
                 "api-version" = "0.12"
                 tail = 5000
             }
-            $apiUrl = Get-AlpacaEndpointUrlWithParam -controller "task" -ressource $ContainerName -routeSuffix "logs"  -QueryParams $QueryParams
+            $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "task" -Ressource $ContainerName -RouteSuffix "logs"  -QueryParams $QueryParams
                 
             while ($waitForContainer) {  
 
@@ -124,8 +124,10 @@ function Wait-AlpacaContainerReady {
 
         }
         catch {
-            $ErrorMessage = Get-AlpacaExtendedErrorMessage -errorRecord $_
-            $ErrorMessage -split [Environment]::NewLine | % { Write-Host "::error::$_" }
+            Write-Host "::notice::Error while waiting for container to be ready"
+            $errorMessage = Get-AlpacaExtendedErrorMessage -errorRecord $_
+            $errorMessage -replace "`r" -split "`n" | 
+                ForEach-Object { Write-Host "`e[31m$_`e[0m" }
             $success = $false
             return
         }

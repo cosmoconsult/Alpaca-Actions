@@ -19,7 +19,7 @@ $failures = 0
 
 foreach ($container in $containers) {
     try {
-        Remove-AlpacaContainer -container $container -token $Token
+        Remove-AlpacaContainer -Container $container -Token $Token
     } catch {
         Write-Host "::error::Failed to delete container '$($container.Id)': $($_.Exception.Message)"
         $failures += 1

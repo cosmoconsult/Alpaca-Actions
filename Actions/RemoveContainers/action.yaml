@@ -19,8 +19,11 @@ runs:
     - id: RemoveContainers
       name: Remove COSMO Alpaca Containers
       shell: ${{ input.shell }}
+      env:
+        _token: ${{ inputs.token }}
+        _containersJson: ${{ inputs.containersJson }}
       run: |
-        ${{ github.action_path }}/RemoveContainers/RemoveContainers.ps1 -Token "${{ input.token }}" -ContainersJson "${{ inputs.containersJson }}"
+        ${{ github.action_path }}/RemoveContainers/RemoveContainers.ps1 -Token $env:_token -ContainersJson $env:_containersJson
 branding:
   icon: terminal
   color: blue

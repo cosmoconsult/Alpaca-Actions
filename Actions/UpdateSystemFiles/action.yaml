@@ -1,0 +1,48 @@
+name: Update System Files
+description: This action updates the COSMO Alpaca System Files
+author: COSMO CONSULT
+inputs:
+  shell:
+    description: Shell in which you want to run the action (powershell or pwsh)
+    required: false
+    default: powershell
+  actor:
+    description: The GitHub actor running the action
+    required: false
+    default: ${{ github.actor }}
+  token:
+    description: Base64 encoded GhTokenWorkflow secret
+    required: false
+    default: ""
+  templateUrl:
+    description: URL of the template repository (default is the template repository used to create the repository)
+    required: false
+    default: ""
+  downloadLatest:
+    description: Set this input to true in order to download latest version of the template repository (else it will reuse the SHA from last update)
+    required: true
+  updateBranch:
+    description: Set the branch to update
+    required: false
+    default: ${{ github.ref_name }}
+  directCommit:
+    description: Direct Commit?
+    required: false
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: run
+      shell: ${{ inputs.shell }}
+      env:
+        _actor: ${{ inputs.actor }}
+        _token: ${{ inputs.token }}
+        _templateUrl: ${{ inputs.templateUrl }}
+        _downloadLatest: ${{ inputs.downloadLatest }}
+        _updateBranch: ${{ inputs.updateBranch }}
+        _directCommit: ${{ inputs.directCommit }}
+      run: |
+        ${{ github.action_path }}/UpdateSystemFiles.ps1 -Actor $env:_actor -Token $env:_token -TemplateUrl $env:_templateUrl -DownloadLatest ($env:_downloadLatest -eq 'true') -UpdateBranch $env:_updateBranch -DirectCommit ($env:_directCommit -eq 'true')
+branding:
+  icon: terminal
+  color: blue

@@ -22,7 +22,7 @@ $containers = @()
 
 try {
     foreach ($project in $projects) {
-        $containers += New-AlpacaContainer -project $project -token $Token
+        $containers += New-AlpacaContainer -Project $project -Token $Token
     }
 } catch {
     Write-Host "::error::Failed to create container: $($_.Exception.Message)"

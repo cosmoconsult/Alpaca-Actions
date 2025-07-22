@@ -23,10 +23,10 @@ runs:
       name: COSMO Alpaca Initialization
       shell: ${{ inputs.shell }}
       env:
-        GITHUB_ACTION_REPO: ${{ github.action_repository }}
-        GITHUB_ACTION_REF: ${{ github.action_ref }}
+        _actionRepo: ${{ github.action_repository }}
+        _actionRef: ${{ github.action_ref }}
       run: |
-        ${{ github.action_path }}/Initialization.ps1 -ActionRepo $env:GITHUB_ACTION_REPO -ActionRef $env:GITHUB_ACTION_REF
+        ${{ github.action_path }}/Initialization.ps1 -ActionRepo $env:_actionRepo -ActionRef $env:_actionRef
 branding:
   icon: terminal
   color: blue

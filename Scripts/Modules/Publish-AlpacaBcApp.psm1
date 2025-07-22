@@ -17,7 +17,6 @@ function Publish-AlpacaBcApp {
     
     $tries=0
     $maxtries=5
-    $errorMessages = @()
     $appName = [System.IO.Path]::GetFileName($Path)    
     Write-Host "::group::Publish app $appName"
     while (!$success -and $tries -lt $maxTries)
@@ -74,18 +73,16 @@ function Publish-AlpacaBcApp {
             $success = $true
         }
         catch {
-            $errorMessage = Get-ExtendedErrorMessage -errorRecord $_
-            $errorMessageLines = $errorMessage -replace "`r" -split "`n"
+            Write-Host "::notice::Error Publishing App $appName on attempt $($tries + 1)"
+            $errorMessage = Get-AlpacaExtendedErrorMessage -errorRecord $_
+            $errorMessage -replace "`r" -split "`n" | 
+                ForEach-Object { Write-Host "`e[31m$_`e[0m" }
 
             $tries = $tries + 1
             if ($tries -ge $maxTries) {
-                Write-Host "::error::`e[31mError Publishing App $appName on attempt $tries`e[0m"
-                $errorMessageLines | ForEach-Object { Write-Host "`e[31m$_`e[0m" }
                 throw "Error Publishing App $appName"
             }
             else {
-                Write-Host "::notice::`e[31mError Publishing App $appName on attempt $tries`e[0m"
-                $errorMessageLines | ForEach-Object { Write-Host "`e[31m$_`e[0m" }
                 Write-Host "Failed to publish app, retry after 15 sec"
                 Start-Sleep 15
             }

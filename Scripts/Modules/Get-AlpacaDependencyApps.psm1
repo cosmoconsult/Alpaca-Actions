@@ -19,7 +19,7 @@ function Get-AlpacaDependencyApps {
 
     Write-Host "Get container artifacts for $owner/$repository and ref $branch (project: $project)"
 
-    $headers = Get-AlpacaAuthenticationHeaders -token $Token -owner $owner -repository $repository
+    $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
     $headers.add("Content-Type", "application/json")
 
     $config = Get-AlpacaConfigNameForWorkflowName 
@@ -45,7 +45,7 @@ function Get-AlpacaDependencyApps {
     $QueryParams = @{
         "api-version" = "0.12"
     }
-    $apiUrl = Get-AlpacaEndpointUrlWithParam -controller "Container" -endpoint "GitHub/GetBuildContainerArtifacts" -QueryParams $QueryParams
+    $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "GitHub/GetBuildContainerArtifacts" -QueryParams $QueryParams
     $artifacts = Invoke-RestMethod $apiUrl -Method 'GET' -Headers $headers -Body $body -AllowInsecureRedirect
 
     foreach ($artifact in $artifacts) {

@@ -23,9 +23,12 @@ runs:
     - id: CreateContainers
       name: Create COSMO Alpaca Containers
       shell: ${{ input.shell }}
+      env:
+        _token: ${{ inputs.token }}
+        _projectsJson: ${{ inputs.projectsJson }}
       run: |
-        ${{ github.action_path }}/CreateContainers.ps1 -Token "${{ input.token }}" -ProjectsJson "${{ inputs.projectsJson }}"
-    
+        ${{ github.action_path }}/CreateContainers.ps1 -Token $env:_token -ProjectsJson $env:_projectsJson
+
     - name: Remove COSMO Alpaca Containers on failure
       if: failure()
       uses: ./RemoveContainers
