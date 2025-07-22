@@ -1,0 +1,38 @@
+name: Create Containers
+description: This action creates a COSMO Alpaca container for each project
+author: COSMO CONSULT
+inputs:
+  shell:
+    description: Shell in which you want to run the action (powershell or pwsh)
+    required: false
+    default: powershell
+  token:
+    description: The GitHub token running the action
+    required: false
+    default: ${{ github.token }}
+  projectsJson:
+    description: An array of AL-Go projects in compressed JSON format
+    required: true
+outputs:
+  containersJson:
+    description: An array of Alpaca container informations in compressed JSON format
+    value: ${{ steps.CreateContainers.outputs.containersJson }}
+runs:
+  using: composite
+  steps:
+    - id: CreateContainers
+      name: Create COSMO Alpaca Containers
+      shell: ${{ input.shell }}
+      run: |
+        ${{ github.action_path }}/CreateContainers.ps1 -Token "${{ input.token }}" -ProjectsJson "${{ inputs.projectsJson }}"
+    
+    - name: Remove COSMO Alpaca Containers on failure
+      if: failure()
+      uses: ./RemoveContainers
+      with:
+        shell: ${{ inputs.shell }}
+        token: ${{ inputs.token }}
+        containersJson: ${{ env.ALPACA_CONTAINERS_JSON }}
+branding:
+  icon: terminal
+  color: blue

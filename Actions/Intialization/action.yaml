@@ -1,0 +1,32 @@
+name: Initialization
+description: This action initializes COSMO Alpaca
+author: COSMO CONSULT
+inputs:
+  shell:
+    description: Shell in which you want to run the action (powershell or pwsh)
+    required: false
+    default: powershell
+outputs:
+  backendUrl:
+    description: COSMO Alpaca Backend URL
+    value: ${{ steps.Initialization.outputs.backendUrl }}
+  scriptsArchiveUrl:
+    description: COSMO Alpaca Scripts Archive URL
+    value: ${{ steps.Initialization.outputs.scriptsArchiveUrl }}
+  scriptsArchiveDirectory:
+    description: COSMO Alpaca Scripts Archive Directory
+    value: ${{ steps.Initialization.outputs.scriptsArchiveDirectory }}
+runs:
+  using: composite
+  steps:
+    - id: Initialization
+      name: COSMO Alpaca Initialization
+      shell: ${{ inputs.shell }}
+      env:
+        GITHUB_ACTION_REPO: ${{ github.action_repository }}
+        GITHUB_ACTION_REF: ${{ github.action_ref }}
+      run: |
+        ${{ github.action_path }}/Initialization.ps1 -ActionRepo $env:GITHUB_ACTION_REPO -ActionRef $env:GITHUB_ACTION_REF
+branding:
+  icon: terminal
+  color: blue

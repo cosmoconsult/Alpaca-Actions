@@ -1,14 +1,14 @@
 function Get-AlpacaBackendUrl {
     Param(
-        [string]$backendUrl = $env:ALPACA_BACKEND_URL    
+        [string] $BackendUrl = $env:ALPACA_BACKEND_URL    
     )  
-    if ([string]::IsNullOrWhiteSpace($backendUrl)) {
-        $backendUrl = "https://cosmo-alpaca-enterprise.westeurope.cloudapp.azure.com/"
+    if ([string]::IsNullOrWhiteSpace($BackendUrl)) {
+        $BackendUrl = "https://cosmo-alpaca-enterprise.westeurope.cloudapp.azure.com/"
     }
-    elseif ($backendUrl -notlike "*/") {
-        $backendUrl = $backendUrl + "/"
+    elseif ($BackendUrl -notlike "*/") {
+        $BackendUrl = $BackendUrl + "/"
     }
-    return $backendUrl
+    return $BackendUrl
 }
 Export-ModuleMember -Function Get-AlpacaBackendUrl
 
@@ -16,31 +16,31 @@ function Get-AlpacaEndpointUrlWithParam {
     Param(
         [Parameter(Mandatory = $false)]
         [ValidateSet("k8s", "alpaca")]
-        [string]$api = "k8s",
+        [string] $Api = "k8s",
         [Parameter(Mandatory = $true)]
-        [string]$controller,
-        [string]$endpoint,
-        [string]$ressource,
-        [string]$routeSuffix,
+        [string] $Controller,
+        [string] $Endpoint,
+        [string] $Ressource,
+        [string] $RouteSuffix,
         [Hashtable] $QueryParams
     )
     $url = Get-AlpacaBackendUrl
-    switch ($api) {
+    switch ($Api) {
         "k8s" { $url = $url + "api/docker/release/" }
         "alpaca" { $url = $url + "api/alpaca/release/" }
     }
-    $url = $url + $controller  
+    $url = $url + $Controller
 
-    if ($endpoint) {
-        $url = $url + "/" + $endpoint 
-    }
-    
-    if ($ressource) {
-        $url = $url + "/" + $ressource
+    if ($Endpoint) {
+        $url = $url + "/" + $Endpoint
     }
 
-    if ($routeSuffix) {
-        $url = $url + "/" + $routeSuffix
+    if ($Ressource) {
+        $url = $url + "/" + $Ressource
+    }
+
+    if ($RouteSuffix) {
+        $url = $url + "/" + $RouteSuffix
     }
     
     if ($QueryParams) {
@@ -58,16 +58,16 @@ Export-ModuleMember -Function Get-AlpacaEndpointUrlWithParam
 function Get-AlpacaAuthenticationHeaders {
     Param(
         [Parameter(Mandatory = $true)]
-        [string]$token,
+        [string] $Token,
         [Parameter(Mandatory = $true)]
-        [string]$owner,
+        [string] $Owner,
         [Parameter(Mandatory = $true)]
-        [string]$repository
+        [string] $Repository
     )
     $headers = @{
-        Authorization              = "Bearer $token"
-        "Authorization-Owner"      = "$owner"
-        "Authorization-Repository" = "$repository"
+        Authorization              = "Bearer $Token"
+        "Authorization-Owner"      = "$Owner"
+        "Authorization-Repository" = "$Repository"
     }
     return $headers
 }

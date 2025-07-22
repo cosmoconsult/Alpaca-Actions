@@ -1,9 +1,9 @@
 function Remove-AlpacaContainer {
     param (
         [Parameter(Mandatory = $true)]
-        [pscustomobject]$container,
+        [pscustomobject] $Container,
         [Parameter(Mandatory = $true)]
-        [string]$token
+        [string] $Token
     )
 
     $owner = $env:GITHUB_REPOSITORY_OWNER
@@ -11,17 +11,17 @@ function Remove-AlpacaContainer {
     $repository = $repository.replace($owner, "")
     $repository = $repository.replace("/", "")
 
-    Write-Host "Deleting Container '$($container.Id)' of project '$($container.Project)'"
+    Write-Host "Deleting Container '$($Container.Id)' of project '$($Container.Project)'"
 
-    $headers = Get-AlpacaAuthenticationHeaders -token $token -owner $owner -repository $repository
+    $headers = Get-AlpacaAuthenticationHeaders -token $Token -owner $owner -repository $repository
 
     $QueryParams = @{
         "api-version" = "0.12"
     }        
-    $apiUrl = Get-AlpacaEndpointUrlWithParam -controller "Container" -ressource $container.Id -QueryParams $QueryParams
+    $apiUrl = Get-AlpacaEndpointUrlWithParam -controller "Container" -ressource $Container.Id -QueryParams $QueryParams
     
     Invoke-RestMethod $apiUrl -Method 'DELETE' -Headers $headers -AllowInsecureRedirect | Out-Null
-        
-    Write-Host "Deleted Container '$($container.Id)'"
+
+    Write-Host "Deleted Container '$($Container.Id)'"
 }
 Export-ModuleMember -Function Remove-AlpacaContainer

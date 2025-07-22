@@ -1,12 +1,14 @@
 function Wait-AlpacaContainerImageReady {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)][string]$token,
-        [Parameter(Mandatory = $true)][string]$containerName
+        [Parameter(Mandatory = $true)]
+        [string] $ContainerName,
+        [Parameter(Mandatory = $true)]
+        [string] $Token
     )
     process {
-        Write-Host ("[info]Checking status of service: {0}" -f $containerName)
-        
+        Write-Host ("[info]Checking status of service: {0}" -f $ContainerName)
+
         $SleepSeconds = 60
         $SleepSecondsPending = 10
         $TimeoutInMinutes = 50
@@ -19,11 +21,11 @@ function Wait-AlpacaContainerImageReady {
         $repository = $repository.replace($owner, "")
         $repository = $repository.replace("/", "")
 
-        $headers = Get-AlpacaAuthenticationHeaders -token $token -owner $owner -repository $repository
+        $headers = Get-AlpacaAuthenticationHeaders -token $Token -owner $owner -repository $repository
         $headers.add("Content-Type","application/json")
 
-        $apiUrl = Get-AlpacaEndpointUrlWithParam -controller "service" -ressource $containerName -routeSuffix "status"  -QueryParams $QueryParams
-        
+        $apiUrl = Get-AlpacaEndpointUrlWithParam -controller "service" -ressource $ContainerName -routeSuffix "status" -QueryParams $QueryParams
+
         Write-Host "Get status from $apiUrl"
 
         $time = New-TimeSpan -Seconds ($TimeoutInMinutes * 60)

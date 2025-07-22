@@ -2,18 +2,18 @@
 function Publish-AlpacaBcApp {
     Param(
         [Parameter(Mandatory = $true)]
-        [string]$containerUrl,
+        [string] $ContainerUrl,
         [Parameter(Mandatory = $true)]
-        [string]$containerUser,
+        [string] $ContainerUser,
         [Parameter(Mandatory = $true)]
-        [string]$containerPassword,
+        [string] $ContainerPassword,
         [Parameter(Mandatory = $true)]
-        [string]$path,
+        [string] $Path,
         [Parameter(Mandatory = $false)]
         [ValidateSet('Development','Clean','ForceSync')]
-        [string]$syncMode='Development',
+        [string] $SyncMode='Development',
         [Parameter(Mandatory = $false)]
-        [string]$tenant='default') 
+        [string] $Tenant='default') 
     
     $tries=0
     $maxtries=5
@@ -34,12 +34,12 @@ function Publish-AlpacaBcApp {
         $HttpClient.Timeout = [System.Threading.Timeout]::InfiniteTimeSpan
         $HttpClient.DefaultRequestHeaders.ExpectContinue = $false
         $schemaUpdateMode = "synchronize"
-        if ($syncMode -eq "Clean") {
+        if ($SyncMode -eq "Clean") {
             $schemaUpdateMode = "recreate";
-        } elseif ($syncMode -eq "ForceSync") {
+        } elseif ($SyncMode -eq "ForceSync") {
             $schemaUpdateMode = "forcesync"
         }
-        $devServerUrl = $ContainerUrl + "dev/dev/apps?SchemaUpdateMode=$schemaUpdateMode&tenant=$tenant"
+        $devServerUrl = $ContainerUrl + "dev/dev/apps?SchemaUpdateMode=$schemaUpdateMode&tenant=$Tenant"
     
         $multipartContent = [System.Net.Http.MultipartFormDataContent]::new()
         $FileStream = [System.IO.FileStream]::new($Path, [System.IO.FileMode]::Open)
@@ -74,19 +74,18 @@ function Publish-AlpacaBcApp {
             $success = $true
         }
         catch {
-            $errorMessages += Get-ExtendedErrorMessage -errorRecord $_
+            $errorMessage = Get-ExtendedErrorMessage -errorRecord $_
+            $errorMessageLines = $errorMessage -replace "`r" -split "`n"
 
             $tries = $tries + 1
             if ($tries -ge $maxTries) {
-                # Output errors from last to first attempt
-                for ($i = $errorMessages.Count - 1; $i -ge 0; $i--) {
-                    Write-Host "::error::Error Publishing App $appName on attempt $($i + 1)"
-                    $errorMessage = $errorMessages[$i]
-                    $errorMessage -split [Environment]::NewLine | ForEach-Object { Write-Host "::error::$_" }
-                }
+                Write-Host "::error::`e[31mError Publishing App $appName on attempt $tries`e[0m"
+                $errorMessageLines | ForEach-Object { Write-Host "`e[31m$_`e[0m" }
                 throw "Error Publishing App $appName"
             }
             else {
+                Write-Host "::notice::`e[31mError Publishing App $appName on attempt $tries`e[0m"
+                $errorMessageLines | ForEach-Object { Write-Host "`e[31m$_`e[0m" }
                 Write-Host "Failed to publish app, retry after 15 sec"
                 Start-Sleep 15
             }

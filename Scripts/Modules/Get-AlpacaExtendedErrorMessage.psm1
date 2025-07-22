@@ -5,15 +5,15 @@
 #>
 function Get-AlpacaExtendedErrorMessage {
     Param(
-        $errorRecord
+        $ErrorRecord
     )
 
-    $exception = $errorRecord.Exception
+    $exception = $ErrorRecord.Exception
     $message = $exception.Message
 
     try {
-        if ($errorRecord.ErrorDetails) {
-            $errorDetails = $errorRecord.ErrorDetails | ConvertFrom-Json
+        if ($ErrorRecord.ErrorDetails) {
+            $errorDetails = $ErrorRecord.ErrorDetails | ConvertFrom-Json
             $message += " $($errorDetails.error)`r`n$($errorDetails.error_description)"
         }
     }

@@ -1,16 +1,27 @@
 function Wait-AlpacaContainerReady {
     param (
-        [Parameter(Mandatory = $true)][string]       $token,
-        [Parameter(Mandatory = $true)][string]       $containerName,
-        [Parameter(Mandatory = $false)][System.Collections.ArrayList]    $readyString = @("Ready for connections!"),
-        [Parameter(Mandatory = $false)][System.Collections.ArrayList]    $errorString = @("[ERROR]"),
-        [Parameter(Mandatory = $false)][System.Collections.ArrayList]    $warningString = @("[WARN]"),
-        [Parameter(Mandatory = $false)][System.Collections.ArrayList]    $groupStartString = @("::group::", "##[group]"),
-        [Parameter(Mandatory = $false)][System.Collections.ArrayList]    $groupEndString = @("::endgroup::", "##[endgroup]"),
-        [Parameter(Mandatory = $false)][bool]         $printLog = $true,
-        [Parameter(Mandatory = $false)][int]          $maxTries = 30,
-        [Parameter(Mandatory = $false)][int]          $sleepSeconds = 5,
-        [Parameter(Mandatory = $false)][int]          $initialSleepSeconds = 15
+        [Parameter(Mandatory = $true)]
+        [string] $ContainerName,
+        [Parameter(Mandatory = $true)]
+        [string] $Token,
+        [Parameter(Mandatory = $false)]
+        [System.Collections.ArrayList] $ReadyString = @("Ready for connections!"),
+        [Parameter(Mandatory = $false)]
+        [System.Collections.ArrayList] $ErrorString = @("[ERROR]"),
+        [Parameter(Mandatory = $false)]
+        [System.Collections.ArrayList] $WarningString = @("[WARN]"),
+        [Parameter(Mandatory = $false)]
+        [System.Collections.ArrayList] $GroupStartString = @("::group::", "##[group]"),
+        [Parameter(Mandatory = $false)]
+        [System.Collections.ArrayList] $GroupEndString = @("::endgroup::", "##[endgroup]"),
+        [Parameter(Mandatory = $false)]
+        [bool] $PrintLog = $true,
+        [Parameter(Mandatory = $false)]
+        [int] $MaxTries = 30,
+        [Parameter(Mandatory = $false)]
+        [int] $SleepSeconds = 5,
+        [Parameter(Mandatory = $false)]
+        [int] $InitialSleepSeconds = 15
     )
     process {
         try {
@@ -19,18 +30,18 @@ function Wait-AlpacaContainerReady {
             # - Warnings
             # - Errors
             # - Log Messages
-            $warnRegex = [string]::Join("|", (@() + $warningString | ForEach-Object { [System.Text.RegularExpressions.Regex]::Escape($_) }) )
-            $errorRegex = [string]::Join("|", (@() + $errorString | ForEach-Object { [System.Text.RegularExpressions.Regex]::Escape($_) }) )
-            $readyRegex = [string]::Join("|", (@() + $readyString | ForEach-Object { [System.Text.RegularExpressions.Regex]::Escape($_) }) )
-            $groupStartRegex = [string]::Join("|", (@() + $groupStartString | ForEach-Object { [System.Text.RegularExpressions.Regex]::Escape($_) }) )
-            $groupEndRegex = [string]::Join("|", (@() + $groupEndString | ForEach-Object { [System.Text.RegularExpressions.Regex]::Escape($_) }) )
+            $warnRegex = [string]::Join("|", (@() + $WarningString | ForEach-Object { [System.Text.RegularExpressions.Regex]::Escape($_) }) )
+            $errorRegex = [string]::Join("|", (@() + $ErrorString | ForEach-Object { [System.Text.RegularExpressions.Regex]::Escape($_) }) )
+            $readyRegex = [string]::Join("|", (@() + $ReadyString | ForEach-Object { [System.Text.RegularExpressions.Regex]::Escape($_) }) )
+            $groupStartRegex = [string]::Join("|", (@() + $GroupStartString | ForEach-Object { [System.Text.RegularExpressions.Regex]::Escape($_) }) )
+            $groupEndRegex = [string]::Join("|", (@() + $GroupEndString | ForEach-Object { [System.Text.RegularExpressions.Regex]::Escape($_) }) )
             $tries = 0
             $waitForContainer = $true
             $takenLines = 0
 
-            if ($initialSleepSeconds) {
-                Write-Host "Wait for container connection ($initialSleepSeconds sec)"
-                Start-Sleep -Seconds $initialSleepSeconds
+            if ($InitialSleepSeconds) {
+                Write-Host "Wait for container connection ($InitialSleepSeconds sec)"
+                Start-Sleep -Seconds $InitialSleepSeconds
             }
 
             $owner = $Env:GITHUB_REPOSITORY_OWNER
@@ -39,14 +50,14 @@ function Wait-AlpacaContainerReady {
             $repository = $repository.replace("/", "")
 
             
-            $headers = Get-AlpacaAuthenticationHeaders -token $token -owner $owner -repository $repository
+            $headers = Get-AlpacaAuthenticationHeaders -token $Token -owner $owner -repository $repository
             $headers.add("accept","application/text")
 
             $QueryParams = @{
                 "api-version" = "0.12"
                 tail = 5000
             }
-            $apiUrl = Get-AlpacaEndpointUrlWithParam -controller "task" -ressource $containerName -routeSuffix "logs"  -QueryParams $QueryParams
+            $apiUrl = Get-AlpacaEndpointUrlWithParam -controller "task" -ressource $ContainerName -routeSuffix "logs"  -QueryParams $QueryParams
                 
             while ($waitForContainer) {  
 
@@ -56,7 +67,7 @@ function Wait-AlpacaContainerReady {
 
                 if ($StatusCode -ne 200) {
                         
-                    if ($tries -lt $maxTries) {
+                    if ($tries -lt $MaxTries) {
                         $tries = $tries + 1
                     }
                     else {
@@ -103,8 +114,8 @@ function Wait-AlpacaContainerReady {
                 }
                 $takenLines = $content.Length - 1
 
-                if ($waitForContainer -and $sleepSeconds) {
-                    Start-Sleep -Seconds $sleepSeconds
+                if ($waitForContainer -and $SleepSeconds) {
+                    Start-Sleep -Seconds $SleepSeconds
                 }
                 elseif ($takenLines -lt $content.Length) {
                     Write-Host "$($content | Select-Object -Last 1)"

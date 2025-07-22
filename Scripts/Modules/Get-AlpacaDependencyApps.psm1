@@ -1,7 +1,9 @@
 function Get-AlpacaDependencyApps {
     Param(
-        $packagesFolder,
-        $token
+        [Parameter(Mandatory = $true)]
+        [string] $PackagesFolder,
+        [Parameter(Mandatory = $true)]
+        [string] $Token
     )
 
     $owner = $Env:GITHUB_REPOSITORY_OWNER
@@ -17,7 +19,7 @@ function Get-AlpacaDependencyApps {
 
     Write-Host "Get container artifacts for $owner/$repository and ref $branch (project: $project)"
 
-    $headers = Get-AlpacaAuthenticationHeaders -token $token -owner $owner -repository $repository
+    $headers = Get-AlpacaAuthenticationHeaders -token $Token -owner $owner -repository $repository
     $headers.add("Content-Type", "application/json")
 
     $config = Get-AlpacaConfigNameForWorkflowName 
@@ -62,7 +64,7 @@ function Get-AlpacaDependencyApps {
                     Write-Host "- $($_.FullName)"
 
                     # Move file to PackagesFolder
-                    $destinationPath = Join-Path $packagesFolder $_.Name
+                    $destinationPath = Join-Path $PackagesFolder $_.Name
                     if (-not (Test-Path $destinationPath)) {
                         Write-Host "  Moving to PackagesFolder..."
                         Move-Item -Path $_.FullName -Destination $destinationPath -Force
@@ -87,8 +89,8 @@ function Get-AlpacaDependencyApps {
         }
     }
 
-    Write-Host "::group::Files in PackagesFolder $packagesFolder"
-    $files = Get-ChildItem -Path $packagesFolder -File
+    Write-Host "::group::Files in PackagesFolder $PackagesFolder"
+    $files = Get-ChildItem -Path $PackagesFolder -File
     foreach ($file in $files) {
         Write-Host "- $($file.Name)"
     }

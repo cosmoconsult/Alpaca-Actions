@@ -2,9 +2,9 @@ function New-AlpacaContainer {
     [cmdletbinding()]
     param (
         [Parameter(Mandatory = $true)]
-        [string]$project,
+        [string] $Project,
         [Parameter(Mandatory = $true)]
-        [string]$token
+        [string] $Token
     )
 
     $owner = $env:GITHUB_REPOSITORY_OWNER
@@ -17,9 +17,9 @@ function New-AlpacaContainer {
         $branch = $env:GITHUB_REF_NAME
     }
 
-    Write-Host "Creating container for project '$project' of '$owner/$repository' on ref '$branch'"
+    Write-Host "Creating container for project '$Project' of '$owner/$repository' on ref '$branch'"
 
-    $headers = Get-AlpacaAuthenticationHeaders -token $token -owner $owner -repository $repository
+    $headers = Get-AlpacaAuthenticationHeaders -token $Token -owner $owner -repository $repository
     $headers.add("Content-Type", "application/json")
 
     $config = Get-AlpacaConfigNameForWorkflowName 
@@ -34,7 +34,7 @@ function New-AlpacaContainer {
             owner = "$owner"
             repo = "$repository"
             branch = "$branch"
-            project = "$($project -replace '^\.$', '_')"
+            project = "$($Project -replace '^\.$', '_')"
         }
         containerConfiguration = "$config"
         workflow = @{
@@ -50,7 +50,7 @@ function New-AlpacaContainer {
     $response = Invoke-RestMethod $apiUrl -Method 'POST' -Headers $headers -Body $body -AllowInsecureRedirect
 
     $container = [pscustomobject]@{
-        Project = $project
+        Project = $Project
         Id = $response.id
         User = $response.username
         Password = $response.Password
