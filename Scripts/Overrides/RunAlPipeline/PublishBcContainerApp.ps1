@@ -1,5 +1,5 @@
 Param(
-    [Hashtable]$parameters
+    [Hashtable] $parameters
 )
 
 if ($parameters.appFile.GetType().BaseType.Name -eq 'Array') {

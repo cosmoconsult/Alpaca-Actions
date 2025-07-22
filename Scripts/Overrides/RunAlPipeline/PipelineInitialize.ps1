@@ -1,10 +1,10 @@
 param(
     [Parameter(Mandatory = $true)]
-    [string]$ScriptsPath,
+    [string] $ScriptsPath,
     [Parameter(Mandatory = $true)]
-    [object]$InitializationJob,
+    [object] $InitializationJob,
     [Parameter(Mandatory = $true)]
-    [object]$CreateContainersJob,
+    [object] $CreateContainersJob
 )
 
 Import-Module (Join-Path $ScriptsPath "Modules\Alpaca.psd1") -Scope Global -DisableNameChecking
@@ -56,10 +56,10 @@ if ($runAlPipelineOverrides | Where-Object { $_ -ne "PipelineInitialize"}) {
         $scriptName = $_
         $scriptPath = Join-Path $ScriptsPath "Overrides\RunAlPipeline\$scriptName.ps1"
         if (Test-Path -Path $scriptPath -Type Leaf) {
-            Write-Host "Set Alpaca override for $scriptName"
+            Write-Host "Set Alpaca override for '$scriptName' with '$scriptPath'"
             $existingScriptBlock = Get-Variable -Name $scriptName -ValueOnly -Scope 1 -ErrorAction Ignore
             if ($existingScriptBlock) {
-                Write-Host -ForegroundColor Yellow "Existing $scriptName override"; 
+                Write-Host -ForegroundColor Yellow "Existing '$scriptName' override"; 
                 Write-Host $existingScriptBlock.ToString()
                 Set-Variable -Name "AlGo$scriptName" -Value $existingScriptBlock -Scope 1
             }
