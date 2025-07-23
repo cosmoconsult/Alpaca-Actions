@@ -26,9 +26,7 @@ $script:groupLevel = 0
 
 function Write-AlpacaOutput {
     Param(
-        [Parameter(Mandatory = $true)]
-        [string] $Message,
-        [Parameter(Mandatory = $false)]
+        [string] $Message = "",
         [ValidateSet( 'None', 'Red', 'Green', 'Yellow', 'Blue', 'Magenta', 'Cyan', 'White' )]
         [string] $Color = 'None'
     )
@@ -49,7 +47,6 @@ function Write-AlpacaAnnotation {
     Param(
         [Parameter(Mandatory = $true)]
         [string] $Message,
-        [Parameter(Mandatory = $false)]
         [ValidateSet('Notice', 'Warning', 'Error', 'Debug')]
         [string] $Annotation = 'Notice'
     )
