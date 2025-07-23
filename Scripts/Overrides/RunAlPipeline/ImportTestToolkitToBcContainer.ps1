@@ -8,7 +8,7 @@ try {
     Write-AlpacaOutput "Importing Test Toolkit to BC Container not necessary for COSMO Alpaca container"
 }
 finally {
-    Write-AlpacaGroupEnd "COSMO Alpaca - ImportTestToolkitToBcContainer"
+    Write-AlpacaGroupEnd
 }
 
 if ($AlGoImportTestToolkitToBcContainer) {

@@ -112,5 +112,5 @@ try {
     Write-AlpacaGroupEnd
 }
 finally {
-    Write-AlpacaGroupEnd "COSMO Alpaca - PipelineInitialize"
+    Write-AlpacaGroupEnd
 }

@@ -62,7 +62,7 @@ try {
                         -Path $parameters.appFile
 }
 finally {
-    Write-AlpacaGroupEnd "COSMO Alpaca - PublishBcContainerApp"
+    Write-AlpacaGroupEnd
 }
 
 if ($AlGoPublishBcContainerApp) {
