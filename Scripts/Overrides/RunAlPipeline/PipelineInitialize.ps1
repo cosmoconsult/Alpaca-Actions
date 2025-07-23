@@ -98,8 +98,9 @@ try {
             Write-AlpacaOutput "Getting existing override for '$scriptName'"
             $existingScriptBlock = Get-Variable -Name $scriptName -ValueOnly -Scope 1 -ErrorAction Ignore
             if ($existingScriptBlock) {
-                Write-AlpacaOutput "Existing '$scriptName' override" -Color "Yellow" 
+                Write-AlpacaGroupStart "Existing '$scriptName' override"
                 Write-AlpacaOutput $existingScriptBlock.ToString()
+                Write-AlpacaGroupEnd
 
                 Write-AlpacaOutput "Setting parent 'AlGo$ScriptName' to existing override"
                 Set-Variable -Name "AlGo$scriptName" -Value $existingScriptBlock -Scope 1
