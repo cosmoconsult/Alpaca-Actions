@@ -67,7 +67,7 @@ $overridesPath = Join-Path $ScriptsPath "Overrides/RunAlPipeline"
 Write-Host "Loading Alpaca overrides from $(Resolve-Path $overridesPath -Relative)"
 
 Get-Item -Path $overridesPath | 
-    Get-ChildItem -Path $overridesPath -File -Filter "*.ps1" -Exclude "PipelineInitialize.*" | 
+    Get-ChildItem -File -Filter "*.ps1" -Exclude "PipelineInitialize.*" | 
     ForEach-Object {
         $scriptPath = $_.FullName
         $scriptName = $_.BaseName
