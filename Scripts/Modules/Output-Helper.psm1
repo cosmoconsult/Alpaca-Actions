@@ -28,20 +28,16 @@ function Write-AlpacaOutput {
     Param(
         [string] $Message = "",
         [string] $Command = "",
+        [string] $LineBreak = "`n",
         [ValidateSet( 'None', 'Red', 'Green', 'Yellow', 'Blue', 'Magenta', 'Cyan', 'White' )]
         [string] $Color = 'None'
     )
 
     $groupPrefix = $script:groupIndentation * $script:groupLevel;
 
-    $Message -split '\r?\n' | 
-        ForEach-Object {
-            Write-Host "$($groupPrefix)" -NoNewline
-            Write-Host "$($Command)" -NoNewline
-            Write-Host "`e[$($script:colorCodes[$Color])m" -NoNewLine
-            Write-Host "$_" -NoNewline
-            Write-Host "`e[0m"
-        }
+    $formattedMessage = ( $Message -split '\r?\n' | ForEach-Object { "`e[$($script:colorCodes[$Color])m$($_)`e[0m" } ) -join $LineBreak
+
+    Write-Host "$($groupPrefix)$($Command)$($formattedMessage)"
 }
 Export-ModuleMember -Function Write-AlpacaOutput
 
@@ -55,8 +51,9 @@ function Write-AlpacaAnnotation {
         [string] $Color = 'None'
     )
 
-    Write-AlpacaOutput -Message "$($Message -replace '\r?\n', $script:annotationLineBreak)" `
-                       -Command "$($script:annotationCommands[$Annotation])" `
+    Write-AlpacaOutput -Message $Message `
+                       -Command $script:annotationCommands[$Annotation] `
+                       -LineBreak $script:annotationLineBreak `
                        -Color $Color
 }
 Export-ModuleMember -Function Write-AlpacaAnnotation
