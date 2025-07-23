@@ -4,7 +4,7 @@ Param(
 
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
-$skip = $true
+$skip = $false
 if ($parameters.appFile.GetType().BaseType.Name -eq 'Array') {
     # Check if current run is installing dependenciy apps
     # Dependency apps are already installed and should be skipped
@@ -29,12 +29,12 @@ if ($parameters.appFile.GetType().BaseType.Name -eq 'Array') {
 
     if ($equal) {
         Write-AlpacaOutput "Skip apps before apps/testapps because they are already handled by Alpaca"
-        $skip = $false
+        $skip = $true
     }
 }
 
 if (! $skip) {
-    Write-AlpacaGroupStart "Wait for image to be ready"
+    Write-AlpacaGroupStart "Waiting for image to be ready"
     if ($env:ALPACA_CONTAINER_IMAGE_READY) {
         Write-AlpacaOutput "ALPACA_CONTAINER_IMAGE_READY is already set to '$env:ALPACA_CONTAINER_IMAGE_READY'. Skipping wait."
     } else {
@@ -44,7 +44,7 @@ if (! $skip) {
     }
     Write-AlpacaGroupEnd
 
-    Write-AlpacaGroupStart "Wait for container start"
+    Write-AlpacaGroupStart "Waiting for container start"
     if ($env:ALPACA_CONTAINER_READY) {
         Write-AlpacaOutput "ALPACA_CONTAINER_READY is already set to '$env:ALPACA_CONTAINER_READY'. Skipping wait."
     } else {
