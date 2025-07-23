@@ -2,11 +2,9 @@ Param(
     [Hashtable] $parameters
 )
 
-begin {
+try {
     Write-AlpacaGroupStart "PublishBcContainerApp"
-}
-
-process {
+    
     if ($parameters.appFile.GetType().BaseType.Name -eq 'Array') {
         # Check if current run is installing dependenciy apps
         # Dependency apps are already installed and should be skipped
@@ -63,12 +61,11 @@ process {
                         -containerPassword $password `
                         -path $parameters.appFile
 }
-
-end {
+finally {
     Write-AlpacaGroupEnd
+}
 
-    if ($AlGoPublishBcContainerApp) {
-        Write-AlpacaOutput "Invoking AL-Go override"
-        Invoke-Command -ScriptBlock $AlGoPublishBcContainerApp -ArgumentList $parameters
-    }
+if ($AlGoPublishBcContainerApp) {
+    Write-AlpacaOutput "Invoking AL-Go override"
+    Invoke-Command -ScriptBlock $AlGoPublishBcContainerApp -ArgumentList $parameters
 }

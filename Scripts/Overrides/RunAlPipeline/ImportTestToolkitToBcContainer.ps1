@@ -2,19 +2,16 @@ Param(
     [Hashtable] $parameters
 ) 
 
-begin {
+try {
     Write-AlpacaGroupStart "ImportTestToolkitToBcContainer"
-}
 
-process {
     Write-AlpacaOutput "Importing Test Toolkit to BC Container not necessary for COSMO Alpaca container"
 }
-
-end {
+finally {
     Write-AlpacaGroupEnd
+}
 
-    if ($AlGoImportTestToolkitToBcContainer) {
-        Write-AlpacaOutput "Invoking AL-Go override"
-        Invoke-Command -ScriptBlock $AlGoImportTestToolkitToBcContainer -ArgumentList $parameters
-    }
+if ($AlGoImportTestToolkitToBcContainer) {
+    Write-AlpacaOutput "Invoking AL-Go override"
+    Invoke-Command -ScriptBlock $AlGoImportTestToolkitToBcContainer -ArgumentList $parameters
 }

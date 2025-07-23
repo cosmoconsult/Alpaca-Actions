@@ -123,18 +123,31 @@ Export-ModuleMember -Function Write-AlpacaDebug
 function Write-AlpacaGroupStart {
     Param(
         [Parameter(Mandatory = $true)]
-        [string] $Message
+        [string] $Message,
+        [switch] $UseCommand
     )
 
-    Write-AlpacaOutput -Message "==== COSMO Alpaca - Group Start: $Message ====" -Color "Green"
-
-    $script:groupLevel += 1
+    if ($UseCommand) {
+        Write-AlpacaOutput -Message "::group::$Message"
+    } else {
+        Write-AlpacaOutput -Message "> $Message"
+        $script:groupLevel += 1
+    }
 }
 Export-ModuleMember -Function Write-AlpacaGroupStart
 
 function Write-AlpacaGroupEnd {
-    $script:groupLevel = [Math]::Max($script:groupLevel - 1, 0)
-
-    Write-AlpacaOutput -Message "==== COSMO Alpaca - Group End ====" -Color "Green"
+    Param(
+        [string] $Message,
+        [switch] $UseCommand
+    )
+    if ($UseCommand) {
+        Write-AlpacaOutput -Message "::endgroup::$Message"
+    } else {
+        $script:groupLevel = [Math]::Max($script:groupLevel - 1, 0)
+        if ($Message) {
+            Write-AlpacaOutput -Message "$Message"
+        }
+    }
 }
 Export-ModuleMember -Function Write-AlpacaGroupEnd

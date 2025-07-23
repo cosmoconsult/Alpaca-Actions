@@ -7,13 +7,11 @@ param(
     [object] $CreateContainersJob
 )
 
-begin {
-    Import-Module (Join-Path $ScriptsPath "Modules/Alpaca.psd1") -Scope Global -DisableNameChecking
+Import-Module (Join-Path $ScriptsPath "Modules/Alpaca.psd1") -Scope Global -DisableNameChecking
 
+try {
     Write-AlpacaGroupStart "PipelineInitialize"
-}
 
-process {
     # Collect informations
 
     Write-AlpacaGroupStart "Collect Informations"
@@ -116,7 +114,6 @@ process {
 
     Write-AlpacaGroupEnd
 }
-
-end {
+finally {
     Write-AlpacaGroupEnd
 }

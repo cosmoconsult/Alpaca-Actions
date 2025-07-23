@@ -79,12 +79,7 @@ function Wait-AlpacaContainerReady {
                 }
                     
                 # Check for Errors, Warnings, Ready-String
-                $indentation = 0
-                foreach ($line in ($content | Select-Object -Skip $takenLines -First ($content.Length - 1))) {
-                    if (! [string]::IsNullOrWhiteSpace($line)) {
-                        Write-AlpacaOutput (" " * $indentation * 2) -NoNewline
-                    }
-                    
+                foreach ($line in ($content | Select-Object -Skip $takenLines -First ($content.Length - 1))) {                    
                     if ($errorRegex -and ($line -match $errorRegex)) {
                         Write-AlpacaError $line
                         $success = $false                                
@@ -99,12 +94,10 @@ function Wait-AlpacaContainerReady {
                         $waitForContainer = $false
                     }
                     elseif ($groupStartRegex -and ($line -match $groupStartRegex)) {
-                        Write-AlpacaOutput "> $($line -replace $groupStartRegex, '')"
-                        $indentation += 1
+                        Write-AlpacaGroupStart "$($line -replace $groupStartRegex, '')"
                     }
                     elseif ($groupEndRegex -and ($line -match $groupEndRegex)) {
-                        Write-AlpacaOutput "$($line -replace $groupEndRegex, '')"
-                        $indentation = [Math]::Max($indentation - 1, 0)
+                        Write-AlpacaGroupEnd "$($line -replace $groupEndRegex, '')"
                     }
                     elseif (! [string]::IsNullOrWhiteSpace($line)) {
                         #Avoid Empty lines in logfile
