@@ -22,7 +22,7 @@ runs:
   steps:
     - id: CreateContainers
       name: Create COSMO Alpaca Containers
-      shell: ${{ input.shell }}
+      shell: ${{ inputs.shell }}
       env:
         _token: ${{ inputs.token }}
         _projectsJson: ${{ inputs.projectsJson }}

@@ -18,7 +18,7 @@ runs:
   steps:    
     - id: RemoveContainers
       name: Remove COSMO Alpaca Containers
-      shell: ${{ input.shell }}
+      shell: ${{ inputs.shell }}
       env:
         _token: ${{ inputs.token }}
         _containersJson: ${{ inputs.containersJson }}
