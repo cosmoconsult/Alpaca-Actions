@@ -35,10 +35,10 @@ function Write-AlpacaOutput {
 
     $groupPrefix = $script:groupIndentation * $script:groupLevel;
 
-    $formattedMessageLines = $Message -split '\r?\n' | ForEach-Object { "`e[$($script:colorCodes[$Color])m$($_)`e[0m" }
+    $formattedMessageLines = $Message -split '\r?\n' | ForEach-Object { "`e[$($script:colorCodes[$Color])m$($groupPrefix)$($_)`e[0m" }
     $formattedMessage = $formattedMessageLines -join $LineBreak
 
-    Write-Host "$($groupPrefix)$($Command)$($formattedMessage)"
+    Write-Host "$($Command)$($formattedMessage)"
 }
 Export-ModuleMember -Function Write-AlpacaOutput
 
