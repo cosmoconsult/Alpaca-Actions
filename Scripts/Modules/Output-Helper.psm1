@@ -35,7 +35,8 @@ function Write-AlpacaOutput {
 
     $groupPrefix = $script:groupIndentation * $script:groupLevel;
 
-    $formattedMessage = ( $Message -split '\r?\n' | ForEach-Object { "`e[$($script:colorCodes[$Color])m$($_)`e[0m" } ) -join $LineBreak
+    $formattedMessageLines = $Message -split '\r?\n' | ForEach-Object { "`e[$($script:colorCodes[$Color])m$($_)`e[0m" }
+    $formattedMessage = $formattedMessageLines -join $LineBreak
 
     Write-Host "$($groupPrefix)$($Command)$($formattedMessage)"
 }
