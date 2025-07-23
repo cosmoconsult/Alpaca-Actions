@@ -73,7 +73,7 @@ function Get-AlpacaAuthenticationHeaders {
 Export-ModuleMember -Function Get-AlpacaAuthenticationHeaders
 
 function Get-AlpacaConfigNameForWorkflowName {
-    switch ($ENV:GITHUB_WORKFLOW) {
+    switch ($env:GITHUB_WORKFLOW) {
         "NextMajor" { return "NextMajor" }
         "NextMinor" { return "NextMinor" }
         default { return "current" }

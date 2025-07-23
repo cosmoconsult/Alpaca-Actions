@@ -44,8 +44,8 @@ function Wait-AlpacaContainerReady {
                 Start-Sleep -Seconds $InitialSleepSeconds
             }
 
-            $owner = $Env:GITHUB_REPOSITORY_OWNER
-            $repository = $Env:GITHUB_REPOSITORY
+            $owner = $env:GITHUB_REPOSITORY_OWNER
+            $repository = $env:GITHUB_REPOSITORY
             $repository = $repository.replace($owner, "")
             $repository = $repository.replace("/", "")
 

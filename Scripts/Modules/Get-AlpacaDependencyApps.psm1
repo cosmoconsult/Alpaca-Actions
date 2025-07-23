@@ -6,16 +6,16 @@ function Get-AlpacaDependencyApps {
         [string] $Token
     )
 
-    $owner = $Env:GITHUB_REPOSITORY_OWNER
-    $repository = $Env:GITHUB_REPOSITORY
+    $owner = $env:GITHUB_REPOSITORY_OWNER
+    $repository = $env:GITHUB_REPOSITORY
     $repository = $repository.replace($owner, "")
     $repository = $repository.replace("/", "")
-    $branch = $Env:GITHUB_HEAD_REF
-    # $Env:GITHUB_HEAD_REF is specified only for pull requests, so if it is not specified, use GITHUB_REF_NAME
+    $branch = $env:GITHUB_HEAD_REF
+    # $env:GITHUB_HEAD_REF is specified only for pull requests, so if it is not specified, use GITHUB_REF_NAME
     if (!$branch) {
-        $branch = $Env:GITHUB_REF_NAME
+        $branch = $env:GITHUB_REF_NAME
     }
-    $project = $Env:_project
+    $project = $env:ALGO_PROJECT
 
     Write-Host "Get container artifacts for $owner/$repository and ref $branch (project: $project)"
 
@@ -33,11 +33,11 @@ function Get-AlpacaDependencyApps {
         }
         containerConfiguration = "$config"
         workflow = @{
-            actor = "$($Env:GITHUB_ACTOR)"
-            workflowName = "$($Env:GITHUB_WORKFLOW)"
-            WorkflowRef = "$($Env:GITHUB_WORKFLOW_REF)"
-            RunID = "$($Env:GITHUB_RUN_ID)"
-            Repository = "$($Env:GITHUB_REPOSITORY)"
+            actor = "$($env:GITHUB_ACTOR)"
+            workflowName = "$($env:GITHUB_WORKFLOW)"
+            WorkflowRef = "$($env:GITHUB_WORKFLOW_REF)"
+            RunID = "$($env:GITHUB_RUN_ID)"
+            Repository = "$($env:GITHUB_REPOSITORY)"
         }
     }
     $body = $request | ConvertTo-Json -Depth 10

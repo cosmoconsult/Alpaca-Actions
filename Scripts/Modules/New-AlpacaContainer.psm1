@@ -12,7 +12,7 @@ function New-AlpacaContainer {
     $repository = $repository.replace($owner, "")
     $repository = $repository.replace("/", "")
     $branch = $env:GITHUB_HEAD_REF
-    # $Env:GITHUB_HEAD_REF is specified only for pull requests, so if it is not specified, use GITHUB_REF_NAME
+    # $env:GITHUB_HEAD_REF is specified only for pull requests, so if it is not specified, use GITHUB_REF_NAME
     if (!$branch) {
         $branch = $env:GITHUB_REF_NAME
     }
