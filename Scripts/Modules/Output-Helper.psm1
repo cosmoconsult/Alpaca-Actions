@@ -27,6 +27,7 @@ $script:groupLevel = 0
 function Write-AlpacaOutput {
     Param(
         [string] $Message = "",
+        [string] $Command = "",
         [ValidateSet( 'None', 'Red', 'Green', 'Yellow', 'Blue', 'Magenta', 'Cyan', 'White' )]
         [string] $Color = 'None'
     )
@@ -36,6 +37,7 @@ function Write-AlpacaOutput {
     $Message -split '\r?\n' | 
         ForEach-Object {
             Write-Host "$($groupPrefix)" -NoNewline
+            Write-Host "$($Command)" -NoNewline
             Write-Host "`e[$($script:colorCodes[$Color])m" -NoNewLine
             Write-Host "$_" -NoNewline
             Write-Host "`e[0m"
@@ -53,7 +55,8 @@ function Write-AlpacaAnnotation {
         [string] $Color = 'None'
     )
 
-    Write-AlpacaOutput -Message "$($script:annotationCommands[$Annotation])$($Message -replace '\r?\n', $script:annotationLineBreak)" `
+    Write-AlpacaOutput -Message "$($Message -replace '\r?\n', $script:annotationLineBreak)" `
+                       -Command "$($script:annotationCommands[$Annotation])" `
                        -Color $Color
 }
 Export-ModuleMember -Function Write-AlpacaAnnotation
@@ -126,7 +129,7 @@ function Write-AlpacaGroupStart {
     )
 
     if ($UseCommand) {
-        Write-AlpacaOutput -Message "::group::$Message"
+        Write-AlpacaOutput -Message $Message -Command "::group::" 
     } else {
         Write-AlpacaOutput -Message "> $Message"
         $script:groupLevel += 1
@@ -140,11 +143,11 @@ function Write-AlpacaGroupEnd {
         [switch] $UseCommand
     )
     if ($UseCommand) {
-        Write-AlpacaOutput -Message "::endgroup::$Message"
+        Write-AlpacaOutput -Message $Message -Command "::endgroup::"
     } else {
         $script:groupLevel = [Math]::Max($script:groupLevel - 1, 0)
         if ($Message) {
-            Write-AlpacaOutput -Message "$Message"
+            Write-AlpacaOutput -Message $Message
         }
     }
 }
