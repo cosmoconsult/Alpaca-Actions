@@ -25,14 +25,15 @@
 
     NestedModules     = @(
         'API-Helper.psm1',
-        'Get-AlpacaSettings.psm1',
         'Get-AlpacaDependencyApps.psm1',
         'Get-AlpacaExtendedErrorMessage.psm1',
-        'Publish-AlpacaBcApp.psm1',
+        'Get-AlpacaSettings.psm1',
         'New-AlpacaContainer.psm1',
+        'Output-Helper.psm1',
+        'Publish-AlpacaBcApp.psm1',
         'Remove-AlpacaContainer.psm1',
-        'Wait-AlpacaContainerReady.psm1',
-        'Wait-AlpacaContainerImageReady.psm1')
+        'Wait-AlpacaContainerImageReady.psm1',
+        'Wait-AlpacaContainerReady.psm1')
 
     # Functions to export from this module
     FunctionsToExport = '*'

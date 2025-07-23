@@ -71,8 +71,7 @@ function Wait-AlpacaContainerReady {
                         $tries = $tries + 1
                     }
                     else {
-                        Write-Host "::error::Error while getting logs from container"
-                        Write-Host "::error::Content: $($content)"
+                        Write-AlpacaError "Error while getting logs from container`nContent:`n$($content)"
                         $waitForContainer = $false
                         $success = $false
                         return
@@ -87,12 +86,12 @@ function Wait-AlpacaContainerReady {
                     }
                     
                     if ($errorRegex -and ($line -match $errorRegex)) {
-                        Write-Host "::error::$line"
+                        Write-AlpacaError $line
                         $success = $false                                
                         $waitForContainer = $false
                     }
                     elseif ($warnRegex -and ($line -match $warnRegex)) {
-                        Write-Host "::warning::$line"
+                        Write-AlpacaWarning $line
                         $warning = $true
                     }
                     elseif ($readyRegex -and ($line -match $readyRegex)) {
@@ -124,10 +123,9 @@ function Wait-AlpacaContainerReady {
 
         }
         catch {
-            Write-Host "::notice::Error while waiting for container to be ready"
             $errorMessage = Get-AlpacaExtendedErrorMessage -errorRecord $_
-            $errorMessage -replace "`r" -split "`n" | 
-                ForEach-Object { Write-Host "`e[31m$_`e[0m" }
+            $errorMessage = "Error while waiting for container '$ContainerName' to be ready`n$errorMessage"
+            Write-AlpacaError $errorMessage
             $success = $false
             return
         }
@@ -138,7 +136,7 @@ function Wait-AlpacaContainerReady {
             throw "Errors found during container start"
         }
         elseif ($warning) {
-            Write-Host "::warning::container started with warnings"
+            Write-AlpacaWarning "Container started with warnings"
         }
         else {
             Write-Host "Container is ready."

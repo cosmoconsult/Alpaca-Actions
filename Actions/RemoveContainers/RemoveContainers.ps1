@@ -21,12 +21,12 @@ foreach ($container in $containers) {
     try {
         Remove-AlpacaContainer -Container $container -Token $Token
     } catch {
-        Write-Host "::error::Failed to delete container '$($container.Id)': $($_.Exception.Message)"
+        Write-AlpacaError "Failed to delete container '$($container.Id)':`n$($_.Exception.Message)"
         $failures += 1
     }
 }
 
 Write-Host "Deleted $($containers.Count - $failures) of $($containers.Count) containers"
 if ($failures) {
-    exit 1
+    throw "Failed to delete $failures containers"
 }

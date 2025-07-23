@@ -55,7 +55,6 @@ function Publish-AlpacaBcApp {
             $status = $result.StatusCode
             Write-Host "Returned $status from $devServerUrl"
             if (!$result.IsSuccessStatusCode) {
-                Write-Host "Error Publishing App $appName"
                 $message = "Status Code $($result.StatusCode) : $($result.ReasonPhrase)"
                 try {
                     $resultMsg = $result.Content.ReadAsStringAsync().Result
@@ -73,16 +72,16 @@ function Publish-AlpacaBcApp {
             $success = $true
         }
         catch {
-            Write-Host "::notice::Error Publishing App $appName on attempt $($tries + 1)"
-            $errorMessage = Get-AlpacaExtendedErrorMessage -errorRecord $_
-            $errorMessage -replace "`r" -split "`n" | 
-                ForEach-Object { Write-Host "`e[31m$_`e[0m" }
+            $errorMessage = Get-ExtendedErrorMessage -errorRecord $_
+            $errorMessage = "Error Publishing App '$appName'`n$errorMessage"
 
             $tries = $tries + 1
             if ($tries -ge $maxTries) {
-                throw "Error Publishing App $appName"
+                Write-AlpacaError $errorMessage
+                throw "Error Publishing App '$appName'"
             }
             else {
+                Write-AlpacaError $errorMessage -Annotation $false
                 Write-Host "Failed to publish app, retry after 15 sec"
                 Start-Sleep 15
             }

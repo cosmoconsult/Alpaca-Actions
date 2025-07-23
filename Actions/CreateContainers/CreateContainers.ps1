@@ -25,8 +25,8 @@ try {
         $containers += New-AlpacaContainer -Project $project -Token $Token
     }
 } catch {
-    Write-Host "::error::Failed to create container: $($_.Exception.Message)"
-    exit 1;
+    Write-AlpacaError "Failed to create containers:`n$($_.Exception.Message)"
+    throw "Failed to create containers"
 } finally {
     Write-Host "Created $($containers.Count) of $($projects.Count) containers"
 

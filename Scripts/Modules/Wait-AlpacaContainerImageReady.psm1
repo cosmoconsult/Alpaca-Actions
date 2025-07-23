@@ -55,7 +55,7 @@ function Wait-AlpacaContainerImageReady {
                 switch ($currentStatus) {
                     "Error" { 
                         $success = $false
-                        Write-Host "##[Error]An error occured during building the image."
+                        Write-AlpacaError "An error occured during building the image."
                         return
                     }
                     Default {                    
@@ -66,7 +66,7 @@ function Wait-AlpacaContainerImageReady {
             $attemps += 1
             if ((Get-Date) -gt $stoptime) {
                 $success= $false
-                Write-Host "::error::Timeout waiting for image build."
+                Write-AlpacaError "Timeout waiting for image build."
                 return
             }
         } until ($currentStatus -in $ContainerStatusCode)
