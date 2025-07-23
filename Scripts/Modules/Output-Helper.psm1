@@ -48,12 +48,13 @@ function Write-AlpacaAnnotation {
         [Parameter(Mandatory = $true)]
         [string] $Message,
         [ValidateSet('Notice', 'Warning', 'Error', 'Debug')]
-        [string] $Annotation = 'Notice'
+        [string] $Annotation = 'Notice',
+        [ValidateSet( 'None', 'Red', 'Green', 'Yellow', 'Blue', 'Magenta', 'Cyan', 'White' )]
+        [string] $Color = 'None'
     )
 
-    $groupPrefix = $script:groupIndentation * $script:groupLevel;
-
-    Write-Host "$($groupPrefix)$($script:annotationCommands[$Annotation])$($Message -replace '\r?\n', $script:annotationLineBreak)"
+    Write-AlpacaOutput -Message "$($script:annotationCommands[$Annotation])$($Message -replace '\r?\n', $script:annotationLineBreak)" `
+                       -Color $Color
 }
 Export-ModuleMember -Function Write-AlpacaAnnotation
 

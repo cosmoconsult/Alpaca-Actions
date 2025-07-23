@@ -2,37 +2,38 @@ Param(
     [Hashtable] $parameters
 )
 
-try {
-    Write-AlpacaGroupStart "COSMO Alpaca - PublishBcContainerApp"
+Write-AlpacaOutput "Using COSMO Alpaca override"
 
-    if ($parameters.appFile.GetType().BaseType.Name -eq 'Array') {
-        # Check if current run is installing dependenciy apps
-        # Dependency apps are already installed and should be skipped
+$skip = $true
+if ($parameters.appFile.GetType().BaseType.Name -eq 'Array') {
+    # Check if current run is installing dependenciy apps
+    # Dependency apps are already installed and should be skipped
+    $equal = $true
+    for ($i = 0; $i -lt $appsBeforeApps.Count; $i++) {
+        if ($appsBeforeApps[$i] -ne $parameters.appFile[$i]) {
+            $equal = $false
+            break
+        }
+    }
+
+    if (-not $equal) {
+        #check second dependency array
         $equal = $true
-        for ($i = 0; $i -lt $appsBeforeApps.Count; $i++) {
-            if ($appsBeforeApps[$i] -ne $parameters.appFile[$i]) {
+        for ($i = 0; $i -lt $appsBeforeTestApps.Count; $i++) {
+            if ($appsBeforeTestApps[$i] -ne $parameters.appFile[$i]) {
                 $equal = $false
                 break
             }
         }
-
-        if (-not $equal) {
-            #check second dependency array
-            $equal = $true
-            for ($i = 0; $i -lt $appsBeforeTestApps.Count; $i++) {
-                if ($appsBeforeTestApps[$i] -ne $parameters.appFile[$i]) {
-                    $equal = $false
-                    break
-                }
-            }
-        }
-
-        if ($equal) {
-            Write-AlpacaOutput "Skip apps before apps/testapps because they are already handled by Alpaca"
-            return
-        }
     }
 
+    if ($equal) {
+        Write-AlpacaOutput "Skip apps before apps/testapps because they are already handled by Alpaca"
+        $skip = $false
+    }
+}
+
+if (! $skip) {
     Write-AlpacaGroupStart "Wait for image to be ready"
     if ($env:ALPACA_CONTAINER_IMAGE_READY) {
         Write-AlpacaOutput "ALPACA_CONTAINER_IMAGE_READY is already set to '$env:ALPACA_CONTAINER_IMAGE_READY'. Skipping wait."
@@ -60,9 +61,6 @@ try {
                         -ContainerUser $parameters.bcAuthContext.username `
                         -ContainerPassword $password `
                         -Path $parameters.appFile
-}
-finally {
-    Write-AlpacaGroupEnd
 }
 
 if ($AlGoPublishBcContainerApp) {
