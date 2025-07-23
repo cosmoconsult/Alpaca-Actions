@@ -5,9 +5,6 @@ param (
     [string] $ActionRef
 )
 
-Write-Host "$(Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve)"
-Write-Host "$(Join-Path -Path '.' -ChildPath "\Scripts\Modules\Alpaca.psd1" -Resolve)"
-
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
 
 $backendUrl = Get-AlpacaBackendUrl
