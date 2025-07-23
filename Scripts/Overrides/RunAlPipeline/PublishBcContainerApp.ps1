@@ -3,8 +3,8 @@ Param(
 )
 
 try {
-    Write-AlpacaGroupStart "PublishBcContainerApp"
-    
+    Write-AlpacaGroupStart "COSMO Alpaca - PublishBcContainerApp"
+
     if ($parameters.appFile.GetType().BaseType.Name -eq 'Array') {
         # Check if current run is installing dependenciy apps
         # Dependency apps are already installed and should be skipped
@@ -62,7 +62,7 @@ try {
                         -path $parameters.appFile
 }
 finally {
-    Write-AlpacaGroupEnd
+    Write-AlpacaGroupEnd "COSMO Alpaca - PublishBcContainerApp"
 }
 
 if ($AlGoPublishBcContainerApp) {

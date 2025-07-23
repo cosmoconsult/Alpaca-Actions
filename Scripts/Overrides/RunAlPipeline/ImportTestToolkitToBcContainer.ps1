@@ -3,12 +3,12 @@ Param(
 ) 
 
 try {
-    Write-AlpacaGroupStart "ImportTestToolkitToBcContainer"
+    Write-AlpacaGroupStart "COSMO Alpaca - ImportTestToolkitToBcContainer"
 
     Write-AlpacaOutput "Importing Test Toolkit to BC Container not necessary for COSMO Alpaca container"
 }
 finally {
-    Write-AlpacaGroupEnd
+    Write-AlpacaGroupEnd "COSMO Alpaca - ImportTestToolkitToBcContainer"
 }
 
 if ($AlGoImportTestToolkitToBcContainer) {

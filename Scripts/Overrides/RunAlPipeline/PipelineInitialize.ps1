@@ -10,7 +10,7 @@ param(
 Import-Module (Join-Path $ScriptsPath "Modules/Alpaca.psd1") -Scope Global -DisableNameChecking
 
 try {
-    Write-AlpacaGroupStart "PipelineInitialize"
+    Write-AlpacaGroupStart "COSMO Alpaca - PipelineInitialize"
 
     # Collect informations
 
@@ -115,5 +115,5 @@ try {
     Write-AlpacaGroupEnd
 }
 finally {
-    Write-AlpacaGroupEnd
+    Write-AlpacaGroupEnd "COSMO Alpaca - PipelineInitialize"
 }
