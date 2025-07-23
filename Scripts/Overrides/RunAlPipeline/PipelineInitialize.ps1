@@ -65,23 +65,26 @@ Get-AlpacaDependencyApps -packagesFolder $packagesFolder -token $env:_token
 $overridesPath = Join-Path $ScriptsPath "Overrides/RunAlPipeline"
 
 Write-Host "Loading Alpaca overrides from $(Resolve-Path $overridesPath -Relative)"
-Get-ChildItem -Path $overridesPath -File -Filter "*.ps1" -Exclude "PipelineInitialize.*" | ForEach-Object {
-    $scriptPath = $_.FullName
-    $scriptName = $_.BaseName
 
-    Write-Host "Loading Alpaca override for '$scriptName' from '$(Resolve-Path $scriptPath -Relative)'"
-    $scriptBlock = Get-Command $scriptPath | Select-Object -ExpandProperty ScriptBlock
+Get-Item -Path $overridesPath | 
+    Get-ChildItem -Path $overridesPath -File -Filter "*.ps1" -Exclude "PipelineInitialize.*" | 
+    ForEach-Object {
+        $scriptPath = $_.FullName
+        $scriptName = $_.BaseName
 
-    Write-Host "Getting existing override for '$scriptName'"
-    $existingScriptBlock = Get-Variable -Name $scriptName -ValueOnly -Scope 1 -ErrorAction Ignore
-    if ($existingScriptBlock) {
-        Write-Host -ForegroundColor Yellow "Existing '$scriptName' override"; 
-        Write-Host $existingScriptBlock.ToString()
+        Write-Host "Loading Alpaca override for '$scriptName' from '$(Resolve-Path $scriptPath -Relative)'"
+        $scriptBlock = Get-Command $scriptPath | Select-Object -ExpandProperty ScriptBlock
 
-        Write-Host "Setting parent 'AlGo$ScriptName' to existing override"
-        Set-Variable -Name "AlGo$scriptName" -Value $existingScriptBlock -Scope 1
+        Write-Host "Getting existing override for '$scriptName'"
+        $existingScriptBlock = Get-Variable -Name $scriptName -ValueOnly -Scope 1 -ErrorAction Ignore
+        if ($existingScriptBlock) {
+            Write-Host -ForegroundColor Yellow "Existing '$scriptName' override"; 
+            Write-Host $existingScriptBlock.ToString()
+
+            Write-Host "Setting parent 'AlGo$ScriptName' to existing override"
+            Set-Variable -Name "AlGo$scriptName" -Value $existingScriptBlock -Scope 1
+        }
+
+        Write-Host "Setting parent '$scriptName' to Alpaca override"
+        Set-Variable -Name $scriptName -Value $scriptBlock -Scope 1
     }
-
-    Write-Host "Setting parent '$scriptName' to Alpaca override"
-    Set-Variable -Name $scriptName -Value $scriptBlock -Scope 1
-}
