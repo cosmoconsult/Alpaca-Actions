@@ -66,7 +66,7 @@ function Write-AlpacaNotice {
     )
 
     if ($Annotation) {
-        Write-AlpacaAnnotation -Message $Message -Annotation "Notice"
+        Write-AlpacaAnnotation -Message $Message -Annotation "Notice" -Color "White"
     } else {
         Write-AlpacaOutput -Message $Message -Color "White"
     }
@@ -81,7 +81,7 @@ function Write-AlpacaWarning {
     )
 
     if ($Annotation) {
-        Write-AlpacaAnnotation -Message $Message -Annotation "Warning"
+        Write-AlpacaAnnotation -Message $Message -Annotation "Warning" -Color "Yellow"
     } else {
         Write-AlpacaOutput -Message $Message -Color "Yellow"
     }
@@ -96,7 +96,7 @@ function Write-AlpacaError {
     )
 
     if ($Annotation) {
-        Write-AlpacaAnnotation -Message $Message -Annotation "Error"
+        Write-AlpacaAnnotation -Message $Message -Annotation "Error" -Color "Red"
     } else {
         Write-AlpacaOutput -Message $Message -Color "Red"
     }
@@ -111,7 +111,7 @@ function Write-AlpacaDebug {
     )
 
     if ($Annotation) {
-        Write-AlpacaAnnotation -Message $Message -Annotation "Debug"
+        Write-AlpacaAnnotation -Message $Message -Annotation "Debug" -Color "Blue"
     } else {
         Write-AlpacaOutput -Message $Message -Color "Blue"
     }
