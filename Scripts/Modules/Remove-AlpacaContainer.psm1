@@ -11,7 +11,7 @@ function Remove-AlpacaContainer {
     $repository = $repository.replace($owner, "")
     $repository = $repository.replace("/", "")
 
-    Write-Host "Deleting Container '$($Container.Id)' of project '$($Container.Project)'"
+    Write-AlpacaOutput "Deleting Container '$($Container.Id)' of project '$($Container.Project)'"
 
     $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
 
@@ -22,6 +22,6 @@ function Remove-AlpacaContainer {
     
     Invoke-RestMethod $apiUrl -Method 'DELETE' -Headers $headers -AllowInsecureRedirect | Out-Null
 
-    Write-Host "Deleted Container '$($Container.Id)'"
+    Write-AlpacaOutput "Deleted Container '$($Container.Id)'"
 }
 Export-ModuleMember -Function Remove-AlpacaContainer

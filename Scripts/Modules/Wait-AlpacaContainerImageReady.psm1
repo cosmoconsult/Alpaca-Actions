@@ -7,7 +7,7 @@ function Wait-AlpacaContainerImageReady {
         [string] $Token
     )
     process {
-        Write-Host ("[info]Checking status of service: {0}" -f $ContainerName)
+        Write-AlpacaOutput ("[info]Checking status of service: {0}" -f $ContainerName)
 
         $SleepSeconds = 60
         $SleepSecondsPending = 10
@@ -26,7 +26,7 @@ function Wait-AlpacaContainerImageReady {
 
         $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "service" -Ressource $ContainerName -RouteSuffix "status" -QueryParams $QueryParams
 
-        Write-Host "Get status from $apiUrl"
+        Write-AlpacaOutput "Get status from $apiUrl"
 
         $time = New-TimeSpan -Seconds ($TimeoutInMinutes * 60)
         $stoptime = (Get-Date).Add($time)
@@ -39,8 +39,8 @@ function Wait-AlpacaContainerImageReady {
                 return 
             }
             $currentStatus = $serviceResult.statusCode
-            Write-Host "[info] Response: $serviceResult"
-            Write-Host ("[info] Status is: {0}" -f $currentStatus)
+            Write-AlpacaOutput "[info] Response: $serviceResult"
+            Write-AlpacaOutput ("[info] Status is: {0}" -f $currentStatus)
             $CurrentSleepSeconds = $SleepSeconds
             if($currentStatus -in @("Unknown", "Pending")) {
                 $CurrentSleepSeconds = $SleepSecondsPending
@@ -49,8 +49,8 @@ function Wait-AlpacaContainerImageReady {
             if (!$serviceResult.imageBuilding){
                 $CurrentWaitMessage = 'Waiting for service to start. Going to sleep for {0} seconds.'
             }
-            Write-Host ("Attempt {0}: {1}" -f $attemps, $($CurrentWaitMessage -f $CurrentSleepSeconds))
-            Write-Host
+            Write-AlpacaOutput ("Attempt {0}: {1}" -f $attemps, $($CurrentWaitMessage -f $CurrentSleepSeconds))
+            Write-AlpacaOutput
             if ($currentStatus -notin $ContainerStatusCode) {
                 switch ($currentStatus) {
                     "Error" { 
@@ -70,7 +70,7 @@ function Wait-AlpacaContainerImageReady {
                 return
             }
         } until ($currentStatus -in $ContainerStatusCode)
-        Write-Host "##[info] Reached desired status: $currentStatus"
+        Write-AlpacaOutput "##[info] Reached desired status: $currentStatus"
         $success= $true
     }
 
@@ -78,7 +78,7 @@ function Wait-AlpacaContainerImageReady {
         if(! $success) {
             throw "Error during image build"
         } else {
-            Write-Host "Task Completed."
+            Write-AlpacaOutput "Task Completed."
         }
     }
 

@@ -17,13 +17,16 @@ function Publish-AlpacaBcApp {
     
     $tries=0
     $maxtries=5
-    $appName = [System.IO.Path]::GetFileName($Path)    
-    Write-Host "::group::Publish app $appName"
+    $appName = [System.IO.Path]::GetFileName($Path)
+
+    Write-AlpacaGroupStart "Publish app $appName"
+    
     while (!$success -and $tries -lt $maxTries)
     {
         if ($tries -gt 0) {
-            Write-Host "::group::Publish attempt $($tries + 1) / $maxtries"
+            Write-AlpacaGroupStart "Publish attempt $($tries + 1) / $maxtries"
         }
+
         $handler = New-Object System.Net.Http.HttpClientHandler
         $HttpClient = [System.Net.Http.HttpClient]::new($handler)
         $pair = "$($ContainerUser):$ContainerPassword"
@@ -50,10 +53,10 @@ function Publish-AlpacaBcApp {
             $fileContent = [System.Net.Http.StreamContent]::new($FileStream)
             $fileContent.Headers.ContentDisposition = $fileHeader
             $multipartContent.Add($fileContent)
-            Write-Host "Publishing $appName to $devServerUrl"
+            Write-AlpacaOutput "Publishing $appName to $devServerUrl"
             $result = $HttpClient.PostAsync($devServerUrl, $multipartContent).GetAwaiter().GetResult()
             $status = $result.StatusCode
-            Write-Host "Returned $status from $devServerUrl"
+            Write-AlpacaOutput "Returned $status from $devServerUrl"
             if (!$result.IsSuccessStatusCode) {
                 $message = "Status Code $($result.StatusCode) : $($result.ReasonPhrase)"
                 try {
@@ -82,13 +85,14 @@ function Publish-AlpacaBcApp {
             }
             else {
                 Write-AlpacaError $errorMessage -Annotation $false
-                Write-Host "Failed to publish app, retry after 15 sec"
+                Write-AlpacaOutput "Failed to publish app, retry after 15 sec"
                 Start-Sleep 15
             }
         }
         finally {
             $FileStream.Close()
-            Write-Host "::endgroup::"
+
+            Write-AlpacaGroupEnd
         }
     }
 }

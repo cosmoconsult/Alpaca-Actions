@@ -40,7 +40,7 @@ function Wait-AlpacaContainerReady {
             $takenLines = 0
 
             if ($InitialSleepSeconds) {
-                Write-Host "Wait for container connection ($InitialSleepSeconds sec)"
+                Write-AlpacaOutput "Wait for container connection ($InitialSleepSeconds sec)"
                 Start-Sleep -Seconds $InitialSleepSeconds
             }
 
@@ -82,7 +82,7 @@ function Wait-AlpacaContainerReady {
                 $indentation = 0
                 foreach ($line in ($content | Select-Object -Skip $takenLines -First ($content.Length - 1))) {
                     if (! [string]::IsNullOrWhiteSpace($line)) {
-                        Write-Host (" " * $indentation * 2) -NoNewline
+                        Write-AlpacaOutput (" " * $indentation * 2) -NoNewline
                     }
                     
                     if ($errorRegex -and ($line -match $errorRegex)) {
@@ -95,20 +95,20 @@ function Wait-AlpacaContainerReady {
                         $warning = $true
                     }
                     elseif ($readyRegex -and ($line -match $readyRegex)) {
-                        Write-Host "$($line)"
+                        Write-AlpacaOutput "$($line)"
                         $waitForContainer = $false
                     }
                     elseif ($groupStartRegex -and ($line -match $groupStartRegex)) {
-                        Write-Host "$($line -replace $groupStartRegex, '')"
+                        Write-AlpacaOutput "> $($line -replace $groupStartRegex, '')"
                         $indentation += 1
                     }
                     elseif ($groupEndRegex -and ($line -match $groupEndRegex)) {
-                        Write-Host "$($line -replace $groupEndRegex, '')"
+                        Write-AlpacaOutput "$($line -replace $groupEndRegex, '')"
                         $indentation = [Math]::Max($indentation - 1, 0)
                     }
                     elseif (! [string]::IsNullOrWhiteSpace($line)) {
                         #Avoid Empty lines in logfile
-                        Write-Host "$($line)"
+                        Write-AlpacaOutput "$($line)"
                     }
                 }
                 $takenLines = $content.Length - 1
@@ -117,7 +117,7 @@ function Wait-AlpacaContainerReady {
                     Start-Sleep -Seconds $SleepSeconds
                 }
                 elseif ($takenLines -lt $content.Length) {
-                    Write-Host "$($content | Select-Object -Last 1)"
+                    Write-AlpacaOutput "$($content | Select-Object -Last 1)"
                 }
             }
 
@@ -139,7 +139,7 @@ function Wait-AlpacaContainerReady {
             Write-AlpacaWarning "Container started with warnings"
         }
         else {
-            Write-Host "Container is ready."
+            Write-AlpacaOutput "Container is ready."
         }
     }
 }

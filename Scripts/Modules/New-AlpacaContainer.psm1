@@ -17,7 +17,7 @@ function New-AlpacaContainer {
         $branch = $env:GITHUB_REF_NAME
     }
 
-    Write-Host "Creating container for project '$Project' of '$owner/$repository' on ref '$branch'"
+    Write-AlpacaOutput "Creating container for project '$Project' of '$owner/$repository' on ref '$branch'"
 
     $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
     $headers.add("Content-Type", "application/json")
@@ -57,7 +57,7 @@ function New-AlpacaContainer {
         Url = $response.webUrl
     }
     
-    Write-Host "Created container '$($container.Id)'"
+    Write-AlpacaOutput "Created container '$($container.Id)'"
 
     return $container
 }

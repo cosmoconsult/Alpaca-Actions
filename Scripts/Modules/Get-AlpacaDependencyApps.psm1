@@ -17,7 +17,7 @@ function Get-AlpacaDependencyApps {
     }
     $project = $env:ALGO_PROJECT
 
-    Write-Host "Get container artifacts for $owner/$repository and ref $branch (project: $project)"
+    Write-AlpacaOutput "Get container artifacts for $owner/$repository and ref $branch (project: $project)"
 
     $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
     $headers.add("Content-Type", "application/json")
@@ -51,26 +51,26 @@ function Get-AlpacaDependencyApps {
     foreach ($artifact in $artifacts) {
         if ($artifact.target -eq 'App') {
             if ($artifact.type -eq 'Url') {
-                Write-Host "::group::Downloading $($artifact.name) from $($artifact.url)"
+                Write-AlpacaGroupStart "Downloading $($artifact.name) from $($artifact.url)"
                 
                 $tempArchive = "$([System.IO.Path]::GetTempFileName()).zip"
                 $tempFolder = ([System.IO.Path]::GetRandomFileName())
                 Invoke-WebRequest -Uri $artifact.url -OutFile $tempArchive
                 Expand-Archive -Path $tempArchive -DestinationPath $tempFolder -Force
 
-                Write-Host "Extracted files:"
+                Write-AlpacaOutput "Extracted files:"
                 
                 Get-ChildItem -Path $tempFolder -Recurse -File | ForEach-Object {
-                    Write-Host "- $($_.FullName)"
+                    Write-AlpacaOutput "- $($_.FullName)"
 
                     # Move file to PackagesFolder
                     $destinationPath = Join-Path $PackagesFolder $_.Name
                     if (-not (Test-Path $destinationPath)) {
-                        Write-Host "  Moving to PackagesFolder..."
+                        Write-AlpacaOutput "  Moving to PackagesFolder..."
                         Move-Item -Path $_.FullName -Destination $destinationPath -Force
                     }
                     else {
-                        Write-Host "  Ignoring... file already exists in PackagesFolder"
+                        Write-AlpacaOutput "  Ignoring... file already exists in PackagesFolder"
                     }
                 }
 
@@ -81,20 +81,21 @@ function Get-AlpacaDependencyApps {
                 if (Test-Path $tempFolder) {
                     Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue
                 }
-                Write-Host "::endgroup::"
+
+                Write-AlpacaGroupEnd
             }
             else {
-                Write-Host "NuGet handled by AL-Go $($artifact.name)"
+                Write-AlpacaOutput "NuGet handled by AL-Go $($artifact.name)"
             }
         }
     }
 
-    Write-Host "::group::Files in PackagesFolder $PackagesFolder"
+    Write-AlpacaGroupStart "Files in PackagesFolder $PackagesFolder"
     $files = Get-ChildItem -Path $PackagesFolder -File
     foreach ($file in $files) {
-        Write-Host "- $($file.Name)"
+        Write-AlpacaOutput "- $($file.Name)"
     }
-    Write-Host "::endgroup::"
+    Write-AlpacaGroupEnd
 }
 
 Export-ModuleMember -Function Get-AlpacaDependencyApps

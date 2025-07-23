@@ -1,6 +1,6 @@
 
 # Colors
-$colorCodes = @{
+$script:colorCodes = @{
     None = '0'
     Red = '31'
     Green = '32'
@@ -12,13 +12,17 @@ $colorCodes = @{
 }
 
 # Annotations
-$annotationCommands = @{
+$script:annotationCommands = @{
     Notice = '::notice::'
     Warning = '::warning::'
     Error = '::error::'
     Debug = '::debug::'
 }
-$annotationLineBreak = '%0A'
+$script:annotationLineBreak = '%0A'
+
+# Groups
+$script:groupIndentation = "  "
+$script:groupLevel = 0
 
 function Write-AlpacaOutput {
     Param(
@@ -29,9 +33,14 @@ function Write-AlpacaOutput {
         [string] $Color = 'None'
     )
 
+    $groupPrefix = $script:groupIndentation * $script:groupLevel;
+
     $Message -split '\r?\n' | 
-        ForEach-Object { 
-            Write-Host "`e[$($colorCodes[$Color])m$_`e[0m"
+        ForEach-Object {
+            Write-Host "$($groupPrefix)" -NoNewline
+            Write-Host "`e[$($script:colorCodes[$Color])m" -NoNewLine
+            Write-Host "$_" -NoNewline
+            Write-Host "`e[0m"
         }
 }
 Export-ModuleMember -Function Write-AlpacaOutput
@@ -45,7 +54,9 @@ function Write-AlpacaAnnotation {
         [string] $Annotation = 'Notice'
     )
 
-    Write-Host "$($annotationCommands[$Annotation])$($Message -replace '\r?\n', $annotationLineBreak)"
+    $groupPrefix = $script:groupIndentation * $script:groupLevel;
+
+    Write-Host "$($groupPrefix)$($script:annotationCommands[$Annotation])$($Message -replace '\r?\n', $script:annotationLineBreak)"
 }
 Export-ModuleMember -Function Write-AlpacaAnnotation
 
@@ -108,3 +119,22 @@ function Write-AlpacaDebug {
     }
 }
 Export-ModuleMember -Function Write-AlpacaDebug
+
+function Write-AlpacaGroupStart {
+    Param(
+        [Parameter(Mandatory = $true)]
+        [string] $Message
+    )
+
+    Write-AlpacaOutput -Message "==== COSMO Alpaca - Group Start: $Message ====" -Color "Green"
+
+    $script:groupLevel += 1
+}
+Export-ModuleMember -Function Write-AlpacaGroupStart
+
+function Write-AlpacaGroupEnd {
+    $script:groupLevel = [Math]::Max($script:groupLevel - 1, 0)
+
+    Write-AlpacaOutput -Message "==== COSMO Alpaca - Group End ====" -Color "Green"
+}
+Export-ModuleMember -Function Write-AlpacaGroupEnd
