@@ -23,7 +23,7 @@ runs:
         _token: ${{ inputs.token }}
         _containersJson: ${{ inputs.containersJson }}
       run: |
-        ${{ github.action_path }}/RemoveContainers/RemoveContainers.ps1 -Token $env:_token -ContainersJson $env:_containersJson
+        ${{ github.action_path }}/RemoveContainers.ps1 -Token $env:_token -ContainersJson $env:_containersJson
 branding:
   icon: terminal
   color: blue
