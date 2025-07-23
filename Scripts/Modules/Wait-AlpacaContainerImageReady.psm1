@@ -50,7 +50,7 @@ function Wait-AlpacaContainerImageReady {
                 $CurrentWaitMessage = 'Waiting for service to start. Going to sleep for {0} seconds.'
             }
             Write-AlpacaOutput ("Attempt {0}: {1}" -f $attemps, $($CurrentWaitMessage -f $CurrentSleepSeconds))
-            Write-AlpacaOutput
+            Write-AlpacaOutput ""
             if ($currentStatus -notin $ContainerStatusCode) {
                 switch ($currentStatus) {
                     "Error" { 
