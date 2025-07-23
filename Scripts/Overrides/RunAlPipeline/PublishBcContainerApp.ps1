@@ -34,12 +34,12 @@ try {
     }
 
     Write-AlpacaGroupStart "Wait for image to be ready"
-    if ($env:ALPACA_IMAGE_READY) {
-        Write-AlpacaOutput "ALPACA_IMAGE_READY is already set to '$env:ALPACA_IMAGE_READY'. Skipping wait."
+    if ($env:ALPACA_CONTAINER_IMAGE_READY) {
+        Write-AlpacaOutput "ALPACA_CONTAINER_IMAGE_READY is already set to '$env:ALPACA_CONTAINER_IMAGE_READY'. Skipping wait."
     } else {
-        Wait-AlpacaImageReady -token $env:_token -containerName $env:ALPACA_CONTAINER_ID
-        Write-AlpacaOutput "Setting ALPACA_IMAGE_READY to '$true'"
-        $env:ALPACA_IMAGE_READY = $true
+        Wait-AlpacaContainerImageReady -Token $env:_token -ContainerName $env:ALPACA_CONTAINER_ID
+        Write-AlpacaOutput "Setting ALPACA_CONTAINER_IMAGE_READY to '$true'"
+        $env:ALPACA_CONTAINER_IMAGE_READY = $true
     }
     Write-AlpacaGroupEnd
 
@@ -47,7 +47,7 @@ try {
     if ($env:ALPACA_CONTAINER_READY) {
         Write-AlpacaOutput "ALPACA_CONTAINER_READY is already set to '$env:ALPACA_CONTAINER_READY'. Skipping wait."
     } else {
-        Wait-AlpacaContainerReady -token $env:_token -containerName $env:ALPACA_CONTAINER_ID
+        Wait-AlpacaContainerReady -Token $env:_token -ContainerName $env:ALPACA_CONTAINER_ID
         Write-AlpacaOutput "Setting ALPACA_CONTAINER_READY to '$true'"
         $env:ALPACA_CONTAINER_READY = $true
     }
@@ -56,10 +56,10 @@ try {
     Write-AlpacaOutput "Get password from SecureString"
     $password = ConvertFrom-SecureString -SecureString $parameters.bcAuthContext.Password -AsPlainText
 
-    Publish-AlpacaBcApp -containerUrl $parameters.Environment `
-                        -containerUser $parameters.bcAuthContext.username `
-                        -containerPassword $password `
-                        -path $parameters.appFile
+    Publish-AlpacaBcApp -ContainerUrl $parameters.Environment `
+                        -ContainerUser $parameters.bcAuthContext.username `
+                        -ContainerPassword $password `
+                        -Path $parameters.appFile
 }
 finally {
     Write-AlpacaGroupEnd "COSMO Alpaca - PublishBcContainerApp"

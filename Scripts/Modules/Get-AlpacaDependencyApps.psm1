@@ -15,7 +15,7 @@ function Get-AlpacaDependencyApps {
     if (!$branch) {
         $branch = $env:GITHUB_REF_NAME
     }
-    $project = $env:ALGO_PROJECT
+    $project = $env:_project
 
     Write-AlpacaOutput "Get container artifacts for $owner/$repository and ref $branch (project: $project)"
 

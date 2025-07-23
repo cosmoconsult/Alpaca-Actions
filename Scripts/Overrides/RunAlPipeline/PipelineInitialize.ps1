@@ -43,9 +43,6 @@ try {
 
     Write-AlpacaGroupStart "Update Variables"
 
-    Write-AlpacaOutput "Setting environmental 'ALGO_PROJECT' to '$project'"
-    $env:ALGO_PROJECT = $project
-
     Write-AlpacaOutput "Setting environmental 'ALPACA_BACKEND_URL' to '$backendUrl'"
     $env:ALPACA_BACKEND_URL = $backendUrl
 
