@@ -38,7 +38,7 @@ runs:
         Write-Host "Work: $(Resolve-Path -Path ".")"
         Write-Host "Action: ${{ github.action_path }}"
     - name: run
-      uses: ./../Actions/UpdateSystemFiles
+      uses: cosmoconsult/Alpaca-Actions/Actions/UpdateSystemFiles@${{ github.action_ref }}
       with:
         shell: ${{ inputs.shell }}
         action: ${{ inputs.actor }}
