@@ -33,16 +33,15 @@ runs:
   using: composite
   steps:
     - name: run
-      shell: ${{ inputs.shell }}
-      env:
-        _actor: ${{ inputs.actor }}
-        _token: ${{ inputs.token }}
-        _templateUrl: ${{ inputs.templateUrl }}
-        _downloadLatest: ${{ inputs.downloadLatest }}
-        _updateBranch: ${{ inputs.updateBranch }}
-        _directCommit: ${{ inputs.directCommit }}
-      run: |
-        ${{ github.action_path }}/UpdateAlpacaSystemFiles.ps1 -actor $env:_actor -token $env:_token -templateUrl $env:_templateUrl -downloadLatest ($env:_downloadLatest -eq 'true') -updateBranch $env:_updateBranch -directCommit ($env:_directCommit -eq 'true')
+      uses: ./Actions/RemoveContainers
+      with:
+        shell: ${{ inputs.shell }}
+        action: ${{ inputs.actor }}
+        token: ${{ inputs.token }}
+        templateUrl: ${{ inputs.templateUrl }}
+        downloadLatest: ${{ inputs.downloadLatest }}
+        updateBranch: ${{ inputs.updateBranch }}
+        directCommit: ${{ inputs.directCommit }}
 branding:
   icon: terminal
   color: blue
