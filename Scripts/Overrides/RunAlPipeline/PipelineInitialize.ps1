@@ -94,19 +94,20 @@ Get-Item -Path $overridesPath |
         Write-AlpacaOutput "Loading Alpaca override for '$scriptName' from '$(Resolve-Path $scriptPath -Relative)'"
         $scriptBlock = Get-Command $scriptPath | Select-Object -ExpandProperty ScriptBlock
 
-        Write-AlpacaOutput "Getting existing override for '$scriptName'"
+        Write-AlpacaGroupStart "Getting existing override for '$scriptName'"
         $existingScriptBlock = Get-Variable -Name $scriptName -ValueOnly -Scope 1 -ErrorAction Ignore
         if ($existingScriptBlock) {
-            Write-AlpacaGroupStart "Existing '$scriptName' override"
             Write-AlpacaOutput $existingScriptBlock.ToString()
-            Write-AlpacaGroupEnd
-
-            Write-AlpacaOutput "Setting parent 'AlGo$ScriptName' to existing override"
-            Set-Variable -Name "AlGo$scriptName" -Value $existingScriptBlock -Scope 1
+        } else {
+            Write-AlpacaOutput "None"
         }
+        Write-AlpacaGroupEnd
 
         Write-AlpacaOutput "Setting parent '$scriptName' to Alpaca override"
         Set-Variable -Name $scriptName -Value $scriptBlock -Scope 1
+
+        Write-AlpacaOutput "Setting parent 'AlGo$ScriptName' to existing override"
+        Set-Variable -Name "AlGo$scriptName" -Value $existingScriptBlock -Scope 1
     }
 
 Write-AlpacaGroupEnd
