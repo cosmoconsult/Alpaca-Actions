@@ -34,7 +34,7 @@ if ($parameters.appFile.GetType().BaseType.Name -eq 'Array') {
 }
 
 if (! $skip) {
-    Write-AlpacaGroupStart "Waiting for image to be ready"
+    Write-AlpacaGroupStart "Wait for image to be ready"
     if ($env:ALPACA_CONTAINER_IMAGE_READY) {
         Write-AlpacaOutput "ALPACA_CONTAINER_IMAGE_READY is already set to '$env:ALPACA_CONTAINER_IMAGE_READY'. Skipping wait."
     } else {
@@ -44,7 +44,7 @@ if (! $skip) {
     }
     Write-AlpacaGroupEnd
 
-    Write-AlpacaGroupStart "Waiting for container start"
+    Write-AlpacaGroupStart "Wait for container start"
     if ($env:ALPACA_CONTAINER_READY) {
         Write-AlpacaOutput "ALPACA_CONTAINER_READY is already set to '$env:ALPACA_CONTAINER_READY'. Skipping wait."
     } else {

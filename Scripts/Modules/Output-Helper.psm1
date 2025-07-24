@@ -12,34 +12,58 @@ $script:colorCodes = @{
 }
 
 # Annotations
-$script:annotationCommands = @{
+$script:annotationColors = @{
+    Notice = 'White'
+    Warning = 'Yellow'
+    Error = 'Red'
+    Debug = 'Blue'
+}
+$script:annotationGitHubCommands = @{
     Notice = '::notice::'
     Warning = '::warning::'
     Error = '::error::'
     Debug = '::debug::'
 }
-$script:annotationLineBreak = '%0A'
+$script:annotationGitHubLineBreak = '%0A'
 
 # Groups
 $script:groupIndentation = "  "
 $script:groupLevel = 0
 
+function Format-AlpacaMessage {
+    Param(
+        [string] $Message = "",
+        [ValidateSet( 'None', 'Red', 'Green', 'Yellow', 'Blue', 'Magenta', 'Cyan', 'White' )]
+        [string] $Color = 'None',
+        [string] $LinePrefix = "",
+        [string] $LineBreak = "`n"
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Message)) {
+        return $Message
+    }
+
+    $messageLines = $Message -split '\r?\n'
+    $formattedMessageLines = $messageLines |
+        ForEach-Object { "`e[$($script:colorCodes[$Color])m$($LinePrefix)$($_)`e[0m" }
+    $formattedMessage = $formattedMessageLines -join $LineBreak
+
+    return $formattedMessage
+}
+Export-ModuleMember -Function Format-AlpacaMessage
+
 function Write-AlpacaOutput {
     Param(
         [string] $Message = "",
-        [string] $Command = "",
-        [string] $LineBreak = "`n",
         [ValidateSet( 'None', 'Red', 'Green', 'Yellow', 'Blue', 'Magenta', 'Cyan', 'White' )]
         [string] $Color = 'None'
     )
 
-    $groupPrefix = $script:groupIndentation * $script:groupLevel;
+    $linePrefix = $script:groupIndentation * $script:groupLevel;
 
-    $formattedMessageLines = $Message -split '\r?\n' | 
-        ForEach-Object { "`e[$($script:colorCodes[$Color])m$($groupPrefix)$($_)`e[0m" }
-    $formattedMessage = $formattedMessageLines -join $LineBreak
+    $formattedMessage = Format-AlpacaMessage -Message $Message -Color $Color -LinePrefix $linePrefix
 
-    Write-Host "$($Command)$($formattedMessage)"
+    Write-Host $formattedMessage
 }
 Export-ModuleMember -Function Write-AlpacaOutput
 
@@ -49,14 +73,18 @@ function Write-AlpacaAnnotation {
         [string] $Message,
         [ValidateSet('Notice', 'Warning', 'Error', 'Debug')]
         [string] $Annotation = 'Notice',
-        [ValidateSet( 'None', 'Red', 'Green', 'Yellow', 'Blue', 'Magenta', 'Cyan', 'White' )]
-        [string] $Color = 'None'
+        [switch] $WithoutGitHubAnnotation
     )
+    $color = $script:annotationColors[$Annotation]
 
-    Write-AlpacaOutput -Message $Message `
-                       -Command $script:annotationCommands[$Annotation] `
-                       -LineBreak $script:annotationLineBreak `
-                       -Color $Color
+    if ($WithoutGitHubAnnotation) {
+        $formattedMessage = Format-AlpacaMessage -Message "$($Annotation): $($Message)" -Color $color
+    } else {
+        $formattedMessage = Format-AlpacaMessage -Message $Message -Color $color -LineBreak $script:annotationGitHubLineBreak
+        $formattedMessage = "$($script:annotationGitHubCommands[$Annotation])$formattedMessage"
+    }
+
+    Write-Host $formattedMessage
 }
 Export-ModuleMember -Function Write-AlpacaAnnotation
 
@@ -64,14 +92,10 @@ function Write-AlpacaNotice {
     Param(
         [Parameter(Mandatory = $true)]
         [string] $Message,
-        [bool] $Annotation = $true
+        [switch] $WithoutGitHubAnnotation
     )
 
-    if ($Annotation) {
-        Write-AlpacaAnnotation -Message $Message -Annotation "Notice" -Color "White"
-    } else {
-        Write-AlpacaOutput -Message $Message -Color "White"
-    }
+    Write-AlpacaAnnotation -Message $Message -Annotation "Notice" -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
 }
 Export-ModuleMember -Function Write-AlpacaNotice
 
@@ -79,14 +103,10 @@ function Write-AlpacaWarning {
     Param(
         [Parameter(Mandatory = $true)]
         [string] $Message,
-        [bool] $Annotation = $true
+        [switch] $WithoutGitHubAnnotation
     )
 
-    if ($Annotation) {
-        Write-AlpacaAnnotation -Message $Message -Annotation "Warning" -Color "Yellow"
-    } else {
-        Write-AlpacaOutput -Message $Message -Color "Yellow"
-    }
+    Write-AlpacaAnnotation -Message $Message -Annotation "Warning" -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
 }
 Export-ModuleMember -Function Write-AlpacaWarning
 
@@ -94,14 +114,10 @@ function Write-AlpacaError {
     Param(
         [Parameter(Mandatory = $true)]
         [string] $Message,
-        [bool] $Annotation = $true
+        [switch] $WithoutGitHubAnnotation
     )
 
-    if ($Annotation) {
-        Write-AlpacaAnnotation -Message $Message -Annotation "Error" -Color "Red"
-    } else {
-        Write-AlpacaOutput -Message $Message -Color "Red"
-    }
+    Write-AlpacaAnnotation -Message $Message -Annotation "Error" -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
 }
 Export-ModuleMember -Function Write-AlpacaError
 
@@ -109,14 +125,10 @@ function Write-AlpacaDebug {
     Param(
         [Parameter(Mandatory = $true)]
         [string] $Message,
-        [bool] $Annotation = $true
+        [switch] $WithoutGitHubAnnotation
     )
 
-    if ($Annotation) {
-        Write-AlpacaAnnotation -Message $Message -Annotation "Debug" -Color "Blue"
-    } else {
-        Write-AlpacaOutput -Message $Message -Color "Blue"
-    }
+    Write-AlpacaAnnotation -Message $Message -Annotation "Debug" -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
 }
 Export-ModuleMember -Function Write-AlpacaDebug
 
@@ -124,11 +136,11 @@ function Write-AlpacaGroupStart {
     Param(
         [Parameter(Mandatory = $true)]
         [string] $Message,
-        [switch] $UseCommand
+        [switch] $UseGitHubCommand
     )
 
-    if ($UseCommand) {
-        Write-AlpacaOutput -Message $Message -Command "::group::" 
+    if ($UseGitHubCommand) {
+        Write-Host "::group::$($Message)"
     } else {
         Write-AlpacaOutput -Message "> $Message"
         $script:groupLevel += 1
@@ -139,15 +151,15 @@ Export-ModuleMember -Function Write-AlpacaGroupStart
 function Write-AlpacaGroupEnd {
     Param(
         [string] $Message,
-        [switch] $UseCommand
+        [switch] $UseGitHubCommand
     )
-    if ($UseCommand) {
-        Write-AlpacaOutput -Message $Message -Command "::endgroup::"
+    if ($UseGitHubCommand) {
+        Write-Host "::endgroup::"
     } else {
         $script:groupLevel = [Math]::Max($script:groupLevel - 1, 0)
-        if ($Message) {
-            Write-AlpacaOutput -Message $Message
-        }
+    }
+    if ($Message) {
+        Write-AlpacaOutput -Message $Message
     }
 }
 Export-ModuleMember -Function Write-AlpacaGroupEnd

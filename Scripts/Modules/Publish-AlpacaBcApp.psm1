@@ -84,7 +84,7 @@ function Publish-AlpacaBcApp {
                 throw "Error Publishing App '$appName'"
             }
             else {
-                Write-AlpacaError $errorMessage -Annotation $false
+                Write-AlpacaError $errorMessage -WithoutGitHubAnnotation
                 Write-AlpacaOutput "Failed to publish app, retry after 15 sec"
                 Start-Sleep 15
             }
