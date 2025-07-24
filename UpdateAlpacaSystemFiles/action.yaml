@@ -32,8 +32,13 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: test
+      shell: ${{ inputs.shell }}
+      run: |
+        Write-Host "Work: $(Resolve-Path -Path ".")"
+        Write-Host "Action: ${{ github.action_path }}"
     - name: run
-      uses: ${{ github.action_path }}/../Actions/UpdateSystemFiles
+      uses: ./../Actions/UpdateSystemFiles
       with:
         shell: ${{ inputs.shell }}
         action: ${{ inputs.actor }}

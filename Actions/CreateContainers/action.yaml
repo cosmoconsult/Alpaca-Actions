@@ -31,7 +31,7 @@ runs:
 
     - name: Remove COSMO Alpaca Containers on failure
       if: failure()
-      uses: ${{ github.action_path }}/../RemoveContainers
+      uses: ./RemoveContainers
       with:
         shell: ${{ inputs.shell }}
         token: ${{ inputs.token }}
