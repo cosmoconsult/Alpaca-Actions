@@ -33,7 +33,7 @@ runs:
   using: composite
   steps:
     - name: run
-      uses: ./Actions/RemoveContainers
+      uses: ${{ github.action_path }}/../Actions/UpdateSystemFiles
       with:
         shell: ${{ inputs.shell }}
         action: ${{ inputs.actor }}
