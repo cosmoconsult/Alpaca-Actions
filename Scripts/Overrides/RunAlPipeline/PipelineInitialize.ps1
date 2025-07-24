@@ -15,20 +15,20 @@ Write-AlpacaOutput "Using COSMO Alpaca override"
 
 Write-AlpacaGroupStart "Collect Informations"
 
-Write-AlpacaOutput "Getting AL-Go project from environmental variable"
+Write-AlpacaOutput "Get AL-Go project from environmental variable"
 $project = $env:_project
 
-Write-AlpacaOutput "Getting Alpaca backend url from outputs of initialization job"
+Write-AlpacaOutput "Get Alpaca backend url from outputs of initialization job"
 $backendUrl = $InitializationJob.outputs.backendUrl
 
-Write-AlpacaOutput "Getting Alpaca container information from outputs of create containers job"
+Write-AlpacaOutput "Get Alpaca container information from outputs of create containers job"
 $containers = @("$($CreateContainersJob.outputs.containersJson)" | ConvertFrom-Json)
 $container = $containers | Where-Object { $_.Project -eq $project }
 if (! $container) {
     throw "No Alpaca container information for project '$project' found"
 }
 
-Write-AlpacaOutput "Getting container authentication context from Alpaca container information"
+Write-AlpacaOutput "Get container authentication context from Alpaca container information"
 $containerAuthContext = @{
     username = $container.User
     Password = ConvertTo-SecureString -String $container.Password -AsPlainText
@@ -42,16 +42,16 @@ Write-AlpacaGroupEnd
 
 Write-AlpacaGroupStart "Update Variables"
 
-Write-AlpacaOutput "Setting environmental 'ALPACA_BACKEND_URL' to '$backendUrl'"
+Write-AlpacaOutput "Set environmental variable 'ALPACA_BACKEND_URL' to '$backendUrl'"
 $env:ALPACA_BACKEND_URL = $backendUrl
 
-Write-AlpacaOutput "Setting environmental 'ALPACA_CONTAINER_ID' to '$($container.Id)'"
+Write-AlpacaOutput "Set environmental variable 'ALPACA_CONTAINER_ID' to '$($container.Id)'"
 $env:ALPACA_CONTAINER_ID = $container.Id
 
-Write-AlpacaOutput "Setting parent 'bcAuthContext' to '$([pscustomobject]$containerAuthContext)'"
+Write-AlpacaOutput "Set parent variable 'bcAuthContext' to '$([pscustomobject]$containerAuthContext)'"
 Set-Variable -Name 'bcAuthContext' -value $containerAuthContext -scope 1
 
-Write-AlpacaOutput "Setting parent 'environment' to '$($container.Url)'"
+Write-AlpacaOutput "Set parent variable 'environment' to '$($container.Url)'"
 Set-Variable -Name 'environment' -value $container.Url -scope 1
 
 Write-AlpacaGroupEnd
@@ -83,7 +83,7 @@ Write-AlpacaGroupStart "Load Overrides"
 
 $overridesPath = Join-Path $ScriptsPath "Overrides/RunAlPipeline"
 
-Write-AlpacaOutput "Loading Alpaca overrides from $(Resolve-Path $overridesPath -Relative)"
+Write-AlpacaOutput "Load Alpaca overrides from $(Resolve-Path $overridesPath -Relative)"
 
 Get-Item -Path $overridesPath | 
     Get-ChildItem -Filter "*.ps1" -Exclude "PipelineInitialize.*" -File | 
@@ -91,10 +91,12 @@ Get-Item -Path $overridesPath |
         $scriptPath = $_.FullName
         $scriptName = $_.BaseName
 
-        Write-AlpacaOutput "Loading Alpaca override for '$scriptName' from '$(Resolve-Path $scriptPath -Relative)'"
+        Write-AlpacaGroupStart "Load Alpaca override for '$scriptName'"
+
+        Write-AlpacaOutput "Get Alpaca override from file '$(Resolve-Path $scriptPath -Relative)'"
         $scriptBlock = Get-Command $scriptPath | Select-Object -ExpandProperty ScriptBlock
 
-        Write-AlpacaGroupStart "Getting existing override for '$scriptName'"
+        Write-AlpacaGroupStart "Get existing override from variable '$scriptName'"
         $existingScriptBlock = Get-Variable -Name $scriptName -ValueOnly -Scope 1 -ErrorAction Ignore
         if ($existingScriptBlock) {
             Write-AlpacaOutput $existingScriptBlock.ToString()
@@ -103,11 +105,13 @@ Get-Item -Path $overridesPath |
         }
         Write-AlpacaGroupEnd
 
-        Write-AlpacaOutput "Setting parent '$scriptName' to Alpaca override"
+        Write-AlpacaOutput "Set parent variable '$scriptName' to Alpaca override"
         Set-Variable -Name $scriptName -Value $scriptBlock -Scope 1
 
-        Write-AlpacaOutput "Setting parent 'AlGo$ScriptName' to existing override"
+        Write-AlpacaOutput "Set parent variable 'AlGo$ScriptName' to existing override"
         Set-Variable -Name "AlGo$scriptName" -Value $existingScriptBlock -Scope 1
+
+        Write-AlpacaGroupEnd
     }
 
 Write-AlpacaGroupEnd

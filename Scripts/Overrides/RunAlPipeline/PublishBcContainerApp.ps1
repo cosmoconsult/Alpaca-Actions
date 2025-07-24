@@ -39,7 +39,7 @@ if (! $skip) {
         Write-AlpacaOutput "ALPACA_CONTAINER_IMAGE_READY is already set to '$env:ALPACA_CONTAINER_IMAGE_READY'. Skipping wait."
     } else {
         Wait-AlpacaContainerImageReady -Token $env:_token -ContainerName $env:ALPACA_CONTAINER_ID
-        Write-AlpacaOutput "Setting ALPACA_CONTAINER_IMAGE_READY to '$true'"
+        Write-AlpacaOutput "Set ALPACA_CONTAINER_IMAGE_READY to '$true'"
         $env:ALPACA_CONTAINER_IMAGE_READY = $true
     }
     Write-AlpacaGroupEnd
@@ -49,7 +49,7 @@ if (! $skip) {
         Write-AlpacaOutput "ALPACA_CONTAINER_READY is already set to '$env:ALPACA_CONTAINER_READY'. Skipping wait."
     } else {
         Wait-AlpacaContainerReady -Token $env:_token -ContainerName $env:ALPACA_CONTAINER_ID
-        Write-AlpacaOutput "Setting ALPACA_CONTAINER_READY to '$true'"
+        Write-AlpacaOutput "Set ALPACA_CONTAINER_READY to '$true'"
         $env:ALPACA_CONTAINER_READY = $true
     }
     Write-AlpacaGroupEnd
