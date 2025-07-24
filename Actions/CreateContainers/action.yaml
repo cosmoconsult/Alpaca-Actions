@@ -31,11 +31,12 @@ runs:
 
     - name: Remove COSMO Alpaca Containers on failure
       if: failure()
-      uses: ./RemoveContainers
-      with:
-        shell: ${{ inputs.shell }}
-        token: ${{ inputs.token }}
-        containersJson: ${{ env.ALPACA_CONTAINERS_JSON }}
+      shell: ${{ inputs.shell }}
+      env:
+        _token: ${{ inputs.token }}
+        _containersJson: ${{ env.ALPACA_CONTAINERS_JSON }}
+      run: |
+        ${{ github.action_path }}/../RemoveContainers/RemoveContainers.ps1 -Token $env:_token -ContainersJson $env:_containersJson
 branding:
   icon: terminal
   color: blue

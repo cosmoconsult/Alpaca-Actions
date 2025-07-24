@@ -32,21 +32,17 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: test
-      shell: ${{ inputs.shell }}
-      run: |
-        Write-Host "Work: $(Resolve-Path -Path ".")"
-        Write-Host "Action: ${{ github.action_path }}"
     - name: run
-      uses: cosmoconsult/Alpaca-Actions/Actions/UpdateSystemFiles@${{ github.action_ref }}
-      with:
-        shell: ${{ inputs.shell }}
-        action: ${{ inputs.actor }}
-        token: ${{ inputs.token }}
-        templateUrl: ${{ inputs.templateUrl }}
-        downloadLatest: ${{ inputs.downloadLatest }}
-        updateBranch: ${{ inputs.updateBranch }}
-        directCommit: ${{ inputs.directCommit }}
+      shell: ${{ inputs.shell }}
+      env:
+        _actor: ${{ inputs.actor }}
+        _token: ${{ inputs.token }}
+        _templateUrl: ${{ inputs.templateUrl }}
+        _downloadLatest: ${{ inputs.downloadLatest }}
+        _updateBranch: ${{ inputs.updateBranch }}
+        _directCommit: ${{ inputs.directCommit }}
+      run: |
+        ${{ github.action_path }}/../Actions/UpdateSystemFiles/UpdateSystemFiles.ps1 -Actor $env:_actor -Token $env:_token -TemplateUrl $env:_templateUrl -DownloadLatest ($env:_downloadLatest -eq 'true') -UpdateBranch $env:_updateBranch -DirectCommit ($env:_directCommit -eq 'true')
 branding:
   icon: terminal
   color: blue
