@@ -9,8 +9,6 @@ param(
 
 Import-Module (Join-Path $ScriptsPath "Modules/Alpaca.psd1") -Scope Global -DisableNameChecking
 
-Write-AlpacaOutput "Using COSMO Alpaca override"
-
 # Collect informations
 
 Write-AlpacaGroupStart "Collect Informations"

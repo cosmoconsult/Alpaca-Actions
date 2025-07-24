@@ -2,8 +2,9 @@ Param(
     [Hashtable] $parameters
 ) 
 
-Write-AlpacaOutput "Using COSMO Alpaca override"
-Write-AlpacaOutput "Importing Test Toolkit to BC Container not necessary for COSMO Alpaca container"
+Write-AlpacaOutput "Using Alpaca override"
+
+Write-AlpacaOutput "Importing Test Toolkit to BC Container not necessary for Alpaca container"
 
 if ($AlGoImportTestToolkitToBcContainer) {
     Write-AlpacaOutput "Invoking AL-Go override"
