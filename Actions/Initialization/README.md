@@ -29,5 +29,6 @@ Create a COSMO Alpaca container for each project
 
 | Name | Description |
 | :-- | :-- |
+| backendUrl | COSMO Alpaca Backend URL |
 | scriptsArchiveUrl | Url for downloading an Archive containing the COSMO Alpaca Scripts |
 | scriptsArchiveDirectory | Direcotry inside the Archive that contains the COSMO Alpaca scripts |

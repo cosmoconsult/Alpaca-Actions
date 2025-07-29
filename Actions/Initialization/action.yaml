@@ -7,6 +7,9 @@ inputs:
     required: false
     default: powershell
 outputs:
+  backendUrl:
+    description: COSMO Alpaca Backend URL
+    value: ${{ steps.Initialization.outputs.backendUrl }}
   scriptsArchiveUrl:
     description: COSMO Alpaca Scripts Archive URL
     value: ${{ steps.Initialization.outputs.scriptsArchiveUrl }}
