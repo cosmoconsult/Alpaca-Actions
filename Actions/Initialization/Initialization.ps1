@@ -9,8 +9,6 @@ Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\A
 
 $backendUrl = Get-AlpacaBackendUrl
 Write-AlpacaOutput "Using Backend Url '$backendUrl'"
-Add-Content -encoding UTF8 -Path $env:GITHUB_ENV -Value "ALPACA_BACKEND_URL=$($backendUrl)"
-Add-Content -encoding UTF8 -Path $env:GITHUB_OUTPUT -Value "backendUrl=$($backendUrl)"
 
 $scriptsArchiveUrl = "https://github.com/$($ActionRepo)/archive/refs/heads/$($ActionRef).zip"
 Write-AlpacaOutput "Using Scripts Archive Url '$scriptsArchiveUrl'"
