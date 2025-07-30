@@ -53,7 +53,7 @@ $TemplateUrl = $TemplateUrl -replace "^(https:\/\/)(www\.)(.*)$", '$1$3'
 $repoSettings = ReadSettings -project '' -workflowName '' -userName '' -branchName '' | ConvertTo-HashTable -recurse
 $templateSha = $repoSettings.templateSha
 # If templateUrl has changed, download latest version of the template repository (ignore templateSha)
-if ($repoSettings.templateUrl -ne $env:templateUrl -or $templateSha -eq '') {
+if ($repoSettings.templateUrl -ne $TemplateUrl -or $templateSha -eq '') {
     $DownloadLatest = $true
 }
 
