@@ -26,6 +26,7 @@ function Wait-AlpacaContainerReady {
     process {
         try {
             $success = $true
+            $warning = $false
             # Wait for Read-String & Handle Exceptions
             # - Warnings
             # - Errors

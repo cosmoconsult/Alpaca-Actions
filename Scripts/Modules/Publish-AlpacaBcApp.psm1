@@ -14,10 +14,11 @@ function Publish-AlpacaBcApp {
         [string] $SyncMode='Development',
         [Parameter(Mandatory = $false)]
         [string] $Tenant='default') 
-    
-    $tries=0
-    $maxtries=5
+
+    $tries = 0
+    $maxtries = 5
     $appName = [System.IO.Path]::GetFileName($Path)
+    $success = $false
 
     Write-AlpacaGroupStart "Publish app $appName"
     

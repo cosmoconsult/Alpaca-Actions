@@ -24,7 +24,7 @@ function Wait-AlpacaContainerImageReady {
         $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
         $headers.add("Content-Type","application/json")
 
-        $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "service" -Ressource $ContainerName -RouteSuffix "status" -QueryParams $QueryParams
+        $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "service" -Ressource $ContainerName -RouteSuffix "status"
 
         Write-AlpacaOutput "Get status from $apiUrl"
 

@@ -1,6 +1,6 @@
 # Initialization
 
-Create a COSMO Alpaca container for each project
+Initialize COSMO Alpaca settings
 
 ## INPUT
 
