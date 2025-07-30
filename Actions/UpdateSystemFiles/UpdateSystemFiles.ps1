@@ -1,24 +1,24 @@
 ﻿Param(
     [Parameter(HelpMessage = "The GitHub actor running the action", Mandatory = $false)]
-    [string] $actor,
+    [string] $Actor,
     [Parameter(HelpMessage = "Base64 encoded GhTokenWorkflow secret", Mandatory = $false)]
-    [string] $token,
+    [string] $Token,
     [Parameter(HelpMessage = "URL of the template repository (default is the template repository used to create the repository)", Mandatory = $false)]
-    [string] $templateUrl = "",
+    [string] $TemplateUrl = "",
     [Parameter(HelpMessage = "Set this input to true in order to download latest version of the template repository (else it will reuse the SHA from last update)", Mandatory = $true)]
-    [bool] $downloadLatest,
+    [bool] $DownloadLatest,
     [Parameter(HelpMessage = "Set the branch to update", Mandatory = $false)]
-    [string] $updateBranch,
+    [string] $UpdateBranch,
     [Parameter(HelpMessage = "Direct Commit?", Mandatory = $false)]
-    [bool] $directCommit
+    [bool] $DirectCommit
 )
 
-if (-not $token) {
+if (-not $Token) {
     throw "The GhTokenWorkflow secret is needed. Read https://github.com/microsoft/AL-Go/blob/main/Scenarios/GhTokenWorkflow.md for more information."
 }
 else {
     # token comes from a secret, base 64 encoded
-    $token = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($token))
+    $Token = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($Token))
 }
 
 Write-Host "Download and Import AL-Go Helpers"
@@ -41,40 +41,40 @@ foreach ($file in $helperFiles.Keys) {
 . (Join-Path $PSScriptRoot "AL-Go-Helper.ps1")
 . (Join-Path $PSScriptRoot "CheckForUpdates.HelperFunctions.ps1")
 
-if (-not $templateUrl.Contains('@')) {
-    $templateUrl += "@main"
+if (-not $TemplateUrl.Contains('@')) {
+    $TemplateUrl += "@main"
 }
-if ($templateUrl -notlike "https://*") {
-    $templateUrl = "https://github.com/$templateUrl"
+if ($TemplateUrl -notlike "https://*") {
+    $TemplateUrl = "https://github.com/$TemplateUrl"
 }
 # Remove www part (if exists)
-$templateUrl = $templateUrl -replace "^(https:\/\/)(www\.)(.*)$", '$1$3'
+$TemplateUrl = $TemplateUrl -replace "^(https:\/\/)(www\.)(.*)$", '$1$3'
 
 $repoSettings = ReadSettings -project '' -workflowName '' -userName '' -branchName '' | ConvertTo-HashTable -recurse
 $templateSha = $repoSettings.templateSha
 # If templateUrl has changed, download latest version of the template repository (ignore templateSha)
-if ($repoSettings.templateUrl -ne $env:templateUrl -or $templateSha -eq '') {
-    $downloadLatest = $true
+if ($repoSettings.templateUrl -ne $TemplateUrl -or $templateSha -eq '') {
+    $DownloadLatest = $true
 }
 
-$templateFolder = DownloadTemplateRepository -token $token -templateUrl $templateUrl -templateSha ([ref]$templateSha) -downloadLatest $downloadLatest
+$templateFolder = DownloadTemplateRepository -token $Token -templateUrl $TemplateUrl -templateSha ([ref]$templateSha) -downloadLatest $DownloadLatest
 Write-Host "Template Folder: $templateFolder"
-$templateOwner = $templateUrl.Split('/')[3]
-$templateInfo = "$templateOwner/$($templateUrl.Split('/')[4])"
+$templateOwner = $TemplateUrl.Split('/')[3]
+$templateInfo = "$templateOwner/$($TemplateUrl.Split('/')[4])"
 
 try {
     # If a pull request already exists with the same REF, then exit
-    $branchSHA = RunAndCheck git rev-list -n 1 $updateBranch '--'
-    $commitMessage = "[$($updateBranch)@$($branchSHA.SubString(0,7))] Update COSMO Alpaca System Files from $templateInfo - $($templateSha.SubString(0,7)) [skip ci]"
+    $branchSHA = RunAndCheck git rev-list -n 1 $UpdateBranch '--'
+    $commitMessage = "[$($UpdateBranch)@$($branchSHA.SubString(0,7))] Update COSMO Alpaca System Files from $templateInfo - $($templateSha.SubString(0,7)) [skip ci]"
 
-    $env:GH_TOKEN = $token
-    $existingPullRequest = (gh api --paginate "/repos/$env:GITHUB_REPOSITORY/pulls?base=$updateBranch" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" | ConvertFrom-Json) | Where-Object { $_.title -eq $commitMessage } | Select-Object -First 1
+    $env:GH_TOKEN = $Token
+    $existingPullRequest = (gh api --paginate "/repos/$env:GITHUB_REPOSITORY/pulls?base=$UpdateBranch" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" | ConvertFrom-Json) | Where-Object { $_.title -eq $commitMessage } | Select-Object -First 1
     if ($existingPullRequest) {
         OutputWarning "Pull request already exists for $($commitMessage): $($existingPullRequest.html_url)."
         exit
     }
 
-    $serverUrl, $branch = CloneIntoNewFolder -actor $actor -token $token -updateBranch $updateBranch -DirectCommit $directCommit -newBranchPrefix 'update-cosmo-alpaca-system-files'
+    $serverUrl, $branch = CloneIntoNewFolder -actor $Actor -token $Token -updateBranch $UpdateBranch -DirectCommit $DirectCommit -newBranchPrefix 'update-cosmo-alpaca-system-files'
 
     invoke-git status
 
@@ -117,12 +117,12 @@ try {
         Copy-Item -Path (Join-Path $alpacaSource "*") -Destination $alpacaDest -Recurse -Force -ErrorAction Stop
     }
 
-    if (!(CommitFromNewFolder -serverUrl $serverUrl -commitMessage $commitMessage -branch $branch -headBranch $updateBranch)) {
+    if (!(CommitFromNewFolder -serverUrl $serverUrl -commitMessage $commitMessage -branch $branch -headBranch $UpdateBranch)) {
         OutputNotice -message "No updates available for COSMO Alpaca."
     }
 }
 catch {
-    if ($directCommit) {
+    if ($DirectCommit) {
         throw "Failed to update COSMO Alpaca System Files. Make sure that the personal access token, defined in the secret called GhTokenWorkflow, is not expired and it has permission to update workflows. Read https://github.com/microsoft/AL-Go/blob/main/Scenarios/GhTokenWorkflow.md for more information. (Error was $($_.Exception.Message))"
     }
     else {

@@ -1,4 +1,4 @@
-name: Update Alpaca System Files
+name: Update System Files
 description: This action updates the COSMO Alpaca System Files
 author: COSMO CONSULT
 inputs:
@@ -42,7 +42,7 @@ runs:
         _updateBranch: ${{ inputs.updateBranch }}
         _directCommit: ${{ inputs.directCommit }}
       run: |
-        ${{ github.action_path }}/../Actions/UpdateSystemFiles/UpdateSystemFiles.ps1 -Actor $env:_actor -Token $env:_token -TemplateUrl $env:_templateUrl -DownloadLatest ($env:_downloadLatest -eq 'true') -UpdateBranch $env:_updateBranch -DirectCommit ($env:_directCommit -eq 'true')
+        ${{ github.action_path }}/UpdateSystemFiles.ps1 -Actor $env:_actor -Token $env:_token -TemplateUrl $env:_templateUrl -DownloadLatest ($env:_downloadLatest -eq 'true') -UpdateBranch $env:_updateBranch -DirectCommit ($env:_directCommit -eq 'true')
 branding:
   icon: terminal
   color: blue

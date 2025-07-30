@@ -8,4 +8,11 @@ Please go to https://aka.ms/AL-Go and [COSMO Docs](https://docs.cosmoconsult.com
 
 | Name | Description |
 | :-- | :-- |
-| [Update Alpaca System Files](UpdateAlpacaSystemFiles) | Update COSMO Alpaca system files |
+| [Update Alpaca System Files](UpdateAlpacaSystemFiles) **(Deprecated)** | Update COSMO Alpaca system files |
+
+## Branches
+
+| Name | Description |
+| :-- | :-- |
+| [main](https://github.com/cosmoconsult/Alpaca-Actions/tree/main) | Preview of unreleased changes |
+| vX.Y | Releases |
