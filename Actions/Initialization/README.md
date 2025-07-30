@@ -1,4 +1,4 @@
-# Create Alpaca Containers
+# Initialization
 
 Create a COSMO Alpaca container for each project
 
