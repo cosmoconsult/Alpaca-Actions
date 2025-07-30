@@ -12,7 +12,7 @@ Write-AlpacaOutput "Using Backend Url '$backendUrl'"
 Add-Content -encoding UTF8 -Path $env:GITHUB_ENV -Value "ALPACA_BACKEND_URL=$($backendUrl)"
 Add-Content -encoding UTF8 -Path $env:GITHUB_OUTPUT -Value "backendUrl=$($backendUrl)"
 
-$scriptsArchiveUrl = "https://github.com/$($ActionRepo)/archive/refs/heads/$($ActionRef).zip"
+$scriptsArchiveUrl = "https://github.com/$($ActionRepo)/archive/$($ActionRef).zip"
 Write-AlpacaOutput "Using Scripts Archive Url '$scriptsArchiveUrl'"
 Add-Content -encoding UTF8 -Path $env:GITHUB_ENV -Value "ALPACA_SCRIPTS_ARCHIVE_URL=$($scriptsArchiveUrl)"
 Add-Content -encoding UTF8 -Path $env:GITHUB_OUTPUT -Value "scriptsArchiveUrl=$($scriptsArchiveUrl)"
