@@ -1,10 +1,8 @@
 param(
     [Parameter(Mandatory = $true)]
-    [string] $ScriptsPath,
+    [hashtable] $Jobs,
     [Parameter(Mandatory = $true)]
-    [object] $InitializationJob,
-    [Parameter(Mandatory = $true)]
-    [object] $CreateContainersJob
+    [string] $ScriptsPath
 )
 
 Import-Module (Join-Path $ScriptsPath "Modules/Alpaca.psd1") -Scope Global -DisableNameChecking
@@ -17,10 +15,10 @@ Write-AlpacaOutput "Get AL-Go project from environmental variable"
 $project = $env:_project
 
 Write-AlpacaOutput "Get Alpaca backend url from outputs of initialization job"
-$backendUrl = $InitializationJob.outputs.backendUrl
+$backendUrl = $Jobs.initialization.outputs.backendUrl
 
 Write-AlpacaOutput "Get Alpaca container information from outputs of create containers job"
-$containers = @("$($CreateContainersJob.outputs.containersJson)" | ConvertFrom-Json)
+$containers = @("$($Jobs.createContainers.outputs.containersJson)" | ConvertFrom-Json)
 $container = $containers | Where-Object { $_.Project -eq $project }
 if (! $container) {
     throw "No Alpaca container information for project '$project' found"
