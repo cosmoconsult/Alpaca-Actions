@@ -22,6 +22,7 @@ $skipAppFiles = @();
 $skipAppFileHashs = @();
 foreach ($appFile in $parameters.appFile) {
     $appFile = Resolve-Path -Path $appFile
+    Write-AlpacaOutput "- - $appFile"
     if ($outputAppFiles -contains $appFile) {
         # Publish output apps
         $appType = "build output"
