@@ -8,7 +8,8 @@ $dependenciesFolder = Join-Path "$env:GITHUB_WORKSPACE" ".dependencies"
 $dependencyFileHashs = 
     $installApps + $installTestApps | 
         Where-Object { $_ -like "$($dependenciesFolder.TrimEnd('\'))\*" } | 
-        ForEach-Object { Get-FileHash -Path $_ }
+        ForEach-Object { Get-FileHash -Path $_ } |
+        Select-Object -ExpandProperty Hash
 
 Write-AlpacaOutput "Apps:"
 
@@ -16,15 +17,15 @@ $appFiles = @();
 $skipAppFiles = @();
 foreach ($appFile in $parameters.appFile) {
     $appFile = Resolve-Path -Path $appFile
-    if ($appFile -like "$($outputFolder.TrimEnd('\'))\*") {
+    if ($appFile -in $apps + $testApps + $bcptTestApps) {
         # Publish output apps
         Write-AlpacaOutput "- $appFile (build output)"
         $appFiles += $appFile
-    } elseif ($previousApps -contains $appFile) {
+    } elseif ($appFile -in $previousApps) {
         # Publish previous apps
         Write-AlpacaOutput "- $appFile (previous release)"
         $appFiles += $appFile
-    } elseif ($dependencyFileHashs -contains (Get-FileHash -Path $appFile)) {
+    } elseif ((Get-FileHash -Path $appFile).Hash -in $dependencyFileHashs) {
         # Publish dependency apps
         Write-AlpacaOutput "- $appFile (project dependency)"
         $appFiles += $appFile
