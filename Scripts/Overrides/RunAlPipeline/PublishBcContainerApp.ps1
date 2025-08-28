@@ -4,36 +4,42 @@ Param(
 
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
-$skip = $false
-if ($parameters.appFile.GetType().BaseType.Name -eq 'Array') {
-    # Check if current run is installing dependenciy apps
-    # Dependency apps are already installed and should be skipped
-    $equal = $true
-    for ($i = 0; $i -lt $appsBeforeApps.Count; $i++) {
-        if ($appsBeforeApps[$i] -ne $parameters.appFile[$i]) {
-            $equal = $false
-            break
-        }
-    }
+$dependenciesFolder = Join-Path "$env:GITHUB_WORKSPACE" ".dependencies"
+$dependencyFileHashs = 
+    $installApps + installTestApps | 
+        Where-Object { $_ -like "$($dependenciesFolder.TrimEnd('\'))\*" } | 
+        ForEach-Object { Get-FileHash -Path $_ }
 
-    if (-not $equal) {
-        #check second dependency array
-        $equal = $true
-        for ($i = 0; $i -lt $appsBeforeTestApps.Count; $i++) {
-            if ($appsBeforeTestApps[$i] -ne $parameters.appFile[$i]) {
-                $equal = $false
-                break
-            }
-        }
-    }
+Write-AlpacaOutput "Apps:"
 
-    if ($equal) {
-        Write-AlpacaOutput "Skip apps before apps/testapps because they are already handled by Alpaca"
-        $skip = $true
+$appFiles = @();
+$skipAppFiles = @();
+foreach ($appFile in $parameters.appFile) {
+    $appFile = Resolve-Path -Path $appFile
+    if ($appFile -like "$($outputFolder.TrimEnd('\'))\*") {
+        # Publish output apps
+        Write-AlpacaOutput "- $appFile (build output)"
+        $appFiles += $appFile
+    } elseif ($previousApps -contains $appFile) {
+        # Publish previous apps
+        Write-AlpacaOutput "- $appFile (previous release)"
+        $appFiles += $appFile
+    } elseif ($dependencyFileHashs -contains (Get-FileHash -Path $appFile)) {
+        # Publish dependency apps
+        Write-AlpacaOutput "- $appFile (project dependency)"
+        $appFiles += $appFile
+    } else {
+        # Skip remaining apps
+        $skipAppFiles += $appFile
     }
 }
 
-if (! $skip) {
+if ($skipAppFiles) {
+    Write-AlpacaOutput "Skip Apps already handled by COSMO Alpaca:"
+    $skipAppFiles | ForEach-Object { Write-AlpacaOutput "- $_" }
+}
+
+if ($appFiles) {
     Write-AlpacaGroupStart "Wait for image to be ready"
     if ($env:ALPACA_CONTAINER_IMAGE_READY) {
         Write-AlpacaOutput "ALPACA_CONTAINER_IMAGE_READY is already set to '$env:ALPACA_CONTAINER_IMAGE_READY'. Skipping wait."
@@ -57,10 +63,12 @@ if (! $skip) {
     Write-AlpacaOutput "Get password from SecureString"
     $password = ConvertFrom-SecureString -SecureString $parameters.bcAuthContext.Password -AsPlainText
 
-    Publish-AlpacaBcApp -ContainerUrl $parameters.Environment `
-                        -ContainerUser $parameters.bcAuthContext.username `
-                        -ContainerPassword $password `
-                        -Path $parameters.appFile
+    foreach($appFile in $appFiles) {
+        Publish-AlpacaBcApp -ContainerUrl $parameters.Environment `
+                            -ContainerUser $parameters.bcAuthContext.username `
+                            -ContainerPassword $password `
+                            -Path $appFile
+    }
 }
 
 if ($AlGoPublishBcContainerApp) {
