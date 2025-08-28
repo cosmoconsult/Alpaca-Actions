@@ -34,9 +34,15 @@ foreach ($appFile in $parameters.appFile) {
     }
 }
 
+if (!$appFiles) {
+    Write-AlpacaOutput "- None"
+}
+
+Write-AlpacaOutput "Skip Apps already handled by COSMO Alpaca:"
 if ($skipAppFiles) {
-    Write-AlpacaOutput "Skip Apps already handled by COSMO Alpaca:"
     $skipAppFiles | ForEach-Object { Write-AlpacaOutput "- $_" }
+} else {
+    Write-AlpacaOutput "- None"
 }
 
 if ($appFiles) {
