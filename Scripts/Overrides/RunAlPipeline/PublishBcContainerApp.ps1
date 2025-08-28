@@ -6,15 +6,16 @@ Write-AlpacaOutput "Using COSMO Alpaca override"
 
 $outputAppFiles = $apps + $testApps + $bcptTestApps | ForEach-Object { Resolve-Path -Path $_ }
 $previousAppFiles = $previousApps | ForEach-Object { Resolve-Path -Path $_ }
+$installAppFiles = $installApps + $installTestApps | ForEach-Object { Resolve-Path -Path $_ }
+
 $dependenciesFolder = Join-Path "$env:GITHUB_WORKSPACE" ".dependencies"
-$dependencyFileHashs = 
-    $installApps + $installTestApps | 
-        Where-Object { $_ -like "$($dependenciesFolder.TrimEnd('\'))\*" } | 
-        ForEach-Object { Get-FileHash -Path $_ }
+$dependencyAppFileHashs = 
+    Get-ChildItem -Path $dependenciesFolder -File -Recurse |
+    ForEach-Object { Get-FileHash -Path $_ }
 
 Write-AlpacaOutput "Dependencies folder: $dependenciesFolder"
 Write-AlpacaOutput "Dependency Apps:"
-$dependencyFileHashs | ForEach-Object { Write-AlpacaOutput "- $($_.Path): $($_.Hash)"}
+$dependencyAppFileHashs | ForEach-Object { Write-AlpacaOutput "- $($_.Path): $($_.Hash)"}
 
 $appFiles = @();
 $skipAppFiles = @();
@@ -27,7 +28,7 @@ foreach ($appFile in $parameters.appFile) {
     } elseif ($previousAppFiles -contains $appFile) {
         # Publish previous apps
         $appType = "previous release"
-    } elseif ($dependencyFileHashs.Hash -contains (Get-FileHash -Path $appFile).Hash) {
+    } elseif ($installAppFiles -contains $appFile -and $dependencyAppFileHashs.Hash -contains (Get-FileHash -Path $appFile).Hash) {
         # Publish dependency apps
         $appType = "project dependency"
     } else {
