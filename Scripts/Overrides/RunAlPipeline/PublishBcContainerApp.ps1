@@ -4,45 +4,48 @@ Param(
 
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
-$outputAppFiles = $apps + $testApps + $bcptTestApps
-$previousAppFiles = $previousApps
+$outputAppFiles = $apps + $testApps + $bcptTestApps | ForEach-Object { Resolve-Path -Path $_ }
+$previousAppFiles = $previousApps | ForEach-Object { Resolve-Path -Path $_ }
 $dependenciesFolder = Join-Path "$env:GITHUB_WORKSPACE" ".dependencies"
 $dependencyFileHashs = 
     $installApps + $installTestApps | 
         Where-Object { $_ -like "$($dependenciesFolder.TrimEnd('\'))\*" } | 
-        ForEach-Object { Get-FileHash -Path $_ } |
-        Select-Object -ExpandProperty Hash
+        ForEach-Object { Get-FileHash -Path $_ }
+
+Write-AlpacaOutput "Dependencies folder: $dependenciesFolder"
+Write-AlpacaOutput "Dependency Apps:"
+$dependencyFileHashs | ForEach-Object { Write-AlpacaOutput "- $($_.Path): $($_.Hash)"}
 
 $appFiles = @();
 $skipAppFiles = @();
+$skipAppFileHashs = @();
 foreach ($appFile in $parameters.appFile) {
     $appFile = Resolve-Path -Path $appFile
     if ($outputAppFiles -contains $appFile) {
         # Publish output apps
-        Write-AlpacaOutput "- $appFile (build output)"
-        $appFiles += $appFile
+        $appType = "build output"
     } elseif ($previousAppFiles -contains $appFile) {
         # Publish previous apps
-        Write-AlpacaOutput "- $appFile (previous release)"
-        $appFiles += $appFile
-    } elseif ($dependencyFileHashs -contains (Get-FileHash -Path $appFile).Hash) {
+        $appType = "previous release"
+    } elseif ($dependencyFileHashs.Hash -contains (Get-FileHash -Path $appFile).Hash) {
         # Publish dependency apps
-        Write-AlpacaOutput "- $appFile (project dependency)"
-        $appFiles += $appFile
+        $appType = "project dependency"
     } else {
         # Skip remaining apps
         $skipAppFiles += $appFile
+        $skipAppFileHashs += (Get-FileHash -Path $appFile)
+        continue
     }
-}
 
-if ($appFiles) {
-    Write-AlpacaOutput "Apps:"
-    $appFiles | ForEach-Object { Write-AlpacaOutput "- $_" }
+    if (! $appFiles) { Write-AlpacaOutput "Apps:" }
+    Write-AlpacaOutput "- $appFile ($appType)"
+    $appFiles += $appFile
 }
 
 if ($skipAppFiles) {
     Write-AlpacaOutput "Skip Apps already handled by COSMO Alpaca:"
-    $skipAppFiles | ForEach-Object { Write-AlpacaOutput "- $_" }
+    # $skipAppFiles | ForEach-Object { Write-AlpacaOutput "- $_" }
+    $skipAppFileHashs | ForEach-Object { Write-AlpacaOutput "- $($_.Path): $($_.Hash)" }
 }
 
 if ($appFiles) {
