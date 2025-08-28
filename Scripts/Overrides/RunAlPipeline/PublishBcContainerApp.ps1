@@ -4,6 +4,8 @@ Param(
 
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
+Write-AlpacaGroupStart "Publish Apps:"
+
 $outputAppFiles = $apps + $testApps + $bcptTestApps | Resolve-Path | Select-Object -ExpandProperty Path
 $previousAppFiles = $previousApps | Resolve-Path | Select-Object -ExpandProperty Path
 $installAppFiles = $installApps + ($installTestApps -replace '^\(|\)$') | Resolve-Path | Select-Object -ExpandProperty Path
@@ -18,29 +20,35 @@ $appFiles = @();
 $skipAppFiles = @();
 foreach ($appFile in $parameters.appFile) {
     $appFile = (Resolve-Path -Path $appFile).Path
+
     if ($outputAppFiles -contains $appFile) {
         # Publish output apps
-        $appType = "build output"
+        Write-AlpacaOutput "- $appFile (build output)"
     } elseif ($previousAppFiles -contains $appFile) {
         # Publish previous apps
-        $appType = "previous release"
+        Write-AlpacaOutput "- $appFile (previous release)"
     } elseif ($dependencyAppFileHashs -contains (Get-FileHash -Path $appFile).Hash) {
         # Publish dependency apps
-        $appType = "project dependency"
+        Write-AlpacaOutput "- $appFile (project dependency)"
     } else {
         # Skip remaining apps
         $skipAppFiles += $appFile
         continue
     }
 
-    if (! $appFiles) { Write-AlpacaOutput "Apps:" }
-    Write-AlpacaOutput "- $appFile ($appType)"
     $appFiles += $appFile
 }
 
+if (! $appFiles) {
+    Write-AlpacaOutput "- None"
+}
+
+Write-AlpacaGroupEnd
+
 if ($skipAppFiles) {
-    Write-AlpacaOutput "Skip Apps already handled by COSMO Alpaca:"
+    Write-AlpacaGroupStart "Skip Apps already handled by container:"
     $skipAppFiles | ForEach-Object { Write-AlpacaOutput "- $_" }
+    Write-AlpacaGroupEnd
 }
 
 if ($appFiles) {
@@ -54,7 +62,7 @@ if ($appFiles) {
     }
     Write-AlpacaGroupEnd
 
-    Write-AlpacaGroupStart "Wait for container start"
+    Write-AlpacaGroupStart "Wait for container to be ready"
     if ($env:ALPACA_CONTAINER_READY) {
         Write-AlpacaOutput "ALPACA_CONTAINER_READY is already set to '$env:ALPACA_CONTAINER_READY'. Skipping wait."
     } else {
@@ -64,7 +72,6 @@ if ($appFiles) {
     }
     Write-AlpacaGroupEnd
 
-    Write-AlpacaOutput "Get password from SecureString"
     $password = ConvertFrom-SecureString -SecureString $parameters.bcAuthContext.Password -AsPlainText
 
     foreach($appFile in $appFiles) {
