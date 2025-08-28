@@ -6,7 +6,7 @@ Write-AlpacaOutput "Using COSMO Alpaca override"
 
 $dependenciesFolder = Join-Path "$env:GITHUB_WORKSPACE" ".dependencies"
 $dependencyFileHashs = 
-    $installApps + installTestApps | 
+    $installApps + $installTestApps | 
         Where-Object { $_ -like "$($dependenciesFolder.TrimEnd('\'))\*" } | 
         ForEach-Object { Get-FileHash -Path $_ }
 
