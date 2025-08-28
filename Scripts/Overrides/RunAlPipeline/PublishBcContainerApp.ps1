@@ -6,7 +6,7 @@ Write-AlpacaOutput "Using COSMO Alpaca override"
 
 $outputAppFiles = $apps + $testApps + $bcptTestApps | Resolve-Path | Select-Object -ExpandProperty Path
 $previousAppFiles = $previousApps | Resolve-Path | Select-Object -ExpandProperty Path
-$installAppFiles = $installApps + $installTestApps | Resolve-Path | Select-Object -ExpandProperty Path
+$installAppFiles = $installApps + $installTestApps.Trim('()') | Resolve-Path | Select-Object -ExpandProperty Path
 
 $dependenciesFolder = Join-Path "$env:GITHUB_WORKSPACE" ".dependencies"
 $dependencyAppFileHashs = 
