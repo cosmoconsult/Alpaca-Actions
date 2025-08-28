@@ -4,9 +4,9 @@ Param(
 
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
-$outputAppFiles = $apps + $testApps + $bcptTestApps | ForEach-Object { Resolve-Path -Path $_ }
-$previousAppFiles = $previousApps | ForEach-Object { Resolve-Path -Path $_ }
-$installAppFiles = $installApps + $installTestApps | ForEach-Object { Resolve-Path -Path $_ }
+$outputAppFiles = $apps + $testApps + $bcptTestApps | ForEach-Object { Resolve-Path -Path $_ } | ForEach-Object { Write-AlpacaOutput "- $_"; $_ }
+$previousAppFiles = $previousApps | ForEach-Object { Resolve-Path -Path $_ } | ForEach-Object { Write-AlpacaOutput "- $_"; $_ }
+$installAppFiles = $installApps + $installTestApps | ForEach-Object { Resolve-Path -Path $_ } | ForEach-Object { Write-AlpacaOutput "- $_"; $_ }
 
 $dependenciesFolder = Join-Path "$env:GITHUB_WORKSPACE" ".dependencies"
 $dependencyAppFileHashs = 
