@@ -4,8 +4,9 @@ Param(
 
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
-if (! (Get-Variable -Name alpacaPublishedAppInfos -ValueOnly -Scope Script -ErrorAction Ignore)) {
-    $script:alpacaPublishedAppInfos = @()
+$publishedAppInfos = Get-Variable -Name alpacaPublishedAppInfos -ValueOnly -Scope Script -ErrorAction Ignore
+if (! $publishedAppInfos) {
+    $publishedAppInfos = @()
 }
 
 $compilerFolder = (GetCompilerFolder)
@@ -91,8 +92,10 @@ if ($appInfos) {
                             -Path $appInfo.Path
     }
 
-    $script:alpacaPublishedAppInfos += $appInfos
+    $publishedAppInfos += $appInfos
 }
+
+Set-Variable -Name alpacaPublishedAppInfos -Value $publishedAppInfos -Scope Script
 
 if ($AlGoPublishBcContainerApp) {
     Write-AlpacaOutput "Invoking AL-Go override"
