@@ -4,8 +4,9 @@ Param(
 
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
-if ($null -eq $script:alpacaPublishedAppFiles) {
-    $script:alpacaPublishedAppFiles = @()
+$publishedAppFiles = Get-Variable -Name alpacaPublishedAppFiles -ValueOnly -Scope 1 -ErrorAction Ignore
+if (! $publishedAppFiles) {
+    $publishedAppFiles = @()
 }
 
 $outputAppFiles = $apps + $testApps + $bcptTestApps | Resolve-Path | Select-Object -ExpandProperty Path
@@ -25,7 +26,7 @@ $skipAppFiles = @();
 foreach ($appFile in $parameters.appFile) {
     $appFile = (Resolve-Path -Path $appFile).Path
 
-    if ($script:alpacaPublishedAppFiles -contains $appFile) {
+    if ($publishedAppFiles -contains $appFile) {
         # Skip already published apps
         $skipAppFiles += $appFile
     } elseif ($outputAppFiles -contains $appFile) {
@@ -88,8 +89,10 @@ if ($appFiles) {
                             -Path $appFile
     }
 
-    $script:alpacaPublishedAppFiles += $appFiles
+    $publishedAppFiles += $appFiles
 }
+
+Set-Variable -Name alpacaPublishedAppFiles -Value $publishedAppFiles -Scope 1
 
 if ($AlGoPublishBcContainerApp) {
     Write-AlpacaOutput "Invoking AL-Go override"
