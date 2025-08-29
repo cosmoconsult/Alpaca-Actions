@@ -4,7 +4,9 @@ Param(
 
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
-Write-AlpacaGroupStart "Publish Apps:"
+if ($null -eq $script:alpacaPublishedAppFiles) {
+    $script:alpacaPublishedAppFiles = @()
+}
 
 $outputAppFiles = $apps + $testApps + $bcptTestApps | Resolve-Path | Select-Object -ExpandProperty Path
 $previousAppFiles = $previousApps | Resolve-Path | Select-Object -ExpandProperty Path
@@ -16,27 +18,32 @@ $dependencyAppFileHashs =
     Where-Object { $installAppFiles -contains $_.FullName } |
     ForEach-Object { (Get-FileHash -Path $_).Hash }
 
+Write-AlpacaGroupStart "Publish Apps:"
+
 $appFiles = @();
 $skipAppFiles = @();
 foreach ($appFile in $parameters.appFile) {
     $appFile = (Resolve-Path -Path $appFile).Path
 
-    if ($outputAppFiles -contains $appFile) {
+    if ($script:alpacaPublishedAppFiles -contains $appFile) {
+        # Skip already published apps
+        $skipAppFiles += $appFile
+    } elseif ($outputAppFiles -contains $appFile) {
         # Publish output apps
         Write-AlpacaOutput "- $appFile (build output)"
+        $appFiles += $appFile
     } elseif ($previousAppFiles -contains $appFile) {
         # Publish previous apps
         Write-AlpacaOutput "- $appFile (previous release)"
+        $appFiles += $appFile
     } elseif ($dependencyAppFileHashs -contains (Get-FileHash -Path $appFile).Hash) {
         # Publish dependency apps
         Write-AlpacaOutput "- $appFile (project dependency)"
+        $appFiles += $appFile
     } else {
         # Skip remaining apps
         $skipAppFiles += $appFile
-        continue
     }
-
-    $appFiles += $appFile
 }
 
 if (! $appFiles) {
@@ -46,7 +53,7 @@ if (! $appFiles) {
 Write-AlpacaGroupEnd
 
 if ($skipAppFiles) {
-    Write-AlpacaGroupStart "Skip Apps already handled by container:"
+    Write-AlpacaGroupStart "Skip Apps:"
     $skipAppFiles | ForEach-Object { Write-AlpacaOutput "- $_" }
     Write-AlpacaGroupEnd
 }
@@ -80,6 +87,8 @@ if ($appFiles) {
                             -ContainerPassword $password `
                             -Path $appFile
     }
+
+    $script:alpacaPublishedAppFiles += $appFiles
 }
 
 if ($AlGoPublishBcContainerApp) {
