@@ -4,7 +4,7 @@ Param(
 
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
-$publishedAppFiles = Get-Variable -Name alpacaPublishedAppFiles -ValueOnly -Scope 1 -ErrorAction Ignore
+$publishedAppFiles = Get-Variable -Name alpacaPublishedAppFiles -ValueOnly -Scope Script -ErrorAction Ignore
 if (! $publishedAppFiles) {
     $publishedAppFiles = @()
 }
@@ -19,45 +19,34 @@ $dependencyAppFileHashs =
     Where-Object { $installAppFiles -contains $_.FullName } |
     ForEach-Object { (Get-FileHash -Path $_).Hash }
 
-Write-AlpacaGroupStart "Publish Apps:"
+Write-AlpacaGroupStart "Apps:"
 
 $appFiles = @();
-$skipAppFiles = @();
 foreach ($appFile in $parameters.appFile) {
     $appFile = (Resolve-Path -Path $appFile).Path
 
     if ($publishedAppFiles -contains $appFile) {
         # Skip already published apps
-        $skipAppFiles += $appFile
+        Write-AlpacaOutput "- skip '$appFile' (already published)"
     } elseif ($outputAppFiles -contains $appFile) {
         # Publish output apps
-        Write-AlpacaOutput "- $appFile (build output)"
+        Write-AlpacaOutput "- publish '$appFile' (build output)"
         $appFiles += $appFile
     } elseif ($previousAppFiles -contains $appFile) {
         # Publish previous apps
-        Write-AlpacaOutput "- $appFile (previous release)"
+        Write-AlpacaOutput "- publish '$appFile' (previous release)"
         $appFiles += $appFile
     } elseif ($dependencyAppFileHashs -contains (Get-FileHash -Path $appFile).Hash) {
         # Publish dependency apps
-        Write-AlpacaOutput "- $appFile (project dependency)"
+        Write-AlpacaOutput "- publish '$appFile' (project dependency)"
         $appFiles += $appFile
     } else {
         # Skip remaining apps
-        $skipAppFiles += $appFile
+        Write-AlpacaOutput "- skip '$appFile'"
     }
 }
 
-if (! $appFiles) {
-    Write-AlpacaOutput "- None"
-}
-
 Write-AlpacaGroupEnd
-
-if ($skipAppFiles) {
-    Write-AlpacaGroupStart "Skip Apps:"
-    $skipAppFiles | ForEach-Object { Write-AlpacaOutput "- $_" }
-    Write-AlpacaGroupEnd
-}
 
 if ($appFiles) {
     Write-AlpacaGroupStart "Wait for image to be ready"
@@ -92,7 +81,7 @@ if ($appFiles) {
     $publishedAppFiles += $appFiles
 }
 
-Set-Variable -Name alpacaPublishedAppFiles -Value $publishedAppFiles -Scope 1
+Set-Variable -Name alpacaPublishedAppFiles -Value $publishedAppFiles -Scope Script
 
 if ($AlGoPublishBcContainerApp) {
     Write-AlpacaOutput "Invoking AL-Go override"
