@@ -20,7 +20,10 @@ $dependencyAppFiles =
     Get-ChildItem -Path $dependenciesFolder -File -Recurse |
     Select-Object -ExpandProperty FullName |
     Where-Object { $installAppFiles -contains $_ }
-$dependencyAppInfos = @(GetAppInfo -AppFiles $dependencyAppFiles -compilerFolder $compilerFolder -cacheAppinfoPath (Join-Path $dependenciesFolder 'cache_AppInfo.json'))
+$dependencyAppInfos = @()
+if ($dependencyAppFiles) {
+    $dependencyAppInfos += GetAppInfo -AppFiles $dependencyAppFiles -compilerFolder $compilerFolder -cacheAppinfoPath (Join-Path $dependenciesFolder 'cache_AppInfo.json')
+}
 
 Write-AlpacaGroupStart "Apps:"
 
