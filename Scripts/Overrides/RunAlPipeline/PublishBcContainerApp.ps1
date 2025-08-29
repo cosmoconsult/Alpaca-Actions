@@ -4,9 +4,8 @@ Param(
 
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
-$publishedAppInfos = Get-Variable -Name alpacaPublishedAppInfos -ValueOnly -Scope Script -ErrorAction Ignore
-if (! $publishedAppInfos) {
-    $publishedAppInfos = @()
+if (! (Get-Variable -Name alpacaPublishedAppInfos -ValueOnly -Scope Script -ErrorAction Ignore)) {
+    $script:alpacaPublishedAppInfos = @()
 }
 
 $compilerFolder = (GetCompilerFolder)
@@ -14,6 +13,11 @@ $compilerFolder = (GetCompilerFolder)
 $outputAppFiles = $apps + $testApps + $bcptTestApps | Resolve-Path | Select-Object -ExpandProperty Path
 $previousAppFiles = $previousApps | Resolve-Path | Select-Object -ExpandProperty Path
 $installAppFiles = $installApps + ($installTestApps -replace '^\(|\)$') | Resolve-Path | Select-Object -ExpandProperty Path
+
+$appInfos = @()
+if ($parameters.appFile) {
+    $appInfos += GetAppInfo -AppFiles $parameters.appFile -compilerFolder $compilerFolder -cacheAppinfoPath (Join-Path $packagesFolder 'cache_AppInfo.json')
+}
 
 $dependenciesFolder = Join-Path "$env:GITHUB_WORKSPACE" ".dependencies"
 $dependencyAppFiles = 
@@ -27,44 +31,37 @@ if ($dependencyAppFiles) {
 
 Write-AlpacaGroupStart "Apps:"
 
-$appFiles = @();
-foreach ($appFile in $parameters.appFile) {
-    $appFile = (Resolve-Path -Path $appFile).Path
+$appInfos = $appInfos | ForEach-Object {
+    $appInfo = $_
+    $appFile = (Resolve-Path -Path $appInfo.Path).Path
+    $appLabel = '{0}, {1}, {2}, {3}' -f $appInfo.Id, $appInfo.Name, $appInfo.Publisher, $appInfo.Version
 
-    if ($outputAppFiles -contains $appFile) {
-        # Publish output apps
-        Write-AlpacaOutput "- publish build output '$appFile'"
-        $appFiles += $appFile
-        continue
-    }
-    if ($previousAppFiles -contains $appFile) {
-        # Publish previous apps
-        Write-AlpacaOutput "- publish previous release '$appFile'"
-        $appFiles += $appFile
-        continue
-    }
-
-    $appInfo = GetAppInfo -AppFiles $appFile -compilerFolder $compilerFolder -cacheAppinfoPath (Join-Path (Split-Path $appFile -Parent) 'cache_AppInfo.json')
+    # Skip unhandled apps
+    $appComment = "skip"
 
     if ($publishedAppInfos | Where-Object { $_.id -eq $appInfo.id -and $_.version -eq $appInfo.version }) {
         # Skip already published apps
-        Write-AlpacaOutput "- skip already published '$appFile'"
-        continue
-    } 
-    if ($dependencyAppInfos | Where-Object { $_.id -eq $appInfo.id -and $_.version -eq $appInfo.version }) {
+        $appComment = "skip already published"
+    } elseif ($outputAppFiles -contains $appFile) {
+        # Publish output apps
+        $appComment = "publish build output"
+        $appInfo
+    } elseif ($previousAppFiles -contains $appFile) {
+        # Publish previous apps
+        $appComment = "publish previous release"
+        $appInfo
+    } elseif ($dependencyAppInfos | Where-Object { $_.id -eq $appInfo.id -and $_.version -eq $appInfo.version }) {
         # Publish dependency apps
-        Write-AlpacaOutput "- publish dependency build output '$appFile'"
-        $appFiles += $appFile
-        continue
+        $appComment = "publish dependency build output"
+        $appInfo
     }
 
-    # Skip unhandled apps
-    Write-AlpacaOutput "- skip '$appFile'"
+    Write-AlpacaOutput "- $appComment '$appFile' ($appLabel)"
 }
 
 Write-AlpacaGroupEnd
 
-if ($appFiles) {
+if ($appInfos) {
     Write-AlpacaGroupStart "Wait for image to be ready"
     if ($env:ALPACA_CONTAINER_IMAGE_READY) {
         Write-AlpacaOutput "ALPACA_CONTAINER_IMAGE_READY is already set to '$env:ALPACA_CONTAINER_IMAGE_READY'. Skipping wait."
@@ -87,17 +84,15 @@ if ($appFiles) {
 
     $password = ConvertFrom-SecureString -SecureString $parameters.bcAuthContext.Password -AsPlainText
 
-    foreach($appFile in $appFiles) {
+    foreach($appInfo in $appInfos) {
         Publish-AlpacaBcApp -ContainerUrl $parameters.Environment `
                             -ContainerUser $parameters.bcAuthContext.username `
                             -ContainerPassword $password `
-                            -Path $appFile
-
-        $publishedAppInfos = GetAppInfo -AppFiles $appFile -compilerFolder $compilerFolder -cacheAppinfoPath (Join-Path (Split-Path $appFile -Parent) 'cache_AppInfo.json')
+                            -Path $appInfo.Path
     }
-}
 
-Set-Variable -Name alpacaPublishedAppInfos -Value $publishedAppInfos -Scope Script
+    $script:alpacaPublishedAppInfos += $appInfos
+}
 
 if ($AlGoPublishBcContainerApp) {
     Write-AlpacaOutput "Invoking AL-Go override"
