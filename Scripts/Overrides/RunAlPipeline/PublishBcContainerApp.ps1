@@ -91,8 +91,8 @@ if ($appInfos) {
         Publish-AlpacaBcApp -ContainerUrl $parameters.Environment `
                             -ContainerUser $parameters.bcAuthContext.username `
                             -ContainerPassword $password `
-                            -Path $appInfo.Path
-                            
+                            -Path $appFile
+
         $publishedAppInfos = GetAppInfo -AppFiles $appFile -compilerFolder $compilerFolder -cacheAppinfoPath (Join-Path (Split-Path $appFile -Parent) 'cache_AppInfo.json')
     }
 }
