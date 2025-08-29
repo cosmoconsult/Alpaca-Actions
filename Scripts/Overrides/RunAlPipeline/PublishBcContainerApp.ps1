@@ -31,7 +31,7 @@ $appInfos = @();
 foreach ($appFile in $parameters.appFile) {
     $appFile = (Resolve-Path -Path $appFile).Path
     $appInfo = GetAppInfo -AppFiles $appFile -compilerFolder $compilerFolder -cacheAppinfoPath (Join-Path (Split-Path $appFile -Parent) 'cache_AppInfo.json')
-    $appLabel = '{0}, {1}, {2}, {3}' -f $appInfo.Publisher, $appInfo.Name, $appInfo.Id, $appInfo.Version
+    $appLabel = '{0}, {1}, {2}, {3}' -f $appInfo.Id, $appInfo.Publisher, $appInfo.Name, $appInfo.Version
 
     # Skip unhandled apps
     $appComment = "skip"
