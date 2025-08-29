@@ -27,33 +27,39 @@ if ($dependencyAppFiles) {
 
 Write-AlpacaGroupStart "Apps:"
 
-$appInfos = @();
+$appFiles = @();
 foreach ($appFile in $parameters.appFile) {
     $appFile = (Resolve-Path -Path $appFile).Path
-    $appInfo = GetAppInfo -AppFiles $appFile -compilerFolder $compilerFolder -cacheAppinfoPath (Join-Path (Split-Path $appFile -Parent) 'cache_AppInfo.json')
-    $appLabel = '{0}, {1}, {2}, {3}' -f $appInfo.Id, $appInfo.Publisher, $appInfo.Name, $appInfo.Version
 
-    # Skip unhandled apps
-    $appComment = "skip"
+    if ($outputAppFiles -contains $appFile) {
+        # Publish output apps
+        Write-AlpacaOutput "- publish build output '$appFile'"
+        $appFiles += $appFile
+        continue
+    }
+    if ($previousAppFiles -contains $appFile) {
+        # Publish previous apps
+        Write-AlpacaOutput "- publish previous release '$appFile'"
+        $appFiles += $appFile
+        continue
+    }
+
+    $appInfo = GetAppInfo -AppFiles $appFile -compilerFolder $compilerFolder -cacheAppinfoPath (Join-Path (Split-Path $appFile -Parent) 'cache_AppInfo.json')
 
     if ($publishedAppInfos | Where-Object { $_.id -eq $appInfo.id -and $_.version -eq $appInfo.version }) {
         # Skip already published apps
-        $appComment = "skip already published"
-    } elseif ($outputAppFiles -contains $appFile) {
-        # Publish output apps
-        $appComment = "publish build output"
-        $appInfos += $appInfo
-    } elseif ($previousAppFiles -contains $appFile) {
-        # Publish previous apps
-        $appComment = "publish previous release"
-        $appInfos += $appInfo
-    } elseif ($dependencyAppInfos | Where-Object { $_.id -eq $appInfo.id -and $_.version -eq $appInfo.version }) {
+        Write-AlpacaOutput "- skip already published '$appFile'"
+        continue
+    } 
+    if ($dependencyAppInfos | Where-Object { $_.id -eq $appInfo.id -and $_.version -eq $appInfo.version }) {
         # Publish dependency apps
-        $appComment = "publish dependency build output"
-        $appInfos += $appInfo
+        Write-AlpacaOutput "- publish dependency build output '$appFile'"
+        $appFiles += $appFile
+        continue
     }
 
-    Write-AlpacaOutput "- $appComment '$appFile' ($appLabel)"
+    # Skip unhandled apps
+    Write-AlpacaOutput "- skip '$appFile'"
 }
 
 Write-AlpacaGroupEnd
@@ -81,14 +87,14 @@ if ($appInfos) {
 
     $password = ConvertFrom-SecureString -SecureString $parameters.bcAuthContext.Password -AsPlainText
 
-    foreach($appInfo in $appInfos) {
+    foreach($appFile in $appFiles) {
         Publish-AlpacaBcApp -ContainerUrl $parameters.Environment `
                             -ContainerUser $parameters.bcAuthContext.username `
                             -ContainerPassword $password `
                             -Path $appInfo.Path
+                            
+        $publishedAppInfos = GetAppInfo -AppFiles $appFile -compilerFolder $compilerFolder -cacheAppinfoPath (Join-Path (Split-Path $appFile -Parent) 'cache_AppInfo.json')
     }
-
-    $publishedAppInfos += $appInfos
 }
 
 Set-Variable -Name alpacaPublishedAppInfos -Value $publishedAppInfos -Scope Script
