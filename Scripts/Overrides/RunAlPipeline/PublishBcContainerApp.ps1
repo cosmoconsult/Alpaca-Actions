@@ -9,17 +9,19 @@ if (! $publishedAppInfos) {
     $publishedAppInfos = @()
 }
 
-$compilerFolder = (GetCompilerFolder)
-
+# Collect app files
 $outputAppFiles = $apps + $testApps + $bcptTestApps | Resolve-Path | Select-Object -ExpandProperty Path
 $previousAppFiles = $previousApps | Resolve-Path | Select-Object -ExpandProperty Path
 $installAppFiles = $installApps + ($installTestApps -replace '^\(|\)$') | Resolve-Path | Select-Object -ExpandProperty Path
 
+# Collect parameter app infos
 $appInfos = @()
 if ($parameters.appFile) {
+    $compilerFolder = (GetCompilerFolder)
     $appInfos += GetAppInfo -AppFiles $parameters.appFile -compilerFolder $compilerFolder -cacheAppinfoPath (Join-Path $packagesFolder 'cache_AppInfo.json')
 }
 
+# Collect dependency app infos
 $dependenciesFolder = Join-Path "$env:GITHUB_WORKSPACE" ".dependencies"
 $dependencyAppFiles = 
     Get-ChildItem -Path $dependenciesFolder -File -Recurse |
@@ -27,6 +29,7 @@ $dependencyAppFiles =
     Where-Object { $installAppFiles -contains $_ }
 $dependencyAppInfos = @()
 if ($dependencyAppFiles) {
+    $compilerFolder = (GetCompilerFolder)
     $dependencyAppInfos += GetAppInfo -AppFiles $dependencyAppFiles -compilerFolder $compilerFolder -cacheAppinfoPath (Join-Path $dependenciesFolder 'cache_AppInfo.json')
 }
 
@@ -93,9 +96,8 @@ if ($appInfos) {
     }
 
     $publishedAppInfos += $appInfos
+    Set-Variable -Name alpacaPublishedAppInfos -Value $publishedAppInfos -Scope Script
 }
-
-Set-Variable -Name alpacaPublishedAppInfos -Value $publishedAppInfos -Scope Script
 
 if ($AlGoPublishBcContainerApp) {
     Write-AlpacaOutput "Invoking AL-Go override"
