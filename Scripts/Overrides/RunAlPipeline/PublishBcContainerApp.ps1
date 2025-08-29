@@ -64,7 +64,7 @@ foreach ($appFile in $parameters.appFile) {
 
 Write-AlpacaGroupEnd
 
-if ($appInfos) {
+if ($appFiles) {
     Write-AlpacaGroupStart "Wait for image to be ready"
     if ($env:ALPACA_CONTAINER_IMAGE_READY) {
         Write-AlpacaOutput "ALPACA_CONTAINER_IMAGE_READY is already set to '$env:ALPACA_CONTAINER_IMAGE_READY'. Skipping wait."
