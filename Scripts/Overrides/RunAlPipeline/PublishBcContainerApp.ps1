@@ -23,10 +23,13 @@ if ($parameters.appFile) {
 
 # Collect dependency app infos
 $dependenciesFolder = Join-Path "$env:GITHUB_WORKSPACE" ".dependencies"
-$dependencyAppFiles = 
-    Get-ChildItem -Path $dependenciesFolder -File -Recurse |
-    Select-Object -ExpandProperty FullName |
-    Where-Object { $installAppFiles -contains $_ }
+if (Test-Path $dependenciesFolder) {
+    $dependencyAppFiles = Get-ChildItem -Path $dependenciesFolder -File -Recurse |
+        Select-Object -ExpandProperty FullName |
+        Where-Object { $installAppFiles -contains $_ }
+} else {
+    $dependencyAppFiles = @()
+}
 $dependencyAppInfos = @()
 if ($dependencyAppFiles) {
     $compilerFolder = (GetCompilerFolder)
