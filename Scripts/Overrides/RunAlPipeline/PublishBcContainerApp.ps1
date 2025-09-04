@@ -45,7 +45,7 @@ $appInfos = $appInfos | ForEach-Object {
     # Skip unhandled apps
     $appComment = "skip"
 
-    if ($publishedAppInfos | Where-Object { $_.id -eq $appInfo.id -and $_.version -eq $appInfo.version }) {
+    if ($publishedAppInfos | Where-Object { $_.Id -eq $appInfo.Id -and $_.Version -eq $appInfo.Version }) {
         # Skip already published apps
         $appComment = "skip already published"
     } elseif ($outputAppFiles -contains $appFile) {
@@ -56,7 +56,7 @@ $appInfos = $appInfos | ForEach-Object {
         # Publish previous apps
         $appComment = "publish previous release"
         $appInfo
-    } elseif ($dependencyAppInfos | Where-Object { $_.id -eq $appInfo.id -and $_.version -eq $appInfo.version }) {
+    } elseif ($dependencyAppInfos | Where-Object { $_.Id -eq $appInfo.Id -and $_.Version -eq $appInfo.Version }) {
         # Publish dependency apps
         $appComment = "publish dependency build output"
         $appInfo
