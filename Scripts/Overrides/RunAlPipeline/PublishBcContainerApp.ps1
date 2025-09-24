@@ -10,9 +10,9 @@ if (! $publishedAppInfos) {
 }
 
 # Collect app files
-$outputAppFiles = $apps + $testApps + $bcptTestApps | Resolve-Path | Select-Object -ExpandProperty Path
-$previousAppFiles = $previousApps | Resolve-Path | Select-Object -ExpandProperty Path
-$installAppFiles = $installApps + ($installTestApps -replace '^\(|\)$') | Resolve-Path | Select-Object -ExpandProperty Path
+$outputAppFiles = $apps + $testApps + $bcptTestApps | Resolve-Path -ea SilentlyContinue | Select-Object -ExpandProperty Path
+$previousAppFiles = $previousApps | Resolve-Path -ea SilentlyContinue | Select-Object -ExpandProperty Path
+$installAppFiles = $installApps + ($installTestApps -replace '^\(|\)$') | Resolve-Path -ea SilentlyContinue | Select-Object -ExpandProperty Path
 
 # Collect parameter app infos
 $appInfos = @()
