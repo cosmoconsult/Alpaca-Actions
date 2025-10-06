@@ -53,33 +53,84 @@ function Get-AlpacaDependencyApps {
             if ($artifact.type -eq 'Url') {
                 Write-AlpacaGroupStart "Downloading $($artifact.name) from $($artifact.url)"
                 
-                $tempArchive = "$([System.IO.Path]::GetTempFileName()).zip"
-                $tempFolder = ([System.IO.Path]::GetRandomFileName())
-                Invoke-WebRequest -Uri $artifact.url -OutFile $tempArchive
-                Expand-Archive -Path $tempArchive -DestinationPath $tempFolder -Force
+                # Make a web request to get the content and headers
+                $response = Invoke-WebRequest -Uri $artifact.url
 
-                Write-AlpacaOutput "Extracted files:"
-                
-                Get-ChildItem -Path $tempFolder -Recurse -File | ForEach-Object {
-                    Write-AlpacaOutput "- $($_.FullName)"
-
-                    # Move file to PackagesFolder
-                    $destinationPath = Join-Path $PackagesFolder $_.Name
-                    if (-not (Test-Path $destinationPath)) {
-                        Write-AlpacaOutput "  Moving to PackagesFolder..."
-                        Move-Item -Path $_.FullName -Destination $destinationPath -Force
-                    }
-                    else {
-                        Write-AlpacaOutput "  Ignoring... file already exists in PackagesFolder"
-                    }
+                # Determine file type based on Content-Disposition header or content signature
+                $fileType = ''
+                $contentDisposition = $response.Headers["Content-Disposition"][0] # access first element since it's an array
+                if ($contentDisposition -and $contentDisposition.EndsWith("zip")) {
+                    Write-AlpacaOutput "Detected zip file from Content-Disposition header"
+                    $fileType = 'zip'
+                }
+                elseif ($contentDisposition -and $contentDisposition.EndsWith(".app")) {
+                    Write-AlpacaOutput "Detected .app file from Content-Disposition header"
+                    $fileType = 'app'
+                }
+                elseif ([string]::new( [char[]]( $response.Content[0..3] ) ) -eq "NAVX") {
+                    Write-AlpacaOutput "Detected .app file from content signature"
+                    $fileType = 'app'
+                }
+                elseif ([string]::new( [char[]]( $response.Content[0..1] ) ) -eq "PK") {
+                    Write-AlpacaOutput "Detected zip file from content signature"
+                    $fileType = 'zip'
+                }
+                else {
+                    $fileType = 'unknown'
                 }
 
-                # Clean up temporary files
-                if (Test-Path $tempArchive) {
-                    Remove-Item -Path $tempArchive -Force -ErrorAction SilentlyContinue
-                }
-                if (Test-Path $tempFolder) {
-                    Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue
+                switch ($fileType) {
+                    'app' {
+                        # Extract filename from Content-Disposition or use artifact name
+                        $filename = "$($artifact.name).app"
+                        if ($contentDisposition -match "filename\*=utf-8''([^']+)") {
+                            $filename = [System.Web.HttpUtility]::UrlDecode($matches[1])
+                        }
+                        $destinationPath = Join-Path $PackagesFolder $filename
+                    
+                        if (-not (Test-Path $destinationPath)) {
+                            Write-AlpacaOutput "  Saving .app file directly to PackagesFolder..."
+                            [System.IO.File]::WriteAllBytes($destinationPath, $response.Content)
+                            Write-AlpacaOutput "- $destinationPath"
+                        }
+                        else {
+                            Write-AlpacaOutput "  Ignoring... file already exists in PackagesFolder"
+                        }
+                    }
+                    'zip' {
+                        # Save content to temporary zip file and extract
+                        $tempArchive = "$([System.IO.Path]::GetTempFileName()).zip"
+                        $tempFolder = ([System.IO.Path]::GetRandomFileName())
+                        [System.IO.File]::WriteAllBytes($tempArchive, $response.Content)
+                        Expand-Archive -Path $tempArchive -DestinationPath $tempFolder -Force
+
+                        Write-AlpacaOutput "Extracted files:"
+                    
+                        Get-ChildItem -Path $tempFolder -Recurse -File | ForEach-Object {
+                            Write-AlpacaOutput "- $($_.FullName)"
+
+                            # Move file to PackagesFolder
+                            $destinationPath = Join-Path $PackagesFolder $_.Name
+                            if (-not (Test-Path $destinationPath)) {
+                                Write-AlpacaOutput "  Moving to PackagesFolder..."
+                                Move-Item -Path $_.FullName -Destination $destinationPath -Force
+                            }
+                            else {
+                                Write-AlpacaOutput "  Ignoring... file already exists in PackagesFolder"
+                            }
+                        }
+
+                        # Clean up temporary files
+                        if (Test-Path $tempArchive) {
+                            Remove-Item -Path $tempArchive -Force -ErrorAction SilentlyContinue
+                        }
+                        if (Test-Path $tempFolder) {
+                            Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue
+                        }
+                    }
+                    Default {
+                        Write-AlpacaOutput "Unknown file type"
+                    }
                 }
 
                 Write-AlpacaGroupEnd
