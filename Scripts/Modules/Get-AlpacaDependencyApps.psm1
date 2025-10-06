@@ -59,24 +59,30 @@ function Get-AlpacaDependencyApps {
                 # Determine file type based on Content-Disposition header or content signature
                 $fileType = ''
                 $contentDisposition = $response.Headers["Content-Disposition"][0] # access first element since it's an array
-                if ($contentDisposition -and $contentDisposition.EndsWith("zip")) {
-                    Write-AlpacaOutput "Detected zip file from Content-Disposition header"
-                    $fileType = 'zip'
-                }
-                elseif ($contentDisposition -and $contentDisposition.EndsWith(".app")) {
-                    Write-AlpacaOutput "Detected .app file from Content-Disposition header"
-                    $fileType = 'app'
-                }
-                elseif ([string]::new( [char[]]( $response.Content[0..3] ) ) -eq "NAVX") {
-                    Write-AlpacaOutput "Detected .app file from content signature"
-                    $fileType = 'app'
-                }
-                elseif ([string]::new( [char[]]( $response.Content[0..1] ) ) -eq "PK") {
-                    Write-AlpacaOutput "Detected zip file from content signature"
-                    $fileType = 'zip'
-                }
-                else {
-                    $fileType = 'unknown'
+                switch ($true) {
+                    { $contentDisposition -and $contentDisposition.EndsWith("zip") } {
+                        Write-AlpacaOutput "Detected zip file from Content-Disposition header"
+                        $fileType = 'zip'
+                        break
+                    }
+                    { $contentDisposition -and $contentDisposition.EndsWith(".app") } {
+                        Write-AlpacaOutput "Detected .app file from Content-Disposition header"
+                        $fileType = 'app'
+                        break
+                    }
+                    { [string]::new([char[]]($response.Content[0..3])) -eq "NAVX" } {
+                        Write-AlpacaOutput "Detected .app file from content signature"
+                        $fileType = 'app'
+                        break
+                    }
+                    { [string]::new([char[]]($response.Content[0..1])) -eq "PK" } {
+                        Write-AlpacaOutput "Detected zip file from content signature"
+                        $fileType = 'zip'
+                        break
+                    }
+                    Default {
+                        $fileType = 'unknown'
+                    }
                 }
 
                 switch ($fileType) {
