@@ -101,7 +101,7 @@ function Get-AlpacaDependencyApps {
                             }
                             # Handle URL-encoded filenames (if filename*= was used)
                             if ($contentDisposition -match 'filename\*=') {
-                                $filename = [System.Web.HttpUtility]::UrlDecode($filename)
+                                $filename = [System.Net.WebUtility]::UrlDecode($filename)
                             }
                         }
                         $destinationPath = Join-Path $PackagesFolder $filename
