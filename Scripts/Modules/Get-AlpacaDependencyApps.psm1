@@ -64,7 +64,7 @@ function Get-AlpacaDependencyApps {
                     $contentDisposition = $contentDisposition[0]
                 }
                 switch ($true) {
-                    { $contentDisposition -and $contentDisposition.EndsWith("zip") } {
+                    { $contentDisposition -and $contentDisposition.EndsWith(".zip") } {
                         Write-AlpacaOutput "Detected zip file from Content-Disposition header"
                         $fileType = 'zip'
                         break
@@ -74,12 +74,12 @@ function Get-AlpacaDependencyApps {
                         $fileType = 'app'
                         break
                     }
-                    { [string]::new([char[]]($response.Content[0..3])) -eq "NAVX" } {
+                    { ($response.Content.Length -ge 4) -and ([string]::new([char[]]($response.Content[0..3])) -eq "NAVX") } {
                         Write-AlpacaOutput "Detected .app file from content signature"
                         $fileType = 'app'
                         break
                     }
-                    { [string]::new([char[]]($response.Content[0..1])) -eq "PK" } {
+                    { ($response.Content.Length -ge 2) -and ([string]::new([char[]]($response.Content[0..1])) -eq "PK") } {
                         Write-AlpacaOutput "Detected zip file from content signature"
                         $fileType = 'zip'
                         break
