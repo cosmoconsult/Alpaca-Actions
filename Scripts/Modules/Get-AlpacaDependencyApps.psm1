@@ -93,8 +93,16 @@ function Get-AlpacaDependencyApps {
                     'app' {
                         # Extract filename from Content-Disposition or use artifact name
                         $filename = "$($artifact.name).app"
-                        if ($contentDisposition -match "filename\*=utf-8''([^']+)") {
-                            $filename = [System.Web.HttpUtility]::UrlDecode($matches[1])
+                        if ($contentDisposition -match 'filename\*?=(?:"?)([^";]+)(?:"?)') {
+                            $filename = $matches[1]
+                            # Remove UTF-8'' prefix if present (for filename*= format)
+                            if ($filename -like 'UTF-8''*') {
+                                $filename = $filename.Substring(7)
+                            }
+                            # Handle URL-encoded filenames (if filename*= was used)
+                            if ($contentDisposition -match 'filename\*=') {
+                                $filename = [System.Web.HttpUtility]::UrlDecode($filename)
+                            }
                         }
                         $destinationPath = Join-Path $PackagesFolder $filename
                     
