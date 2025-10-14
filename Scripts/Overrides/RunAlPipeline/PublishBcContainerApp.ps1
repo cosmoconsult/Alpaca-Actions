@@ -6,7 +6,13 @@ Write-AlpacaOutput "Using COSMO Alpaca override"
 
 $publishedAppInfos = Get-Variable -Name alpacaPublishedAppInfos -ValueOnly -Scope Script -ErrorAction Ignore
 if (! $publishedAppInfos) {
+    try {
+        $publishedAppInfos = Get-AlpacaAppInfo -Token $env:_token -ContainerName $env:ALPACA_CONTAINER_ID
+    }
+    catch {
+        Write-AlpacaOutput "Error occurred while getting published app infos: $_"
     $publishedAppInfos = @()
+}
 }
 
 # Collect app files
