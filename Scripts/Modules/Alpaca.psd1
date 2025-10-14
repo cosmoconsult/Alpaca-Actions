@@ -31,7 +31,7 @@
         'New-AlpacaContainer.psm1',
         'Output-Helper.psm1',
         'Publish-AlpacaBcApp.psm1',
-        'Get-AlpacaAppInfo.psm1'
+        'Get-AlpacaAppInfo.psm1',
         'Remove-AlpacaContainer.psm1',
         'Wait-AlpacaContainerImageReady.psm1',
         'Wait-AlpacaContainerReady.psm1')
