@@ -58,15 +58,24 @@ function Get-AlpacaAuthenticationHeaders {
     Param(
         [Parameter(Mandatory = $true)]
         [string] $Token,
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [string] $Owner,
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [string] $Repository
     )
     $headers = @{
-        Authorization              = "Bearer $Token"
-        "Authorization-Owner"      = "$Owner"
-        "Authorization-Repository" = "$Repository"
+        Authorization = "Bearer $Token"
+    }
+    # Owner and Repository are required for k8s but not for alpaca api
+    if (-not (String::IsNullOrEmpty($Owner))) {
+        $headers += @{
+            "Authorization-Owner" = $Owner
+        }
+    }
+    if (-not (String::IsNullOrEmpty($Repository))) {
+        $headers += @{
+            "Authorization-Repository" = $Repository
+        }
     }
     return $headers
 }

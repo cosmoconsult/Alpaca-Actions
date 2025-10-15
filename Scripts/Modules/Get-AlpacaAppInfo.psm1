@@ -6,12 +6,7 @@ function Get-AlpacaAppInfo {
         [string] $Token
     )
     process {
-        $owner = $env:GITHUB_REPOSITORY_OWNER
-        $repository = $env:GITHUB_REPOSITORY
-        $repository = $repository.replace($owner, "")
-        $repository = $repository.replace("/", "")
-
-        $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
+        $headers = Get-AlpacaAuthenticationHeaders -Token $Token
         $headers.add("accept", "application/text")
 
         $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "Container" -Endpoint "Exec" -Ressource $ContainerName -RouteSuffix "appInfo"
