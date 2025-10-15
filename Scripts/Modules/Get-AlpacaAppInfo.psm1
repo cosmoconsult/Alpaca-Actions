@@ -14,10 +14,7 @@ function Get-AlpacaAppInfo {
         $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
         $headers.add("accept", "application/text")
 
-        $QueryParams = @{
-            "api-version" = "1.0"
-        }
-        $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "Container" -Endpoint "Exec" -Ressource $ContainerName -RouteSuffix "appInfo" -QueryParams $QueryParams
+        $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "Container" -Endpoint "Exec" -Ressource $ContainerName -RouteSuffix "appInfo"
         Write-AlpacaOutput "Connecting to $apiUrl"
         $result = Invoke-RestMethod $apiUrl -Method 'Get' -Headers $headers -AllowInsecureRedirect
         return $result
