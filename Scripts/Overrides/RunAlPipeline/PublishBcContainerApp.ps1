@@ -4,9 +4,37 @@ Param(
 
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
+Write-AlpacaGroupStart "Wait for image to be ready"
+if ($env:ALPACA_CONTAINER_IMAGE_READY) {
+    Write-AlpacaOutput "ALPACA_CONTAINER_IMAGE_READY is already set to '$env:ALPACA_CONTAINER_IMAGE_READY'. Skipping wait."
+}
+else {
+    Wait-AlpacaContainerImageReady -Token $env:_token -ContainerName $env:ALPACA_CONTAINER_ID
+    Write-AlpacaOutput "Set ALPACA_CONTAINER_IMAGE_READY to '$true'"
+    $env:ALPACA_CONTAINER_IMAGE_READY = $true
+}
+Write-AlpacaGroupEnd
+
+Write-AlpacaGroupStart "Wait for container to be ready"
+if ($env:ALPACA_CONTAINER_READY) {
+    Write-AlpacaOutput "ALPACA_CONTAINER_READY is already set to '$env:ALPACA_CONTAINER_READY'. Skipping wait."
+}
+else {
+    Wait-AlpacaContainerReady -Token $env:_token -ContainerName $env:ALPACA_CONTAINER_ID
+    Write-AlpacaOutput "Set ALPACA_CONTAINER_READY to '$true'"
+    $env:ALPACA_CONTAINER_READY = $true
+}
+Write-AlpacaGroupEnd
+
 $publishedAppInfos = Get-Variable -Name alpacaPublishedAppInfos -ValueOnly -Scope Script -ErrorAction Ignore
 if (! $publishedAppInfos) {
+    try {
+        $publishedAppInfos = Get-AlpacaAppInfo -Token $env:_token -ContainerName $env:ALPACA_CONTAINER_ID
+    }
+    catch {
+        Write-AlpacaOutput "Error occurred while getting published app infos: $_"
     $publishedAppInfos = @()
+}
 }
 
 # Collect app files
@@ -68,26 +96,6 @@ $appInfos = $appInfos | ForEach-Object {
 Write-AlpacaGroupEnd
 
 if ($appInfos) {
-    Write-AlpacaGroupStart "Wait for image to be ready"
-    if ($env:ALPACA_CONTAINER_IMAGE_READY) {
-        Write-AlpacaOutput "ALPACA_CONTAINER_IMAGE_READY is already set to '$env:ALPACA_CONTAINER_IMAGE_READY'. Skipping wait."
-    } else {
-        Wait-AlpacaContainerImageReady -Token $env:_token -ContainerName $env:ALPACA_CONTAINER_ID
-        Write-AlpacaOutput "Set ALPACA_CONTAINER_IMAGE_READY to '$true'"
-        $env:ALPACA_CONTAINER_IMAGE_READY = $true
-    }
-    Write-AlpacaGroupEnd
-
-    Write-AlpacaGroupStart "Wait for container to be ready"
-    if ($env:ALPACA_CONTAINER_READY) {
-        Write-AlpacaOutput "ALPACA_CONTAINER_READY is already set to '$env:ALPACA_CONTAINER_READY'. Skipping wait."
-    } else {
-        Wait-AlpacaContainerReady -Token $env:_token -ContainerName $env:ALPACA_CONTAINER_ID
-        Write-AlpacaOutput "Set ALPACA_CONTAINER_READY to '$true'"
-        $env:ALPACA_CONTAINER_READY = $true
-    }
-    Write-AlpacaGroupEnd
-
     $password = ConvertFrom-SecureString -SecureString $parameters.bcAuthContext.Password -AsPlainText
 
     foreach($appInfo in $appInfos) {
