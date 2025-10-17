@@ -4,6 +4,17 @@ Param(
 
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
+Write-AlpacaGroupStart "Wait for image to be ready"
+if ($env:ALPACA_CONTAINER_IMAGE_READY) {
+    Write-AlpacaOutput "ALPACA_CONTAINER_IMAGE_READY is already set to '$env:ALPACA_CONTAINER_IMAGE_READY'. Skipping wait."
+}
+else {
+    Wait-AlpacaContainerImageReady -Token $env:_token -ContainerName $env:ALPACA_CONTAINER_ID
+    Write-AlpacaOutput "Set ALPACA_CONTAINER_IMAGE_READY to '$true'"
+    $env:ALPACA_CONTAINER_IMAGE_READY = $true
+}
+Write-AlpacaGroupEnd
+
 Write-AlpacaGroupStart "Wait for container to be ready"
 if ($env:ALPACA_CONTAINER_READY) {
     Write-AlpacaOutput "ALPACA_CONTAINER_READY is already set to '$env:ALPACA_CONTAINER_READY'. Skipping wait."
