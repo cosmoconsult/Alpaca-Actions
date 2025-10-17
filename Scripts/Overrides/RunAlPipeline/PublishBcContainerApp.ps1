@@ -46,75 +46,13 @@ $outputAppFiles = $apps + $testApps + $bcptTestApps | Resolve-Path -ea SilentlyC
 $previousAppFiles = $previousApps | Resolve-Path -ea SilentlyContinue | Select-Object -ExpandProperty Path
 $installAppFiles = $installApps + ($installTestApps -replace '^\(|\)$') | Resolve-Path -ea SilentlyContinue | Select-Object -ExpandProperty Path
 
-# Extract Files recursively
-function GetAppFiles($appFiles, $folder) {
-    # Inspired by InitializeModule of bccontainerhelper
-    $isPsCore = $PSVersionTable.PSVersion -ge "6.0.0"
-    if ($isPsCore) {
-        $byteEncodingParam = @{ "asByteStream" = $true }
-    }
-    else {
-        $byteEncodingParam = @{ "Encoding" = "byte" }
-    }
-
-    # Inspired by CopyAppFilesToFolder of bccontainerhelper
-    if ($appFiles -is [String]) {
-        if (!(Test-Path $appFiles)) {
-            $appFiles = @($appFiles.Split(',').Trim() | Where-Object { $_ })
-        }
-    }
-    $appFiles | Where-Object { $_ } | ForEach-Object {
-        $appFile = "$_"
-
-        if (Test-Path $appFiles -PathType Container) {
-            Get-ChildItem $appFiles -Recurse -File | ForEach-Object {
-                GetAppFiles -appFiles $_.FullName -folder $folder
-            }
-        }
-        elseif (Test-Path $appFiles -PathType Leaf) {
-            Get-ChildItem $appFiles | ForEach-Object {
-                $appFile = $_.FullName
-                if ($appFile -like "*.app") {
-                    $destFileName = [System.IO.Path]::GetFileName($appFile)
-                    $destFile = Join-Path $folder $destFileName
-                    if ((Test-Path $destFile) -and ((Get-FileHash -Path $appFile).Hash -ne (Get-FileHash -Path $destFile).Hash)) {
-                        Write-AlpacaWarning -Message "$destFileName already exists, it looks like you have multiple app files with the same name. App filenames must be unique."
-                    }
-                    Copy-Item -Path $appFile -Destination $destFile -Force
-                    $destFile
-                }
-                elseif ([string]::new([char[]](Get-Content $appFile @byteEncodingParam -TotalCount 2)) -eq "PK") {
-                    $tmpFolder = Join-Path ([System.IO.Path]::GetTempPath()) ([Guid]::NewGuid().ToString())
-                    $copied = $false
-                    try {
-                        if ($appFile -notlike "*.zip") {
-                            $orgAppFile = $appFile
-                            $appFile = Join-Path ([System.IO.Path]::GetTempPath()) "$([System.IO.Path]::GetFileName($orgAppFile)).zip"
-                            Copy-Item $orgAppFile $appFile
-                            $copied = $true
-                        }
-                        Expand-Archive $appfile -DestinationPath $tmpFolder -Force
-                        GetAppFiles -appFiles $tmpFolder -folder $folder
-                    }
-                    finally {
-                        Remove-Item -Path $tmpFolder -Recurse -Force
-                        if ($copied) { Remove-Item -Path $appFile -Force }
-                    }
-                }
-            }
-        } 
-    }
-}
-
-
-
 # Collect parameter app infos
 $appInfos = @()
 if ($parameters.appFile) {
     $compilerFolder = (GetCompilerFolder)
 
     $appFiles = @()
-    $appFiles += GetAppFiles -appFiles $parameters.appFile -folder $TempDir
+    $appFiles += CopyAppFilesToFolder -appFiles $parameters.appFile -folder $TempDir
     foreach ($appFile in $appFiles) {
         $appInfos += GetAppInfo -AppFiles $appFile -compilerFolder $compilerFolder -cacheAppinfoPath (Join-Path $TempDir 'cache_AppInfo.json')
     }
@@ -133,7 +71,7 @@ if ($dependencyAppFiles) {
     $compilerFolder = (GetCompilerFolder)
     
     $appFiles = @()
-    $appFiles += GetAppFiles -appFiles $dependencyAppFiles -folder $TempDir
+    $appFiles += CopyAppFilesToFolder -appFiles $dependencyAppFiles -folder $TempDir
     foreach ($appFile in $appFiles) {
         $dependencyAppInfos += GetAppInfo -AppFiles $appFile -compilerFolder $compilerFolder -cacheAppinfoPath (Join-Path $dependenciesFolder 'cache_AppInfo.json')
     }
