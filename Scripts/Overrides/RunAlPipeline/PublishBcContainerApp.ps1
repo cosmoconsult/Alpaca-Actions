@@ -132,5 +132,5 @@ if ($AlGoPublishBcContainerApp) {
 }
 
 if (Test-Path "$TempDir") {
-    $TempDir | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
 }
