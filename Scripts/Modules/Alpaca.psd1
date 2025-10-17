@@ -33,7 +33,6 @@
         'Publish-AlpacaBcApp.psm1',
         'Get-AlpacaAppInfo.psm1',
         'Remove-AlpacaContainer.psm1',
-        'Wait-AlpacaContainerImageReady.psm1',
         'Wait-AlpacaContainerReady.psm1')
 
     # Functions to export from this module
