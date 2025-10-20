@@ -17,37 +17,20 @@ function Get-AlpacaDependencyApps {
     }
     $project = $env:_project
 
-    Write-AlpacaOutput "Get container artifacts for $owner/$repository and ref $branch (project: $project)"
+    Write-AlpacaOutput "Get project configuration for $owner/$repository and ref $branch (project: $project)"
 
     $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
     $headers.add("Content-Type", "application/json")
 
-    $config = Get-AlpacaConfigNameForWorkflowName 
-
-    $request = @{
-        source = @{
-            owner = "$owner"
-            repo = "$repository"
-            branch = "$branch"
-            project = "$($project -replace '^\.$', '_')"
-        }
-        containerConfiguration = "$config"
-        workflow = @{
-            actor = "$($env:GITHUB_ACTOR)"
-            workflowName = "$($env:GITHUB_WORKFLOW)"
-            WorkflowRef = "$($env:GITHUB_WORKFLOW_REF)"
-            RunID = "$($env:GITHUB_RUN_ID)"
-            Repository = "$($env:GITHUB_REPOSITORY)"
-        }
+    $queryParams = @{
+        "reference"     = "$branch"
+        containerConfig = Get-AlpacaConfigNameForWorkflowName
     }
-    $body = $request | ConvertTo-Json -Depth 10
+    $resource = "$($owner)/$($repository)/$($project -replace '^\.$', '_')"
+    $apiUrl = Get-AlpacaEndpointUrlWithParam -api 'alpaca' -Controller "GitHub" -Endpoint "Project" -Ressource $resource -QueryParams $queryParams
 
-    $QueryParams = @{
-        "api-version" = "0.12"
-    }
-    $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "GitHub/GetBuildContainerArtifacts" -QueryParams $QueryParams
-    $artifacts = Invoke-RestMethod $apiUrl -Method 'GET' -Headers $headers -Body $body -AllowInsecureRedirect
-
+    $containerConfig = Invoke-RestMethod $apiUrl -Method 'GET' -Headers $headers -AllowInsecureRedirect
+    $artifacts = $containerConfig.containerConfigurations[0].artifacts
     foreach ($artifact in $artifacts) {
         if ($artifact.target -eq 'App') {
             if ($artifact.type -eq 'Url') {
