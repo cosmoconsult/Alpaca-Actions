@@ -13,8 +13,8 @@ function Wait-AlpacaContainerImageReady {
         $SleepSecondsPending = 10
         $TimeoutInMinutes = 50
         $WaitMessage = "Image is building. Going to sleep for {0} seconds." 
-        $ContainerStatusCode  = @("Running", "Healthy")
-        $success= $true
+        $ContainerStatusCode = @("Running", "Healthy")
+        $success = $true
 
         $owner = $env:GITHUB_REPOSITORY_OWNER
         $repository = $env:GITHUB_REPOSITORY
@@ -22,31 +22,31 @@ function Wait-AlpacaContainerImageReady {
         $repository = $repository.replace("/", "")
 
         $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
-        $headers.add("Content-Type","application/json")
+        $headers.add("Content-Type", "application/json")
 
-        $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "service" -Ressource $ContainerName -RouteSuffix "status"
-
-        Write-AlpacaOutput "Get status from $apiUrl"
+        $apiUrl = Get-AlpacaEndpointUrlWithParam -api 'alpaca' -Controller "Container" -Endpoint "Container" -RouteSuffix "filter"
+        Write-AlpacaOutput "Get status of container '$ContainerName' from $apiUrl"
+        $body = @{containerId = $ContainerName } | ConvertTo-Json -Depth 10
 
         $time = New-TimeSpan -Seconds ($TimeoutInMinutes * 60)
         $stoptime = (Get-Date).Add($time)
 
         $attemps = 1
         do {
-            $serviceResult = Invoke-RestMethod $apiUrl -Method 'Get' -Headers $headers -AllowInsecureRedirect -StatusCodeVariable 'StatusCode'
+            $serviceResult = Invoke-RestMethod $apiUrl -Method 'Get' -Headers $headers -Body $body -AllowInsecureRedirect -StatusCodeVariable 'StatusCode'
             if ($statusCode -ne 200) {
                 $success = $false
                 return 
             }
-            $currentStatus = $serviceResult.statusCode
-            Write-AlpacaOutput "[info] Response: $serviceResult"
+            Write-AlpacaOutput "[info] Response: $($serviceResult.status | ConvertTo-Json -Compress)"
+            $currentStatus = $serviceResult.status.state
             Write-AlpacaOutput ("[info] Status is: {0}" -f $currentStatus)
             $CurrentSleepSeconds = $SleepSeconds
-            if($currentStatus -in @("Unknown", "Pending")) {
+            if ($currentStatus -in @("Unknown", "Pending")) {
                 $CurrentSleepSeconds = $SleepSecondsPending
             }
             $CurrentWaitMessage = $WaitMessage
-            if (!$serviceResult.imageBuilding){
+            if (!$serviceResult.status.imageBuilding) {
                 $CurrentWaitMessage = 'Waiting for service to start. Going to sleep for {0} seconds.'
             }
             Write-AlpacaOutput ("Attempt {0}: {1}" -f $attemps, $($CurrentWaitMessage -f $CurrentSleepSeconds))
@@ -65,19 +65,20 @@ function Wait-AlpacaContainerImageReady {
             }
             $attemps += 1
             if ((Get-Date) -gt $stoptime) {
-                $success= $false
+                $success = $false
                 Write-AlpacaError "Timeout waiting for image build."
                 return
             }
         } until ($currentStatus -in $ContainerStatusCode)
         Write-AlpacaOutput "##[info] Reached desired status: $currentStatus"
-        $success= $true
+        $success = $true
     }
 
     end {
-        if(! $success) {
+        if (! $success) {
             throw "Error during image build"
-        } else {
+        }
+        else {
             Write-AlpacaOutput "Task Completed."
         }
     }
