@@ -33,7 +33,7 @@ function Wait-AlpacaContainerImageReady {
 
         $attemps = 1
         do {
-            $serviceResult = Invoke-RestMethod $apiUrl -Method 'Get' -Headers $headers -Body $body -AllowInsecureRedirect -StatusCodeVariable 'StatusCode'
+            $serviceResult = Invoke-RestMethod $apiUrl -Method Post -Headers $headers -Body $body -AllowInsecureRedirect -StatusCodeVariable 'StatusCode'
             if ($statusCode -ne 200) {
                 $success = $false
                 return 
