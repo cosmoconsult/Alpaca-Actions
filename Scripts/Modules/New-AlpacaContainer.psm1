@@ -25,7 +25,6 @@ function New-AlpacaContainer {
     $apiUrl = Get-AlpacaEndpointUrlWithParam -api 'alpaca' -Controller "Container" -Endpoint "Container"
 
     $request = @{
-
         owner                     = "$owner"
         type                      = "Build"
         containerOriginIdentifier = @{
