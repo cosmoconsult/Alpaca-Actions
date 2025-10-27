@@ -43,8 +43,6 @@ if (! $publishedAppInfos) {
 
 # Collect app files
 $outputAppFiles = $apps + $testApps + $bcptTestApps | Resolve-Path -ea SilentlyContinue | Select-Object -ExpandProperty Path
-$previousAppFiles = $previousApps | Resolve-Path -ea SilentlyContinue | Select-Object -ExpandProperty Path
-$installAppFiles = $installApps + ($installTestApps -replace '^\(|\)$') | Resolve-Path -ea SilentlyContinue | Select-Object -ExpandProperty Path
 
 # Collect parameter app infos
 $appInfos = @()
@@ -54,26 +52,7 @@ if ($parameters.appFile) {
     $appFiles = @()
     $appFiles += CopyAppFilesToFolder -appFiles $parameters.appFile -folder $TempDir
     foreach ($appFile in $appFiles) {
-        $appInfos += GetAppInfo -AppFiles $appFile -compilerFolder $compilerFolder -cacheAppinfoPath (Join-Path $TempDir 'cache_AppInfo.json')
-    }
-}
-
-# Collect dependency app infos
-$dependenciesFolder = Join-Path "$env:GITHUB_WORKSPACE" ".dependencies"
-$dependencyAppFiles = @()
-$dependencyAppInfos = @()
-if (Test-Path $dependenciesFolder) {
-    $dependencyAppFiles += Get-ChildItem -Path $dependenciesFolder -File -Recurse |
-    Select-Object -ExpandProperty FullName |
-    Where-Object { $installAppFiles -contains $_ }
-}
-if ($dependencyAppFiles) {
-    $compilerFolder = (GetCompilerFolder)
-    
-    $appFiles = @()
-    $appFiles += CopyAppFilesToFolder -appFiles $dependencyAppFiles -folder $TempDir
-    foreach ($appFile in $appFiles) {
-        $dependencyAppInfos += GetAppInfo -AppFiles $appFile -compilerFolder $compilerFolder -cacheAppinfoPath (Join-Path $dependenciesFolder 'cache_AppInfo.json')
+        $appInfos += GetAppInfo -AppFiles $appFile -compilerFolder $compilerFolder
     }
 }
 
@@ -87,24 +66,23 @@ $appInfos = $appInfos | ForEach-Object {
     # Skip unhandled apps
     $appComment = "skip"
 
-    if ($publishedAppInfos | Where-Object { $_.Id -eq $appInfo.Id -and $_.Version -eq $appInfo.Version }) {
-        # Skip already published apps
-        $appComment = "skip already published"
-    }
-    elseif ($outputAppFiles -contains $appFile) {
-        # Publish output apps
+    if ($outputAppFiles -contains $appFile) {
         $appComment = "publish build output"
         $appInfo
     }
-    elseif ($previousAppFiles -contains $appFile) {
-        # Publish previous apps
-        $appComment = "publish previous release"
-        $appInfo
-    }
-    elseif ($dependencyAppInfos | Where-Object { $_.Id -eq $appInfo.Id -and $_.Version -eq $appInfo.Version }) {
-        # Publish dependency apps
-        $appComment = "publish dependency build output"
-        $appInfo
+    else {
+        $AlreadyInstalledAppVersions = $publishedAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Select-Object -ExpandProperty Version | % { [version]$_ } | Sort-Object
+        if ( $AlreadyInstalledAppVersions.Count -eq 0) {
+            $appComment = "publish new app"
+            $appInfo
+        }
+        elseif ($AlreadyInstalledAppVersions[-1] -lt [version]$appInfo.Version) {
+            $appComment = "publish newer version"
+            $appInfo
+        }
+        else {
+            $appComment = "skip - same or newer version already installed"
+        }
     }
 
     Write-AlpacaOutput "- $appComment '$appFile' ($appLabel)"
