@@ -72,7 +72,7 @@ $appInfos = $appInfos | ForEach-Object {
     }
     else {
         $AlreadyInstalledAppVersions = @()
-        $AlreadyInstalledAppVersions += $publishedAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Select-Object -ExpandProperty Version | % { [version]$_ } | Sort-Object
+        $AlreadyInstalledAppVersions += $publishedAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Select-Object -ExpandProperty Version | ForEach-Object { [version]$_ } | Sort-Object
         if ($AlreadyInstalledAppVersions.Count -eq 0) {
             $appComment = "publish new app"
             $appInfo
