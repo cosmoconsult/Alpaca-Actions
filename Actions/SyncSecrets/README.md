@@ -16,7 +16,7 @@ Sync COSMO Alpaca secrets to the Alpaca backend for development containers
 | :-- | :-: | :-- | :-- |
 | shell | | The shell (powershell or pwsh) in which the PowerShell script in this action should run | powershell |
 | token | | The GitHub token running the action | github.token |
-| secretsJson | Yes | An object of key-value pairs representing the secrets to sync | |
+| secretsJson | Yes | An object of key-value pairs with base64 values representing the secrets to sync, usually from ReadSettings of AL-Go | |
 
 ## OUTPUT
 

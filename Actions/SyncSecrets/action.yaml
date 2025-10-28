@@ -11,7 +11,7 @@ inputs:
     required: false
     default: ${{ github.token }}
   secretsJson:
-    description: An object of key-value pairs representing the secrets to sync
+    description: An object of key-value pairs with base64 values representing the secrets to sync, usually from ReadSettings of AL-Go
     required: true
 runs:
   using: composite
