@@ -1,0 +1,29 @@
+name: Sync Secrets
+description: This action syncs secrets to the Alpaca backend for development containers
+author: COSMO CONSULT
+inputs:
+  shell:
+    description: Shell in which you want to run the action (powershell or pwsh)
+    required: false
+    default: powershell
+  token:
+    description: The GitHub token running the action
+    required: false
+    default: ${{ github.token }}
+  secretsJson:
+    description: An object of key-value pairs representing the secrets to sync
+    required: true
+runs:
+  using: composite
+  steps:
+    - id: SyncSecrets
+      name: Sync COSMO Alpaca Secrets
+      shell: ${{ inputs.shell }}
+      env:
+        _token: ${{ inputs.token }}
+        _secretsJson: ${{ inputs.secretsJson }}
+      run: |
+        ${{ github.action_path }}/SyncSecrets.ps1 -Token $env:_token -SecretsJson $env:_secretsJson
+branding:
+  icon: terminal
+  color: blue

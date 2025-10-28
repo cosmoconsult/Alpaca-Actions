@@ -1,6 +1,6 @@
 function Get-AlpacaBackendUrl {
     Param(
-        [string] $BackendUrl = $env:ALPACA_BACKEND_URL    
+        [string] $BackendUrl = $env:ALPACA_BACKEND_URL
     )  
     if ([string]::IsNullOrWhiteSpace($BackendUrl)) {
         $BackendUrl = "https://cosmo-alpaca-enterprise.westeurope.cloudapp.azure.com/"
