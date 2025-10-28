@@ -6,12 +6,7 @@ function Sync-AlpacaSecrets {
         [string] $Token
     )
 
-    $owner = $env:GITHUB_REPOSITORY_OWNER
-    $repository = $env:GITHUB_REPOSITORY
-    $repository = $repository.replace($owner, "")
-    $repository = $repository.replace("/", "")
-
-    Write-AlpacaOutput "Syncing secrets for repository '$($owner)/$($repository)'"
+    Write-AlpacaOutput "Syncing secrets to Alpaca backend"
 
     $headers = Get-AlpacaAuthenticationHeaders -Token $Token
     $headers.add("Content-Type", "application/json")
@@ -24,6 +19,6 @@ function Sync-AlpacaSecrets {
     $body = $request | ConvertTo-Json -Depth 10
     Invoke-RestMethod $apiUrl -Method Post -Headers $headers -AllowInsecureRedirect -Body $body | Out-Null
 
-    Write-AlpacaOutput "Synced secrets for repository '$($owner)/$($repository)'"
+    Write-AlpacaOutput "Synced secrets to Alpaca backend"
 }
 Export-ModuleMember -Function Sync-AlpacaSecrets
