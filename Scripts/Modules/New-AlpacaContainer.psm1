@@ -22,39 +22,32 @@ function New-AlpacaContainer {
     $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
     $headers.add("Content-Type", "application/json")
 
-    $config = Get-AlpacaConfigNameForWorkflowName 
-
-    $QueryParams = @{
-        "api-version" = "0.12"
-    }
-    $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "GitHub/Build" -QueryParams $QueryParams
+    $apiUrl = Get-AlpacaEndpointUrlWithParam -api 'alpaca' -Controller "Container" -Endpoint "Container"
 
     $request = @{
-        source = @{
-            owner = "$owner"
-            repo = "$repository"
-            branch = "$branch"
-            project = "$($Project -replace '^\.$', '_')"
+        owner                     = "$owner"
+        type                      = "Build"
+        containerOriginIdentifier = @{
+            origin           = "GitHub"
+            organizationId   = "$($env:GITHUB_REPOSITORY_OWNER_ID)"
+            organizationName = $owner
+            projectName      = $Project    
+            repositoryId     = "$($env:GITHUB_REPOSITORY_ID)"
+            repositoryName   = $repository
+            branch           = $branch
+            workflowName     = "$($env:GITHUB_WORKFLOW)"
+            runId            = "$($env:GITHUB_RUN_ID)"
         }
-        containerConfiguration = "$config"
-        workflow = @{
-            actor = "$($env:GITHUB_ACTOR)"
-            workflowName = "$($env:GITHUB_WORKFLOW)"
-            WorkflowRef = "$($env:GITHUB_WORKFLOW_REF)"
-            RunID = "$($env:GITHUB_RUN_ID)"
-            Repository = "$($env:GITHUB_REPOSITORY)"
-        }
-    }
-    
+    } 
     $body = $request | ConvertTo-Json -Depth 10
     $response = Invoke-RestMethod $apiUrl -Method 'POST' -Headers $headers -Body $body -AllowInsecureRedirect
 
     $container = [pscustomobject]@{
-        Project = $Project
-        Id = $response.id
-        User = $response.username
+        Project  = $Project
+        Id       = $response.id
+        User     = $response.username
         Password = $response.Password
-        Url = $response.webUrl
+        Url      = $response.webUrl
     }
     
     Write-AlpacaOutput "Created container '$($container.Id)'"

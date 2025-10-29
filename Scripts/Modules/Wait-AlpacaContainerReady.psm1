@@ -55,10 +55,9 @@ function Wait-AlpacaContainerReady {
             $headers.add("accept","application/text")
 
             $QueryParams = @{
-                "api-version" = "0.12"
-                tail = 5000
+                tailLines     = 5000
             }
-            $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "task" -Ressource $ContainerName -RouteSuffix "logs"  -QueryParams $QueryParams
+            $apiUrl = Get-AlpacaEndpointUrlWithParam -api 'alpaca' -Controller "Container" -Endpoint "Container" -Ressource $ContainerName -RouteSuffix "logs" -QueryParams $QueryParams
                 
             while ($waitForContainer) {  
 
