@@ -70,8 +70,14 @@ $appInfos = $appInfos | ForEach-Object {
     # Skip unhandled apps
     $appComment = "skip"
 
-    if ($outputAppInfos.Id -contains $appInfo.Id) {
-        $appComment = "publish build output app"
+    $outputAppInfo = $outputAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Sort-Object { [Version]$_.Version } | Select-Object -Last 1
+    if ($outputAppInfo) {
+        if ($outputAppInfo.Version -eq $appInfo.Version) {
+            $appComment = "publish output app"
+        }
+        else {
+            $appComment = "publish other version of output app"
+        }
         $appInfo
     }
     else {
