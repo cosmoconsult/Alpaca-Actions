@@ -70,7 +70,7 @@ $appInfos = $appInfos | ForEach-Object {
     # Skip unhandled apps
     $appComment = "skip"
 
-    $outputAppInfo = $outputAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Sort-Object { [Version]$_.Version } | Select-Object -Last 1
+    $outputAppInfo = $outputAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Sort-Object -Property @{Expression={[Version]$_.Version}; Descending=$true} | Select-Object -First 1
     if ($outputAppInfo) {
         if ($outputAppInfo.Version -eq $appInfo.Version) {
             $appComment = "publish output app"
@@ -81,7 +81,7 @@ $appInfos = $appInfos | ForEach-Object {
         $appInfo
     }
     else {
-        $publishedAppInfo = $publishedAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Sort-Object { [Version]$_.Version } | Select-Object -Last 1
+        $publishedAppInfo = $publishedAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Sort-Object -Property @{Expression={[Version]$_.Version}; Descending=$true} | Select-Object -First 1
         if (!$publishedAppInfo) {
             $appComment = "publish app"
             $appInfo
