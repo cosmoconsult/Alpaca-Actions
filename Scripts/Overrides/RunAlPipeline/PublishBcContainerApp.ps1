@@ -43,6 +43,7 @@ if (! $publishedAppInfos) {
 
 # Collect app files
 $outputAppFiles = $apps + $testApps + $bcptTestApps | Resolve-Path -ea SilentlyContinue | Select-Object -ExpandProperty Path
+$outputAppInfos = GetAppInfo -AppFiles $outputAppFiles -compilerFolder $compilerFolder -cacheAppInfoPath (Join-Path $outputFolder 'cache_AppInfo.json')
 
 # Collect parameter app infos
 $appInfos = @()
@@ -66,7 +67,7 @@ $appInfos = $appInfos | ForEach-Object {
     # Skip unhandled apps
     $appComment = "skip"
 
-    if ($outputAppFiles -contains $appFile) {
+    if ($outputAppInfos.Id -contains $appInfo.Id) {
         $appComment = "publish build output"
         $appInfo
     }
