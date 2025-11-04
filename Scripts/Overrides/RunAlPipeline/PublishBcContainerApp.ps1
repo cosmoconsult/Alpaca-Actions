@@ -68,13 +68,13 @@ $appInfos = $appInfos | ForEach-Object {
     $appComment = "skip"
 
     if ($outputAppInfos.Id -contains $appInfo.Id) {
-        $appComment = "publish build output"
+        $appComment = "publish build output app"
         $appInfo
     }
     else {
         $publishedAppInfo = $publishedAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Sort-Object { [Version]$_.Version } | Select-Object -Last 1
         if (!$publishedAppInfo) {
-            $appComment = "publish new app"
+            $appComment = "publish app"
             $appInfo
         }
         else {
