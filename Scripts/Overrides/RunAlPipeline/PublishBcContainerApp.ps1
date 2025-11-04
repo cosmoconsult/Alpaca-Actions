@@ -71,18 +71,13 @@ $appInfos = $appInfos | ForEach-Object {
         $appInfo
     }
     else {
-        $AlreadyInstalledAppVersions = @()
-        $AlreadyInstalledAppVersions += $publishedAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Select-Object -ExpandProperty Version | ForEach-Object { [version]$_ } | Sort-Object
-        if ($AlreadyInstalledAppVersions.Count -eq 0) {
+        $publishedAppInfo = $publishedAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Sort-Object { [Version]$_.Version } | Select-Object -Last 1
+        if (!$publishedAppInfo) {
             $appComment = "publish new app"
             $appInfo
         }
-        elseif ($AlreadyInstalledAppVersions[-1] -lt [version]$appInfo.Version) {
-            $appComment = "publish newer version"
-            $appInfo
-        }
         else {
-            $appComment = "skip - same or newer version already installed"
+            $appComment = "skip - app already installed with version $($publishedAppInfo.Version)"
         }
     }
 
