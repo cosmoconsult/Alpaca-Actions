@@ -51,7 +51,7 @@ function Publish-AlpacaBcApp {
                 $Tenant = $queryDict["tenant"]
             }
         }
-        $devServerUrl = $url + "dev/dev/apps?SchemaUpdateMode=$schemaUpdateMode&tenant=$Tenant"
+        $devServerUrl = $url.TrimEnd('/') + "/dev/dev/apps?SchemaUpdateMode=$schemaUpdateMode&tenant=$Tenant"
     
         $multipartContent = [System.Net.Http.MultipartFormDataContent]::new()
         $FileStream = [System.IO.FileStream]::new($Path, [System.IO.FileMode]::Open)
