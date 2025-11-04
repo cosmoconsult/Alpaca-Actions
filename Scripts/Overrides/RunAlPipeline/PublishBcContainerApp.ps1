@@ -41,15 +41,15 @@ if (! $publishedAppInfos) {
     }
 }
 
+$compilerFolder = (GetCompilerFolder)
+
 # Collect app files
-$outputAppFiles = $apps + $testApps + $bcptTestApps | Resolve-Path -ea SilentlyContinue | Select-Object -ExpandProperty Path
-$outputAppInfos = GetAppInfo -AppFiles $outputAppFiles -compilerFolder $compilerFolder -cacheAppInfoPath (Join-Path $outputFolder 'cache_AppInfo.json')
+$outputAppInfos = @()
+$outputAppInfos += GetAppInfo -AppFiles ($apps + $testApps + $bcptTestApps) -compilerFolder $compilerFolder -cacheAppInfoPath (Join-Path $outputFolder 'cache_AppInfo.json')
 
 # Collect parameter app infos
 $appInfos = @()
 if ($parameters.appFile) {
-    $compilerFolder = (GetCompilerFolder)
-
     $appFiles = @()
     $appFiles += CopyAppFilesToFolder -appFiles $parameters.appFile -folder $TempDir
     foreach ($appFile in $appFiles) {
