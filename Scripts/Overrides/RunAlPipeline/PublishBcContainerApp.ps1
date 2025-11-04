@@ -41,14 +41,18 @@ if (! $publishedAppInfos) {
     }
 }
 
-# Collect app files
-$outputAppFiles = $apps + $testApps + $bcptTestApps | Resolve-Path -ea SilentlyContinue | Select-Object -ExpandProperty Path
+$compilerFolder = (GetCompilerFolder)
+
+# Collect output app infos
+$outputAppFiles = $apps + $testApps + $bcptTestApps
+$outputAppInfos = @()
+if ($outputAppFiles) {
+    $outputAppInfos += GetAppInfo -AppFiles $outputAppFiles -compilerFolder $compilerFolder -cacheAppInfoPath (Join-Path $outputFolder 'cache_AppInfo.json')
+}
 
 # Collect parameter app infos
 $appInfos = @()
 if ($parameters.appFile) {
-    $compilerFolder = (GetCompilerFolder)
-
     $appFiles = @()
     $appFiles += CopyAppFilesToFolder -appFiles $parameters.appFile -folder $TempDir
     foreach ($appFile in $appFiles) {
@@ -66,23 +70,24 @@ $appInfos = $appInfos | ForEach-Object {
     # Skip unhandled apps
     $appComment = "skip"
 
-    if ($outputAppFiles -contains $appFile) {
-        $appComment = "publish build output"
+    $outputAppInfo = $outputAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Sort-Object -Property @{Expression={[Version]$_.Version}; Descending=$true} | Select-Object -First 1
+    if ($outputAppInfo) {
+        if ($outputAppInfo.Version -eq $appInfo.Version) {
+            $appComment = "publish output app"
+        }
+        else {
+            $appComment = "publish other version of output app"
+        }
         $appInfo
     }
     else {
-        $AlreadyInstalledAppVersions = @()
-        $AlreadyInstalledAppVersions += $publishedAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Select-Object -ExpandProperty Version | ForEach-Object { [version]$_ } | Sort-Object
-        if ($AlreadyInstalledAppVersions.Count -eq 0) {
-            $appComment = "publish new app"
-            $appInfo
-        }
-        elseif ($AlreadyInstalledAppVersions[-1] -lt [version]$appInfo.Version) {
-            $appComment = "publish newer version"
+        $publishedAppInfo = $publishedAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Sort-Object -Property @{Expression={[Version]$_.Version}; Descending=$true} | Select-Object -First 1
+        if (!$publishedAppInfo) {
+            $appComment = "publish app"
             $appInfo
         }
         else {
-            $appComment = "skip - same or newer version already installed"
+            $appComment = "skip - app already installed with version $($publishedAppInfo.Version)"
         }
     }
 
