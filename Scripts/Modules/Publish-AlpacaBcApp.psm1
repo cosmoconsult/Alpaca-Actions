@@ -44,16 +44,12 @@ function Publish-AlpacaBcApp {
         } elseif ($SyncMode -eq "ForceSync") {
             $schemaUpdateMode = "forcesync"
         }
-        $url = $ContainerUrl.Split('?')[0]
-        $urlQuery = ""
-        if ($ContainerUrl -like "*?*") {
-            $urlQuery = $ContainerUrl.Split('?')[1]
-        }
-        $urlQueryDict = [System.Web.HttpUtility]::ParseQueryString($urlQuery)
+        $url, $query = $ContainerUrl.Split('?', 2)
+        $queryDict = [System.Web.HttpUtility]::ParseQueryString("$query")
         if (! $Tenant) {
             $Tenant = "default"
-            if ($urlQueryDict["tenant"]) {
-                $Tenant = $urlQueryDict["tenant"]
+            if ($queryDict["tenant"]) {
+                $Tenant = $queryDict["tenant"]
             }
         }
         $devServerUrl = $url.TrimEnd('/') + "/dev/dev/apps?SchemaUpdateMode=$schemaUpdateMode&tenant=$Tenant"
