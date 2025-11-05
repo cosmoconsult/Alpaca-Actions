@@ -8,13 +8,13 @@ function Invoke-AlpacaPrecompileApp {
     #region DebugInfo
     Write-AlpacaGroupStart "DebugInfo"
 
-    Write-Host "App Type: $appType"
+    Write-AlpacaOutput "App Type: $appType"
 
-    Write-Host "Compilation Params:"
-    $compilationParams.Value | ForEach-Object { Write-Host "  $_" }
+    Write-AlpacaOutput "Compilation Params:"
+    $compilationParams.Value | ForEach-Object { Write-AlpacaOutput "  $_" }
 
-    Write-Host "Env Variables:"
-    Get-ChildItem Env: | ForEach-Object { "  $($_.Name): $($_.Value)" }
+    Write-AlpacaOutput "Env Variables:"
+    Get-ChildItem Env: | ForEach-Object { Write-AlpacaOutput "  $($_.Name): $($_.Value)" }
 
     Write-AlpacaGroupEnd
     #endregion DebugInfo
@@ -25,8 +25,8 @@ function Invoke-AlpacaPrecompileApp {
     #region PreCompile
 
     # Remove Cops parameters
-    $compilationParamsCopy = $compilationParams.Clone()
-    $compilationParamsCopy.Keys | Where-Object { $_ -in $CopParameters.Keys } | ForEach-Object { $compilationParams.Remove($_) }
+    $compilationParamsCopy = $compilationParams.Value.Clone()
+    $compilationParamsCopy.Keys | Where-Object { $_ -in $CopParameters.Keys } | ForEach-Object { $compilationParamsCopy.Remove($_) }
     # TODO: Check other compilationParamsCopy
     if ($useCompilerFolder) {
         $appFile = Invoke-Command -ScriptBlock $CompileAppWithBcCompilerFolder -ArgumentList $compilationParamsCopy
