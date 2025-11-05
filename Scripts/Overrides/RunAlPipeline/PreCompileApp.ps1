@@ -61,8 +61,23 @@ Write-AlpacaGroupStart "Precompile and Translate"
 
 # Remove Cops parameters
 $compilationParamsCopy = $compilationParams.Value.Clone()
-$compilationParamsCopy.Keys | Where-Object { $_ -in $CopParameters.Keys } | ForEach-Object { $compilationParamsCopy.Remove($_) }
+# $compilationParamsCopy.Keys | Where-Object { $_ -in $CopParameters.Keys } | ForEach-Object { $compilationParamsCopy.Remove($_) }
 # TODO: Check other compilationParamsCopy
+# OutputTo
+$compilationParamsCopy.OutputTo = { Param($line) }
+# CopyAppToSymbolsFolder
+$compilationParamsCopy.CopyAppToSymbolsFolder = $false
+# generatecrossreferences
+$compilationParamsCopy.Remove("EnablePerTenantExtensionCop")
+# EnableAppSourceCop
+$compilationParamsCopy.Remove("EnableAppSourceCop")
+# updateDependencies
+$compilationParamsCopy.updateDependencies = $false
+# EnableCodeCop
+$compilationParamsCopy.Remove("EnableCodeCop")
+# EnableUICop
+$compilationParamsCopy.Remove("EnableUICop")
+
 Write-Host "useCompilerFolder: $useCompilerFolder"
 Write-Host "CompileAppWithBcCompilerFolder: $CompileAppWithBcCompilerFolder"
 Write-Host "CompileAppInBcContainer: $CompileAppInBcContainer"
