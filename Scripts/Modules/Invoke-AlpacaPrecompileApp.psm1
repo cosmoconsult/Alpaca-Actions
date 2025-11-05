@@ -19,7 +19,7 @@ function Invoke-AlpacaPrecompileApp {
     Write-AlpacaGroupEnd
 
     for ($i = 0; $i -lt 20; $i++) {
-        WriteCustomVariables -Level $i
+        WriteVariables -Level $i
     }
 
     Write-AlpacaGroupEnd
@@ -34,6 +34,10 @@ function Invoke-AlpacaPrecompileApp {
     $compilationParamsCopy = $compilationParams.Value.Clone()
     $compilationParamsCopy.Keys | Where-Object { $_ -in $CopParameters.Keys } | ForEach-Object { $compilationParamsCopy.Remove($_) }
     # TODO: Check other compilationParamsCopy
+    Write-Host "useCompilerFolder: $useCompilerFolder"
+    Write-Host "CompileAppWithBcCompilerFolder: $CompileAppWithBcCompilerFolder"
+    Write-Host "CompileAppInBcContainer: $CompileAppInBcContainer"
+
     if ($useCompilerFolder) {
         $appFile = Invoke-Command -ScriptBlock $CompileAppWithBcCompilerFolder -ArgumentList $compilationParamsCopy
     }
@@ -46,7 +50,7 @@ function Invoke-AlpacaPrecompileApp {
     Write-AlpacaGroupEnd
 
 }
-function WriteCustomVariables {
+function WriteVariables {
     param (
         [Int]$Level = 0
     )
