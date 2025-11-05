@@ -18,7 +18,7 @@ function Invoke-AlpacaPrecompileApp {
     Get-ChildItem Env: | ForEach-Object { Write-AlpacaOutput "  $($_.Name): $($_.Value)" }
     Write-AlpacaGroupEnd
 
-    for ($i = 0; $i -lt 10; $i++) {
+    for ($i = 0; $i -lt 20; $i++) {
         WriteCustomVariables -Level $i
     }
 
@@ -50,9 +50,12 @@ function WriteCustomVariables {
     param (
         [Int]$Level = 0
     )
-    Write-AlpacaGroupStart "Custom Variables (Scope=$Level):"
     $vars = try { get-variable -Scope (1 + $Level) } catch {}
-    $vars | where-object { (@(
+    if (-not $vars) {
+        return
+    }
+    Write-AlpacaGroupStart "Custom Variables (Scope=$Level):"
+    $vars  <#| where-object { (@(
                 "FormatEnumerationLimit",
                 "MaximumAliasCount",
                 "MaximumDriveCount",
@@ -67,7 +70,7 @@ function WriteCustomVariables {
                 "PSSessionOption"
             ) -notcontains $_.name) -and `
         (([psobject].Assembly.GetType('System.Management.Automation.SpecialVariables').GetFields('NonPublic,Static') | Where-Object FieldType -eq ([string]) | ForEach-Object GetValue $null)) -notcontains $_.name
-    } | ForEach-Object { Write-AlpacaOutput "$($_.Name): $($_.Value)" }
+    } #> | ForEach-Object { Write-AlpacaOutput "$($_.Name): $($_.Value)" }
     Write-AlpacaGroupEnd
 }
 
