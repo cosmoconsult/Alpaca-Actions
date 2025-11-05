@@ -11,7 +11,7 @@ function Invoke-AlpacaPrecompileApp {
     Write-AlpacaOutput "App Type: $appType"
 
     Write-AlpacaOutput "Compilation Params:"
-    $compilationParams.Value | ForEach-Object { Write-AlpacaOutput "  $_" }
+    "$($compilationParams.Value | ConvertTo-Json -Depth 3)" -split "`n" | ForEach-Object { Write-AlpacaOutput $_ }
 
     Write-AlpacaOutput "Env Variables:"
     Get-ChildItem Env: | ForEach-Object { Write-AlpacaOutput "  $($_.Name): $($_.Value)" }
