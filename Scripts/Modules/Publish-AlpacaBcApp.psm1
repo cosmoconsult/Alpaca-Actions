@@ -1,3 +1,4 @@
+Add-Type -AssemblyName System.Web
 
 function Publish-AlpacaBcApp {
     Param(
@@ -13,7 +14,8 @@ function Publish-AlpacaBcApp {
         [ValidateSet('Development','Clean','ForceSync')]
         [string] $SyncMode='Development',
         [Parameter(Mandatory = $false)]
-        [string] $Tenant='default') 
+        [string] $Tenant
+    ) 
 
     $tries = 0
     $maxtries = 5
@@ -42,7 +44,15 @@ function Publish-AlpacaBcApp {
         } elseif ($SyncMode -eq "ForceSync") {
             $schemaUpdateMode = "forcesync"
         }
-        $devServerUrl = $ContainerUrl + "dev/dev/apps?SchemaUpdateMode=$schemaUpdateMode&tenant=$Tenant"
+        $url, $query = $ContainerUrl.Split('?', 2)
+        $queryDict = [System.Web.HttpUtility]::ParseQueryString("$query")
+        if (! $Tenant) {
+            $Tenant = "default"
+            if ($queryDict["tenant"]) {
+                $Tenant = $queryDict["tenant"]
+            }
+        }
+        $devServerUrl = $url.TrimEnd('/') + "dev/dev/apps?SchemaUpdateMode=$schemaUpdateMode&tenant=$Tenant"
     
         $multipartContent = [System.Net.Http.MultipartFormDataContent]::new()
         $FileStream = [System.IO.FileStream]::new($Path, [System.IO.FileMode]::Open)
