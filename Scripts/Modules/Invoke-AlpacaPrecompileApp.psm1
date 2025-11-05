@@ -10,12 +10,35 @@ function Invoke-AlpacaPrecompileApp {
 
     Write-AlpacaOutput "App Type: $appType"
 
-    Write-AlpacaOutput "Compilation Params:"
-    "$($compilationParams.Value | ConvertTo-Json -Depth 3)" -split "`n" | ForEach-Object { Write-AlpacaOutput $_ }
+    Write-AlpacaGroupStart"Compilation Params:"
+    "$($compilationParams.Value | ConvertTo-Json -Depth 2)" -split "`n" | ForEach-Object { Write-AlpacaOutput $_ }
+    Write-AlpacaGroupEnd
 
-    Write-AlpacaOutput "Env Variables:"
+    Write-AlpacaGroupStart "Env Variables:"
     Get-ChildItem Env: | ForEach-Object { Write-AlpacaOutput "  $($_.Name): $($_.Value)" }
+    Write-AlpacaGroupEnd
 
+    Write-AlpacaGroupStart "Custom Variables:"
+    # src: https://stackoverflow.com/a/18427474
+    get-variable | where-object { (@(
+                "FormatEnumerationLimit",
+                "MaximumAliasCount",
+                "MaximumDriveCount",
+                "MaximumErrorCount",
+                "MaximumFunctionCount",
+                "MaximumVariableCount",
+                "PGHome",
+                "PGSE",
+                "PGUICulture",
+                "PGVersionTable",
+                "PROFILE",
+                "PSSessionOption"
+            ) -notcontains $_.name) -and `
+        (([psobject].Assembly.GetType('System.Management.Automation.SpecialVariables').GetFields('NonPublic,Static') | Where-Object FieldType -eq ([string]) | ForEach-Object GetValue $null)) -notcontains $_.name
+    } | ForEach-Object { Write-AlpacaOutput "  $($_.Name): $($_.Value)" }
+    
+    Write-AlpacaGroupEnd
+ 
     Write-AlpacaGroupEnd
     #endregion DebugInfo
 
