@@ -51,8 +51,8 @@ function WriteCustomVariables {
         [Int]$Level = 0
     )
     Write-AlpacaGroupStart "Custom Variables (Scope=$Level):"
-    # src: https://stackoverflow.com/a/18427474
-    (try { get-variable -Scope (1 + $Level) } catch {}) | where-object { (@(
+    $vars = try { get-variable -Scope (1 + $Level) } catch {}
+    $vars | where-object { (@(
                 "FormatEnumerationLimit",
                 "MaximumAliasCount",
                 "MaximumDriveCount",
