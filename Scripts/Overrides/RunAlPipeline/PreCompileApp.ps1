@@ -125,6 +125,7 @@ for ($i = 0; $i -lt 20; $i++) {
     WriteVariables -Level $i
 }
 
+$Settings = $env:Settings | ConvertFrom-Json
 Write-Output "Settings:"
 Write-Output ("Settings.alpaca.createTranslations = {0}" -f $Settings.alpaca.createTranslations)
 Write-Output ("Settings.alpaca.translationLanguages = {0}" -f ($Settings.alpaca.translationLanguages -join ', '))
