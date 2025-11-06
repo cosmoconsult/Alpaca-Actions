@@ -52,7 +52,7 @@ function New-TranslationFiles() {
     $globalXlfFiles += Get-ChildItem -path $Folder -Include '*.g.xlf' -Recurse
     if (-not $globalXlfFiles) {
         Write-AlpacaError "No .g.xlf files found in $Folder!"
-        Write-Output ("Files in directory: {0}" -f ((Get-ChildItem -path $Folder -Recurse | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue | ForEach-Object { $_.Replace($Folder, '').TrimStart('\') } )) -join ', ')
+        Write-AlpacaOutput ("Files in directory: {0}" -f ((Get-ChildItem -path $Folder -Recurse | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue | ForEach-Object { $_.Replace($Folder, '').TrimStart('\') } )) -join ', ')
         throw
     }
     Write-AlpacaOutput "Found $($globalXlfFiles.Count) files in $Folder"
@@ -133,11 +133,11 @@ if ($env:RUNNER_DEBUG -eq '1' -or $env:GITHUB_RUN_ATTEMPT -gt 1) {
     }
 }
 $Settings = $env:Settings | ConvertFrom-Json
-Write-Output "Settings:"
-Write-Output ("Settings.alpaca.createTranslations = {0}" -f $(try { $Settings.alpaca.createTranslations }catch {}))
-Write-Output ("Settings.alpaca.translationLanguages = {0}" -f $(try { $Settings.alpaca.translationLanguages -join ', ' }catch {}))
-Write-Output ("Settings.alpaca.TestTranslations = {0}" -f $(try { $Settings.alpaca.TestTranslations }catch {}))
-Write-Output ("Settings.alpaca.testTranslationRules = {0}" -f $(try { $Settings.alpaca.testTranslationRules -join ', ' }catch {}))
+Write-AlpacaOutput "Settings:"
+Write-AlpacaOutput ("Settings.alpaca.createTranslations = {0}" -f $(try { $Settings.alpaca.createTranslations }catch {}))
+Write-AlpacaOutput ("Settings.alpaca.translationLanguages = {0}" -f $(try { $Settings.alpaca.translationLanguages -join ', ' }catch {}))
+Write-AlpacaOutput ("Settings.alpaca.TestTranslations = {0}" -f $(try { $Settings.alpaca.TestTranslations }catch {}))
+Write-AlpacaOutput ("Settings.alpaca.testTranslationRules = {0}" -f $(try { $Settings.alpaca.testTranslationRules -join ', ' }catch {}))
 
 Write-AlpacaGroupEnd #Level 1
 #endregion DebugInfo
@@ -145,7 +145,7 @@ Write-AlpacaGroupEnd #Level 1
 #region CheckPreconditions
 Write-AlpacaGroupStart "Check Preconditions" #Level 1
 if ($Settings.PSObject.Properties.Name -notcontains 'alpaca') {
-    Write-Output "No 'alpaca' settings found, skipping precompilation and translation."
+    Write-AlpacaOutput "No 'alpaca' settings found, skipping precompilation and translation."
     Write-AlpacaGroupEnd #Level 1, early exit
     return
 }
