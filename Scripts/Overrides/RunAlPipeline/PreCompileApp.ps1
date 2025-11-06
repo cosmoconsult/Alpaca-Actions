@@ -161,7 +161,7 @@ if ($Settings.alpaca.PSObject.Properties.Name -notcontains 'translationLanguages
 }
 
 
-$TranslationEnabledInAppJson = $appJsonContent.PSObject.Properties.Name -contains 'features' -and $appJsonContent.features -contains 'TranslationFile'
+$TranslationEnabledInAppJson = $appJsonContent.PSObject.Properties.Name -contains 'features' -and $appJsonContent.features -contains 'TranslationFile' #appJsonContent comes from parent script
 $TranslationEnforcedByPipelineSetting = $compilationParams.Value.PSObject.Properties.Name -contains 'features' -and $compilationParams.Value.features -contains 'TranslationFile' #Set by buildmodes=Translated
 if (-not ($TranslationEnabledInAppJson -or $TranslationEnforcedByPipelineSetting)) {
     Write-AlpacaOutput "Translation feature is not enabled in app.json or enforced by pipeline settings. Skipping precompilation and translation."
@@ -198,10 +198,10 @@ $compilationParamsCopy.Remove("EnableCodeCop")
 $compilationParamsCopy.Remove("EnableUICop")
 
 if ($useCompilerFolder) {
-    $appFile = Invoke-Command -ScriptBlock $CompileAppWithBcCompilerFolder -ArgumentList $compilationParamsCopy
+    $null = Invoke-Command -ScriptBlock $CompileAppWithBcCompilerFolder -ArgumentList $compilationParamsCopy
 }
 else {
-    $appFile = Invoke-Command -ScriptBlock $CompileAppInBcContainer -ArgumentList $compilationParamsCopy
+    $null = Invoke-Command -ScriptBlock $CompileAppInBcContainer -ArgumentList $compilationParamsCopy
 }
 #endregion PreCompile
 
