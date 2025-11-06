@@ -116,22 +116,22 @@ function Test-TranslationFiles() {
 #endregion Functions
 
 #region DebugInfo
-Write-AlpacaGroupStart "DebugInfo"
+Write-AlpacaGroupStart "DebugInfo" #Level 1
+if ($env:RUNNER_DEBUG -eq '1' -or $env:GITHUB_RUN_ATTEMPT -gt 1) {
+    Write-AlpacaOutput "App Type: $appType"
 
-Write-AlpacaOutput "App Type: $appType"
+    Write-AlpacaGroupStart "Compilation Params:" #Level 2
+    "$($compilationParams.Value | ConvertTo-Json -Depth 2)" -split "`n" | ForEach-Object { Write-AlpacaOutput $_ }
+    Write-AlpacaGroupEnd #Level 2
 
-Write-AlpacaGroupStart "Compilation Params:"
-"$($compilationParams.Value | ConvertTo-Json -Depth 2)" -split "`n" | ForEach-Object { Write-AlpacaOutput $_ }
-Write-AlpacaGroupEnd
+    Write-AlpacaGroupStart "Env Variables:" #Level 2
+    Get-ChildItem Env: | ForEach-Object { Write-AlpacaOutput "  $($_.Name): $($_.Value)" }
+    Write-AlpacaGroupEnd #Level 2
 
-Write-AlpacaGroupStart "Env Variables:"
-Get-ChildItem Env: | ForEach-Object { Write-AlpacaOutput "  $($_.Name): $($_.Value)" }
-Write-AlpacaGroupEnd
-
-for ($i = 0; $i -lt 20; $i++) {
-    WriteVariables -Level $i
+    for ($i = 0; $i -lt 20; $i++) {
+        WriteVariables -Level $i
+    }
 }
-
 $Settings = $env:Settings | ConvertFrom-Json
 Write-Output "Settings:"
 Write-Output ("Settings.alpaca.createTranslations = {0}" -f $(try { $Settings.alpaca.createTranslations }catch {}))
@@ -139,29 +139,39 @@ Write-Output ("Settings.alpaca.translationLanguages = {0}" -f $(try { $Settings.
 Write-Output ("Settings.alpaca.TestTranslations = {0}" -f $(try { $Settings.alpaca.TestTranslations }catch {}))
 Write-Output ("Settings.alpaca.testTranslationRules = {0}" -f $(try { $Settings.alpaca.testTranslationRules -join ', ' }catch {}))
 
-Write-AlpacaGroupEnd
+Write-AlpacaGroupEnd #Level 1
 #endregion DebugInfo
 
 #region CheckPreconditions
-Write-AlpacaGroupStart "Check Preconditions"
+Write-AlpacaGroupStart "Check Preconditions" #Level 1
 if ($Settings.PSObject.Properties.Name -notcontains 'alpaca') {
     Write-Output "No 'alpaca' settings found, skipping precompilation and translation."
+    Write-AlpacaGroupEnd #Level 1, early exit
     return
 }
 if ($Settings.alpaca.PSObject.Properties.Name -notcontains 'createTranslations' -or -not $Settings.alpaca.createTranslations) {
     Write-AlpacaOutput "Skipping precompilation and translation as 'createTranslations' setting is disabled."
+    Write-AlpacaGroupEnd #Level 1, early exit
     return
 }
 if ($Settings.alpaca.PSObject.Properties.Name -notcontains 'translationLanguages' -or -not $Settings.alpaca.translationLanguages ) {
     Write-AlpacaError "No translation languages configured in 'translationLanguages' setting!"
+    Write-AlpacaGroupEnd #Level 1, early exit
     return
 }
 
-# TODO Check Translation feature from app.json and algo setting
-Write-AlpacaGroupEnd
+
+$TranslationEnabledInAppJson = $appJsonContent.PSObject.Properties.Name -contains 'features' -and $appJsonContent.features -contains 'TranslationFile'
+$TranslationEnforcedByPipelineSetting = $compilationParams.Value.PSObject.Properties.Name -contains 'features' -and $compilationParams.Value.features -contains 'TranslationFile' #Set by buildmodes=Translated
+if (-not ($TranslationEnabledInAppJson -or $TranslationEnforcedByPipelineSetting)) {
+    Write-AlpacaOutput "Translation feature is not enabled in app.json or enforced by pipeline settings. Skipping precompilation and translation."
+    Write-AlpacaGroupEnd #Level 1, early exit
+    return
+}
+Write-AlpacaGroupEnd #Level 1
 #endregion CheckPreconditions
 
-Write-AlpacaGroupStart "Precompile and Translate"
+Write-AlpacaGroupStart "Precompile and Translate" #Level 1
 
 #region ClearTranslations
 $TranslationFolder = Join-Path $compilationParams.Value.appProjectFolder "Translations"
@@ -202,4 +212,4 @@ if ($Settings.alpaca.PSObject.Properties.Name -contains 'TestTranslations' -and 
 }
 #endregion Translate
 
-Write-AlpacaGroupEnd
+Write-AlpacaGroupEnd #Level 1
