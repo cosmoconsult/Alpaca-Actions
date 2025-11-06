@@ -157,6 +157,10 @@ Write-AlpacaGroupStart "Precompile and Translate"
 
 #region ClearTranslations
 $TranslationFolder = Join-Path $compilationParams.Value.appProjectFolder "Translations"
+if (-not (Test-Path $TranslationFolder)) {
+    Write-AlpacaWarning "Translation folder $TranslationFolder does not exist."
+}
+Write-AlpacaDebug "Clearing existing translation files in $TranslationFolder"
 Get-ChildItem $TranslationFolder -Recurse -File -Filter *.xlf | Foreach-Object {
     Write-AlpacaOutput "Removing translation file: $($_.FullName)"
     Remove-Item $_.FullName -Force -Confirm:$false
