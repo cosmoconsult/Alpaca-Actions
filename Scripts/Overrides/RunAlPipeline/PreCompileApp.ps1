@@ -127,20 +127,24 @@ for ($i = 0; $i -lt 20; $i++) {
 
 $Settings = $env:Settings | ConvertFrom-Json
 Write-Output "Settings:"
-Write-Output ("Settings.alpaca.createTranslations = {0}" -f $Settings.alpaca.createTranslations)
-Write-Output ("Settings.alpaca.translationLanguages = {0}" -f ($Settings.alpaca.translationLanguages -join ', '))
-Write-Output ("Settings.alpaca.testTranslationRules = {0}" -f ($Settings.alpaca.testTranslationRules -join ', '))
+Write-Output ("Settings.alpaca.createTranslations = {0}" -f $(try { $Settings.alpaca.createTranslations }catch {}))
+Write-Output ("Settings.alpaca.translationLanguages = {0}" -f $(try { $Settings.alpaca.translationLanguages -join ', ' }catch {}))
+Write-Output ("Settings.alpaca.testTranslationRules = {0}" -f $(try { $Settings.alpaca.testTranslationRules -join ', ' }catch {}))
 
 Write-AlpacaGroupEnd
 #endregion DebugInfo
 
 #region CheckPreconditions
 Write-AlpacaGroupStart "Check Preconditions"
-if (-not $settings.alpaca.createTranslations) {
+if (-not $Settings.alpaca) {
+    Write-Output "No 'alpaca' settings found, skipping precompilation and translation."
+    return
+}
+if (-not $Settings.alpaca.createTranslations) {
     Write-AlpacaOutput "Skipping precompilation and translation as 'createTranslations' setting is disabled."
     return
 }
-if (-not $settings.alpaca.translationLanguages) {
+if (-not $Settings.alpaca.translationLanguages) {
     Write-AlpacaError "No translation languages configured in 'translationLanguages' setting!"
     return
 }
@@ -179,9 +183,9 @@ else {
 #endregion PreCompile
 
 #region Translate
-New-TranslationFiles -Folder $TranslationFolder -Languages $settings.alpaca.translationLanguages
+New-TranslationFiles -Folder $TranslationFolder -Languages $Settings.alpaca.translationLanguages
 if ("$(Job.Compile.TestTranslations)" -eq "true") {
-    Test-TranslationFiles -Folder $TranslationFolder -Rules $settings.alpaca.testTranslationRules
+    Test-TranslationFiles -Folder $TranslationFolder -Rules $Settings.alpaca.testTranslationRules
 }
 #endregion Translate
 
