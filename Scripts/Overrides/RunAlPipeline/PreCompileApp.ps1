@@ -160,9 +160,11 @@ if ($Settings.alpaca.PSObject.Properties.Name -notcontains 'translationLanguages
     return
 }
 
-
+Write-AlpacaDebug "AppJsonContent: $($appJsonContent | ConvertTo-Json -Depth 2)"
 $TranslationEnabledInAppJson = $appJsonContent.PSObject.Properties.Name -contains 'features' -and $appJsonContent.features -contains 'TranslationFile' #appJsonContent comes from parent script
+Write-AlpacaDebug "TranslationEnabledInAppJson: $TranslationEnabledInAppJson"
 $TranslationEnforcedByPipelineSetting = $compilationParams.Value.PSObject.Properties.Name -contains 'features' -and $compilationParams.Value.features -contains 'TranslationFile' #Set by buildmodes=Translated
+Write-AlpacaDebug "TranslationEnforcedByPipelineSetting: $TranslationEnforcedByPipelineSetting"
 if (-not ($TranslationEnabledInAppJson -or $TranslationEnforcedByPipelineSetting)) {
     Write-AlpacaOutput "Translation feature is not enabled in app.json or enforced by pipeline settings. Skipping precompilation and translation."
     Write-AlpacaGroupEnd #Level 1, early exit
