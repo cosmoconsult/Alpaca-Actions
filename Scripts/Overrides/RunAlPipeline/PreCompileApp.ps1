@@ -5,33 +5,6 @@ param(
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
 #region Functions
-function WriteVariables {
-    param (
-        [Int]$Level = 0
-    )
-    $vars = try { get-variable -Scope (1 + $Level) } catch {}
-    if (-not $vars) {
-        return
-    }
-    Write-AlpacaGroupStart "Custom Variables (Scope=$Level):"
-    $vars  <#| where-object { (@(
-                "FormatEnumerationLimit",
-                "MaximumAliasCount",
-                "MaximumDriveCount",
-                "MaximumErrorCount",
-                "MaximumFunctionCount",
-                "MaximumVariableCount",
-                "PGHome",
-                "PGSE",
-                "PGUICulture",
-                "PGVersionTable",
-                "PROFILE",
-                "PSSessionOption"
-            ) -notcontains $_.name) -and `
-        (([psobject].Assembly.GetType('System.Management.Automation.SpecialVariables').GetFields('NonPublic,Static') | Where-Object FieldType -eq ([string]) | ForEach-Object GetValue $null)) -notcontains $_.name
-    } #> | ForEach-Object { Write-AlpacaOutput "$($_.Name): $($_.Value)" }
-    Write-AlpacaGroupEnd
-}
 function New-TranslationFiles() {
     # Create translation files (e.g. .de-DE.xlf) based on existing .g.xlf
     param(
@@ -118,23 +91,11 @@ function Test-TranslationFiles() {
 #region DebugInfo
 Write-AlpacaGroupStart "DebugInfo" #Level 1
 if ($env:RUNNER_DEBUG -eq '1' -or $env:GITHUB_RUN_ATTEMPT -gt 1) {
-    Write-Host "RUNNER_DEBUG: $env:RUNNER_DEBUG"
-    Write-Host "GITHUB_RUN_ATTEMPT: $env:GITHUB_RUN_ATTEMPT"
-    Write-Host "IsDebug: $($env:RUNNER_DEBUG -eq '1')"
-    Write-Host "IsLaterAttempt: $($env:GITHUB_RUN_ATTEMPT -gt 1)"
     Write-AlpacaOutput "App Type: $appType"
 
     Write-AlpacaGroupStart "Compilation Params:" #Level 2
     "$($compilationParams.Value | ConvertTo-Json -Depth 2)" -split "`n" | ForEach-Object { Write-AlpacaOutput $_ }
     Write-AlpacaGroupEnd #Level 2
-
-    Write-AlpacaGroupStart "Env Variables:" #Level 2
-    Get-ChildItem Env: | ForEach-Object { Write-AlpacaOutput "  $($_.Name): $($_.Value)" }
-    Write-AlpacaGroupEnd #Level 2
-
-    for ($i = 0; $i -lt 20; $i++) {
-        WriteVariables -Level $i
-    }
 }
 $Settings = $env:Settings | ConvertFrom-Json
 Write-AlpacaOutput "Settings:"
@@ -164,15 +125,11 @@ if ($Settings.alpaca.PSObject.Properties.Name -notcontains 'translationLanguages
     return
 }
 
-Write-AlpacaOutput "AppJsonContent: $($appJsonContent | ConvertTo-Json -Depth 2 -Compress)"
-Write-AlpacaOutput "AppJsonContent from json: $($appJsonContent | Convertfrom-json | ConvertTo-Json -Depth 2 -Compress)"
-Write-AlpacaOutput "AppJsonContent Type: $($appJsonContent.GetType().FullName)"
-
 $AppJson = $appJsonContent | ConvertFrom-Json #appJsonContent comes from parent script
 $TranslationEnabledInAppJson = $AppJson.PSObject.Properties.Name -contains 'features' -and $AppJson.features -contains 'TranslationFile'
-Write-AlpacaOutput "TranslationEnabledInAppJson: $TranslationEnabledInAppJson"
+Write-AlpacaOutput "Translation enabled in app.json: $TranslationEnabledInAppJson"
 $TranslationEnforcedByPipelineSetting = $compilationParams.Value.PSObject.Properties.Name -contains 'features' -and $compilationParams.Value.features -contains 'TranslationFile' #Set by buildmodes=Translated
-Write-AlpacaOutput "TranslationEnforcedByPipelineSetting: $TranslationEnforcedByPipelineSetting"
+Write-AlpacaOutput "Translation enforced by pipeline setting: $TranslationEnforcedByPipelineSetting"
 if (-not ($TranslationEnabledInAppJson -or $TranslationEnforcedByPipelineSetting)) {
     Write-AlpacaOutput "Translation feature is not enabled in app.json or enforced by pipeline settings. Skipping precompilation and translation."
     Write-AlpacaGroupEnd #Level 1, early exit
