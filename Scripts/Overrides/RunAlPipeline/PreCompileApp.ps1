@@ -118,6 +118,10 @@ function Test-TranslationFiles() {
 #region DebugInfo
 Write-AlpacaGroupStart "DebugInfo" #Level 1
 if ($env:RUNNER_DEBUG -eq '1' -or $env:GITHUB_RUN_ATTEMPT -gt 1) {
+    Write-Host "RUNNER_DEBUG: $env:RUNNER_DEBUG"
+    Write-Host "GITHUB_RUN_ATTEMPT: $env:GITHUB_RUN_ATTEMPT"
+    Write-Host "IsDebug: $($env:RUNNER_DEBUG -eq '1')"
+    Write-Host "IsLaterAttempt: $($env:GITHUB_RUN_ATTEMPT -gt 1)"
     Write-AlpacaOutput "App Type: $appType"
 
     Write-AlpacaGroupStart "Compilation Params:" #Level 2
