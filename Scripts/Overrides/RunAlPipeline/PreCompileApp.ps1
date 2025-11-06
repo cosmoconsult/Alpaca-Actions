@@ -44,7 +44,7 @@ function New-TranslationFiles() {
     Write-Host "##[section]Create Translations ($($Languages -join ','))"
 
     Install-Module -Name XliffSync -Scope CurrentUser -Force
-    Write-AlpacaDebug "Successfully installed XliffSync module"
+    Write-AlpacaOutput "Successfully installed XliffSync module"
 
     Write-AlpacaOutput "Found $($Languages.Count) target languages"
 
@@ -86,11 +86,11 @@ function Test-TranslationFiles() {
     Write-AlpacaOutput "Testing Translations (Rules: $($Rules -join ','))"
 
     Install-Module -Name XliffSync -Scope CurrentUser -Force
-    Write-AlpacaDebug "Successfully installed XliffSync module"
+    Write-AlpacaOutput "Successfully installed XliffSync module"
 
     $translatedXlfFiles = @() # Initialize variable to enforce an array due to strict mode
     $translatedXlfFiles += Get-ChildItem -path $Folder -Include '*.??-??.xlf' -Exclude '*.g.xlf' -Recurse
-    Write-AlpacaDebug "Found $($translatedXlfFiles.Count) files in $Folder"
+    Write-AlpacaOutput "Found $($translatedXlfFiles.Count) files in $Folder"
 
     $issues = @()
     foreach ($translatedXlfFile in $translatedXlfFiles) {
@@ -160,11 +160,11 @@ if ($Settings.alpaca.PSObject.Properties.Name -notcontains 'translationLanguages
     return
 }
 
-Write-AlpacaDebug "AppJsonContent: $($appJsonContent | ConvertTo-Json -Depth 2)"
+Write-AlpacaOutput "AppJsonContent: $($appJsonContent | ConvertTo-Json -Depth 2)"
 $TranslationEnabledInAppJson = $appJsonContent.PSObject.Properties.Name -contains 'features' -and $appJsonContent.features -contains 'TranslationFile' #appJsonContent comes from parent script
-Write-AlpacaDebug "TranslationEnabledInAppJson: $TranslationEnabledInAppJson"
+Write-AlpacaOutput "TranslationEnabledInAppJson: $TranslationEnabledInAppJson"
 $TranslationEnforcedByPipelineSetting = $compilationParams.Value.PSObject.Properties.Name -contains 'features' -and $compilationParams.Value.features -contains 'TranslationFile' #Set by buildmodes=Translated
-Write-AlpacaDebug "TranslationEnforcedByPipelineSetting: $TranslationEnforcedByPipelineSetting"
+Write-AlpacaOutput "TranslationEnforcedByPipelineSetting: $TranslationEnforcedByPipelineSetting"
 if (-not ($TranslationEnabledInAppJson -or $TranslationEnforcedByPipelineSetting)) {
     Write-AlpacaOutput "Translation feature is not enabled in app.json or enforced by pipeline settings. Skipping precompilation and translation."
     Write-AlpacaGroupEnd #Level 1, early exit
@@ -180,7 +180,7 @@ $TranslationFolder = Join-Path $compilationParams.Value.appProjectFolder "Transl
 if (-not (Test-Path $TranslationFolder)) {
     Write-AlpacaWarning "Translation folder $TranslationFolder does not exist."
 }
-Write-AlpacaDebug "Clearing existing translation files in $TranslationFolder"
+Write-AlpacaOutput "Clearing existing translation files in $TranslationFolder"
 Get-ChildItem $TranslationFolder -Recurse -File -Filter *.xlf | Foreach-Object {
     Write-AlpacaOutput "Removing translation file: $($_.FullName)"
     Remove-Item $_.FullName -Force -Confirm:$false
