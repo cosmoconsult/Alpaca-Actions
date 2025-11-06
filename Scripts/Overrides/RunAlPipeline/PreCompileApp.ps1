@@ -129,6 +129,7 @@ $Settings = $env:Settings | ConvertFrom-Json
 Write-Output "Settings:"
 Write-Output ("Settings.alpaca.createTranslations = {0}" -f $(try { $Settings.alpaca.createTranslations }catch {}))
 Write-Output ("Settings.alpaca.translationLanguages = {0}" -f $(try { $Settings.alpaca.translationLanguages -join ', ' }catch {}))
+Write-Output ("Settings.alpaca.TestTranslations = {0}" -f $(try { $Settings.alpaca.TestTranslations }catch {}))
 Write-Output ("Settings.alpaca.testTranslationRules = {0}" -f $(try { $Settings.alpaca.testTranslationRules -join ', ' }catch {}))
 
 Write-AlpacaGroupEnd
@@ -184,7 +185,7 @@ else {
 
 #region Translate
 New-TranslationFiles -Folder $TranslationFolder -Languages $Settings.alpaca.translationLanguages
-if ("$(Job.Compile.TestTranslations)" -eq "true") {
+if ($Settings.alpaca.TestTranslations) {
     Test-TranslationFiles -Folder $TranslationFolder -Rules $Settings.alpaca.testTranslationRules
 }
 #endregion Translate
