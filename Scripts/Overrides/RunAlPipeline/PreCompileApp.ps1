@@ -46,10 +46,15 @@ function New-TranslationFiles() {
     Install-Module -Name XliffSync -Scope CurrentUser -Force
     Write-AlpacaDebug "Successfully installed XliffSync module"
 
-    Write-AlpacaDebug "Found $($Languages.Count) target languages"
+    Write-AlpacaOutput "Found $($Languages.Count) target languages"
 
     $globalXlfFiles = Get-ChildItem -path $Folder -Include '*.g.xlf' -Recurse
-    Write-AlpacaDebug "Found $($globalXlfFiles.Count) files in $Folder"
+    if (-not $globalXlfFiles) {
+        Write-AlpacaError "No .g.xlf files found in $Folder!"
+        Write-Output ("Files in directory: {0}" -f ((Get-ChildItem -path $Folder -Recurse | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue | % { $_.Replace($Folder, '').TrimStart('\') } )) -join ', ')
+        throw
+    }
+    Write-AlpacaOutput "Found $($globalXlfFiles.Count) files in $Folder"
 
     foreach ($globalXlfFile in $globalXlfFiles) {
         $FormatTranslationUnit = { param($TranslationUnit) $TranslationUnit.note | Where-Object from -EQ 'Xliff Generator' | Select-Object -ExpandProperty '#text' }
@@ -150,6 +155,7 @@ if (-not $Settings.alpaca.translationLanguages) {
     return
 }
 
+# TODO CHeck Translation feature from app.json and algo setting
 Write-AlpacaGroupEnd
 #endregion CheckPreconditions
 
