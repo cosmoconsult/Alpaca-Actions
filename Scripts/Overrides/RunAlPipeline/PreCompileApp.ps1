@@ -144,20 +144,20 @@ Write-AlpacaGroupEnd
 
 #region CheckPreconditions
 Write-AlpacaGroupStart "Check Preconditions"
-if (-not $Settings.alpaca) {
+if ($Settings.PSObject.Properties.Name -notcontains 'alpaca') {
     Write-Output "No 'alpaca' settings found, skipping precompilation and translation."
     return
 }
-if (-not $Settings.alpaca.createTranslations) {
+if ($Settings.alpaca.PSObject.Properties.Name -notcontains 'createTranslations' -or -not $Settings.alpaca.createTranslations) {
     Write-AlpacaOutput "Skipping precompilation and translation as 'createTranslations' setting is disabled."
     return
 }
-if (-not $Settings.alpaca.translationLanguages) {
+if ($Settings.alpaca.PSObject.Properties.Name -notcontains 'translationLanguages' -or -not $Settings.alpaca.translationLanguages ) {
     Write-AlpacaError "No translation languages configured in 'translationLanguages' setting!"
     return
 }
 
-# TODO CHeck Translation feature from app.json and algo setting
+# TODO Check Translation feature from app.json and algo setting
 Write-AlpacaGroupEnd
 #endregion CheckPreconditions
 
@@ -197,7 +197,7 @@ else {
 
 #region Translate
 New-TranslationFiles -Folder $TranslationFolder -Languages $Settings.alpaca.translationLanguages
-if ($Settings.alpaca.TestTranslations) {
+if ($Settings.alpaca.PSObject.Properties.Name -contains 'TestTranslations' -and $Settings.alpaca.TestTranslations) {
     Test-TranslationFiles -Folder $TranslationFolder -Rules $Settings.alpaca.testTranslationRules
 }
 #endregion Translate
