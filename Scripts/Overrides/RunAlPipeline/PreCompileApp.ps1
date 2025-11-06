@@ -48,10 +48,11 @@ function New-TranslationFiles() {
 
     Write-AlpacaOutput "Found $($Languages.Count) target languages"
 
-    $globalXlfFiles = Get-ChildItem -path $Folder -Include '*.g.xlf' -Recurse
+    $globalXlfFiles = @() # Initialize variable to enforce an array due to strict mode
+    $globalXlfFiles += Get-ChildItem -path $Folder -Include '*.g.xlf' -Recurse
     if (-not $globalXlfFiles) {
         Write-AlpacaError "No .g.xlf files found in $Folder!"
-        Write-Output ("Files in directory: {0}" -f ((Get-ChildItem -path $Folder -Recurse | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue | % { $_.Replace($Folder, '').TrimStart('\') } )) -join ', ')
+        Write-Output ("Files in directory: {0}" -f ((Get-ChildItem -path $Folder -Recurse | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue | ForEach-Object { $_.Replace($Folder, '').TrimStart('\') } )) -join ', ')
         throw
     }
     Write-AlpacaOutput "Found $($globalXlfFiles.Count) files in $Folder"
@@ -87,15 +88,16 @@ function Test-TranslationFiles() {
     Install-Module -Name XliffSync -Scope CurrentUser -Force
     Write-AlpacaDebug "Successfully installed XliffSync module"
 
-    $translatedXlfFiles = Get-ChildItem -path $Folder -Include '*.??-??.xlf' -Exclude '*.g.xlf' -Recurse
+    $translatedXlfFiles = @() # Initialize variable to enforce an array due to strict mode
+    $translatedXlfFiles += Get-ChildItem -path $Folder -Include '*.??-??.xlf' -Exclude '*.g.xlf' -Recurse
     Write-AlpacaDebug "Found $($translatedXlfFiles.Count) files in $Folder"
 
     $issues = @()
-    foreach ($translatedXlfFiles in $translatedXlfFiles) {
+    foreach ($translatedXlfFile in $translatedXlfFiles) {
         $FormatTranslationUnit = { param($TranslationUnit) $TranslationUnit.note | Where-Object from -EQ 'Xliff Generator' | Select-Object -ExpandProperty '#text' }
 
         $issues += Test-XliffTranslations `
-            -targetPath $translatedXlfFiles.FullName `
+            -targetPath $translatedXlfFile.FullName `
             -checkForMissing `
             -checkForProblems:$( $Rules.Count -gt 0 ) `
             -translationRules @( $Rules | Where-Object { $_ -ne 'All' } ) `
