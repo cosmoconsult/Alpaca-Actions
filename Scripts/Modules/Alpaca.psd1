@@ -35,7 +35,7 @@
         'Remove-AlpacaContainer.psm1',
         'Sync-AlpacaSecrets.psm1',
         'Wait-AlpacaContainerImageReady.psm1',
-        'Translation-Helper.psm1',   
+        'Translation-Helper.psm1',
         'Wait-AlpacaContainerReady.psm1')
 
     # Functions to export from this module
