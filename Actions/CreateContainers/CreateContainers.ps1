@@ -9,7 +9,8 @@ Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\A
 
 try {
     # BuildOrderJson is sonething like this: [{"projects":["ProjectA","ProjectB"],"buildDimensions":[{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Default","projectName":"ProjectA"},{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Clean","projectName":"ProjectA"},{"project":"ProjectB","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Default","projectName":"ProjectB"}],"projectsCount":2}]
-    $BuildOrder = ("$BuildOrderJson" | ConvertFrom-Json)[0]
+    # or with multi level projects like this [{"buildDimensions":[{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","buildMode":"Default","projectName":"ProjectA","githubRunnerShell":"pwsh"},{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","buildMode":"Clean","projectName":"ProjectA","githubRunnerShell":"pwsh"}],"projects":["ProjectA"],"projectsCount":1},{"buildDimensions":[{"project":"ProjectB","gitHubRunner":"\"ubuntu-latest\"","buildMode":"Default","projectName":"ProjectB","githubRunnerShell":"pwsh"}],"projects":["ProjectB"],"projectsCount":1}]
+    $BuildOrder = ("$BuildOrderJson" | ConvertFrom-Json)
     if ((-not $BuildOrder.buildDimensions) -or $BuildOrder.buildDimensions.Count -eq 0) {
         throw "No AL-Go build dimensions defined."
     }
