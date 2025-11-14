@@ -4,7 +4,9 @@ function New-AlpacaContainer {
         [Parameter(Mandatory = $true)]
         [string] $Project,
         [Parameter(Mandatory = $true)]
-        [string] $Token
+        [string] $Token,
+        [Parameter(Mandatory = $false)]
+        [string] $BuildMode
     )
 
     $owner = $env:GITHUB_REPOSITORY_OWNER
@@ -43,11 +45,12 @@ function New-AlpacaContainer {
     $response = Invoke-RestMethod $apiUrl -Method 'POST' -Headers $headers -Body $body -AllowInsecureRedirect
 
     $container = [pscustomobject]@{
-        Project  = $Project
-        Id       = $response.id
-        User     = $response.username
-        Password = $response.Password
-        Url      = $response.webUrl
+        Project   = $Project
+        Id        = $response.id
+        User      = $response.username
+        Password  = $response.Password
+        Url       = $response.webUrl
+        BuildMode = "$BuildMode"
     }
     
     Write-AlpacaOutput "Created container '$($container.Id)'"

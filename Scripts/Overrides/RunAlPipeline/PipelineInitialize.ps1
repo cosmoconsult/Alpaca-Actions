@@ -14,14 +14,18 @@ Write-AlpacaGroupStart "Collect Informations"
 Write-AlpacaOutput "Get AL-Go project from environmental variable"
 $project = $env:_project
 
+Write-AlpacaOutput "Get AL-Go build mode from environmental variable"
+$BuildMode = $env:_buildMode
+Write-AlpacaOutput "BuildMode is '$BuildMode'"
+
 Write-AlpacaOutput "Get Alpaca backend url from outputs of initialization job"
 $backendUrl = $Jobs.initialization.outputs.backendUrl
 
 Write-AlpacaOutput "Get Alpaca container information from outputs of create containers job"
 $containers = @("$($Jobs.createContainers.outputs.containersJson)" | ConvertFrom-Json)
-$container = $containers | Where-Object { $_.Project -eq $project }
+$container = $containers | Where-Object { $_.Project -eq $project -and $_.BuildMode -eq $BuildMode }
 if (! $container) {
-    throw "No Alpaca container information for project '$project' found"
+    throw "No Alpaca container information for project '$project' and build mode '$BuildMode' found"
 }
 
 Write-AlpacaOutput "Get container authentication context from Alpaca container information"
