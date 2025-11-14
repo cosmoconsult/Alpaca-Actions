@@ -24,7 +24,7 @@ function New-AlpacaContainer {
     $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
     $headers.add("Content-Type", "application/json")
 
-    $apiUrl = Get-AlpacaEndpointUrlWithParam -api 'alpaca' -Controller "Container" -Endpoint "Container"
+    $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "Container" -Endpoint "Container"
 
     $request = @{
         owner                     = "$owner"
