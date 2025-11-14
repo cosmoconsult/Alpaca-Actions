@@ -15,7 +15,7 @@ function Remove-AlpacaContainer {
 
     $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
 
-    $apiUrl = Get-AlpacaEndpointUrlWithParam -api 'alpaca' -Controller "Container" -Endpoint "Container" -Ressource $Container.Id
+    $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "Container" -Endpoint "Container" -Ressource $Container.Id
     
     Invoke-RestMethod $apiUrl -Method 'DELETE' -Headers $headers -AllowInsecureRedirect | Out-Null
 

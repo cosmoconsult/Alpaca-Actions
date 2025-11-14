@@ -7,7 +7,7 @@ function Wait-AlpacaContainerImageReady {
         [string] $Token
     )
     process {
-        Write-AlpacaOutput ("[info]Checking status of service: {0}" -f $ContainerName)
+        Write-AlpacaOutput ("[info]Checking status of container: {0}" -f $ContainerName)
 
         $SleepSeconds = 60
         $SleepSecondsPending = 10
@@ -24,7 +24,7 @@ function Wait-AlpacaContainerImageReady {
         $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
         $headers.add("Content-Type", "application/json")
 
-        $apiUrl = Get-AlpacaEndpointUrlWithParam -api 'alpaca' -Controller "Container" -Endpoint "Container" -RouteSuffix "filter"
+        $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "Container" -Endpoint "Container" -Ressource $ContainerName
         Write-AlpacaOutput "Get status of container '$ContainerName' from $apiUrl"
         $body = @{containerId = $ContainerName } | ConvertTo-Json -Depth 10
 
@@ -47,7 +47,7 @@ function Wait-AlpacaContainerImageReady {
             }
             $CurrentWaitMessage = $WaitMessage
             if (!$serviceResult.status.imageBuilding) {
-                $CurrentWaitMessage = 'Waiting for service to start. Going to sleep for {0} seconds.'
+                $CurrentWaitMessage = 'Waiting for container to start. Going to sleep for {0} seconds.'
             }
             Write-AlpacaOutput ("Attempt {0}: {1}" -f $attemps, $($CurrentWaitMessage -f $CurrentSleepSeconds))
             Write-AlpacaOutput ""
