@@ -26,14 +26,13 @@ function Wait-AlpacaContainerImageReady {
 
         $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "Container" -Endpoint "Container" -Ressource $ContainerName
         Write-AlpacaOutput "Get status of container '$ContainerName' from $apiUrl"
-        $body = @{containerId = $ContainerName } | ConvertTo-Json -Depth 10
 
         $time = New-TimeSpan -Seconds ($TimeoutInMinutes * 60)
         $stoptime = (Get-Date).Add($time)
 
         $attemps = 1
         do {
-            $containerResult = Invoke-RestMethod $apiUrl -Method Post -Headers $headers -Body $body -AllowInsecureRedirect -StatusCodeVariable 'StatusCode'
+            $containerResult = Invoke-RestMethod $apiUrl -Method 'GET' -Headers $headers -AllowInsecureRedirect -StatusCodeVariable 'StatusCode'
             if ($StatusCode -ne 200) {
                 $success = $false
                 return 
