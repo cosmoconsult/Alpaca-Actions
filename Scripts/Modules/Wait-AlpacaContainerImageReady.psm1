@@ -33,20 +33,20 @@ function Wait-AlpacaContainerImageReady {
 
         $attemps = 1
         do {
-            $serviceResult = Invoke-RestMethod $apiUrl -Method Post -Headers $headers -Body $body -AllowInsecureRedirect -StatusCodeVariable 'StatusCode'
+            $containerResult = Invoke-RestMethod $apiUrl -Method Post -Headers $headers -Body $body -AllowInsecureRedirect -StatusCodeVariable 'StatusCode'
             if ($statusCode -ne 200) {
                 $success = $false
                 return 
             }
-            Write-AlpacaOutput "[info] Response: $($serviceResult.status | ConvertTo-Json -Compress)"
-            $currentStatus = $serviceResult.status.state
+            Write-AlpacaOutput "[info] Response: $($containerResult.status | ConvertTo-Json -Compress)"
+            $currentStatus = $containerResult.status.state
             Write-AlpacaOutput ("[info] Status is: {0}" -f $currentStatus)
             $CurrentSleepSeconds = $SleepSeconds
             if ($currentStatus -in @("Unknown", "Pending")) {
                 $CurrentSleepSeconds = $SleepSecondsPending
             }
             $CurrentWaitMessage = $WaitMessage
-            if (!$serviceResult.status.imageBuilding) {
+            if (!$containerResult.status.imageBuilding) {
                 $CurrentWaitMessage = 'Waiting for container to start. Going to sleep for {0} seconds.'
             }
             Write-AlpacaOutput ("Attempt {0}: {1}" -f $attemps, $($CurrentWaitMessage -f $CurrentSleepSeconds))
