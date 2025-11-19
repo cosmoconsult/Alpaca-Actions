@@ -2,13 +2,13 @@ param(
     [Hashtable] $parameters
 ) 
 
-Write-Host "Custom Function - RunPageScriptingTests.ps1 - Start"
+Write-AlpacaOutput "Custom Function - RunPageScriptingTests.ps1 - Start"
 
 Write-AlpacaGroupStart "Parameters"
 $parameters.GetEnumerator() | ForEach-Object { Write-AlpacaOutput "$($_.Key): $($_.Value)" }
 Write-AlpacaGroupEnd
 
-Write-Host "Custom Code Start"
+Write-AlpacaOutput "Custom Code Start"
 
 # Write-Host "[exec]sudo npx playwright@1.48.0 install-deps "
 # sudo npx playwright@1.48.0 install-deps 
@@ -21,14 +21,19 @@ Write-Host "Custom Code Start"
 # Write-AlpacaGroupEnd
 # Write-AlpacaGroupEnd
 
-Write-Host "Custom Code End"
+Write-AlpacaOutput "Custom Code End"
 
 
 
-
+Write-AlpacaOutput "Overriding start address to Environment value: $($parameters.Environment)"
 $parameters.startAddress = $parameters.Environment
+
+Write-AlpacaOutput "Overriding credential to BcAuthContext credential (User: $($bcAuthContext.Credential.UserName))"
+$parameters.credential = $bcAuthContext.Credential
+
+Write-AlpacaOutput "Invoking parent RunPageScriptingTests with modified parameters"
 RunPageScriptingTests $parameters #invoke parent
-Write-Host "Custom Function - RunPageScriptingTests.ps1 - End"
+Write-AlpacaOutput "Custom Function - RunPageScriptingTests.ps1 - End"
 
 
 
