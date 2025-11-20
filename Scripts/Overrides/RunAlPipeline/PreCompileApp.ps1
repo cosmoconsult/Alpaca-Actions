@@ -21,7 +21,7 @@ $Settings = $env:Settings | ConvertFrom-Json
 Write-AlpacaOutput "Settings:"
 Write-AlpacaOutput ("Settings.alpaca.createTranslations = {0}" -f $(try { $Settings.alpaca.createTranslations }catch { '' }))
 Write-AlpacaOutput ("Settings.alpaca.translationLanguages = {0}" -f $(try { $Settings.alpaca.translationLanguages -join ', ' }catch { '' }))
-Write-AlpacaOutput ("Settings.alpaca.testTranslations = {0}" -f $(try { $Settings.alpaca.testTranslations }catch { '' }))
+Write-AlpacaOutput ("Settings.alpaca.TestTranslations = {0}" -f $(try { $Settings.alpaca.TestTranslations }catch { '' }))
 Write-AlpacaOutput ("Settings.alpaca.testTranslationRules = {0}" -f $(try { $Settings.alpaca.testTranslationRules -join ', ' }catch { '' }))
 
 Write-AlpacaGroupEnd #Level 1
@@ -30,26 +30,26 @@ Write-AlpacaGroupEnd #Level 1
 #region CheckPreconditions
 Write-AlpacaGroupStart "Check Preconditions" #Level 1
 try {
-    if (-not $Settings.Keys.Contains('alpaca')) {
+    if ($Settings.PSObject.Properties.Name -notcontains 'alpaca') {
         Write-AlpacaOutput "No 'alpaca' settings found, skipping translation and testing translations."
         return
     }
-    $Translate = $Settings.alpaca.Keys.Contains('createTranslations') -and $Settings.alpaca.createTranslations
-    $TestTranslation = $Settings.alpaca.Keys.Contains('testTranslations') -and $Settings.alpaca.TestTranslations
+    $Translate = $Settings.alpaca.PSObject.Properties.Name -notcontains 'createTranslations' -or -not $Settings.alpaca.createTranslations
+    $TestTranslation = $Settings.alpaca.PSObject.Properties.Name -contains 'TestTranslations' -and $Settings.alpaca.TestTranslations
 
     if (!($Translate -or $TestTranslation)) {
-        Write-AlpacaOutput "Neither 'createTranslations' nor 'testTranslations' is enabled in settings, skipping translation and testing translations."
+        Write-AlpacaOutput "Neither 'createTranslations' nor 'TestTranslations' is enabled in settings, skipping translation and testing translations."
         return
     }
 
-    if ($Translate -and $Settings.alpaca.Keys.Contains('translationLanguages') -or -not $Settings.alpaca.translationLanguages ) {
+    if ($Translate -and $Settings.alpaca.PSObject.Properties.Name -notcontains 'translationLanguages' -or -not $Settings.alpaca.translationLanguages ) {
         Write-AlpacaError "No translation languages configured in 'translationLanguages' setting!"
         return
     }
    
-    $TranslationEnabledInAppJson = $AppJson.Keys.Contains('features') -and $AppJson.features -contains 'TranslationFile' #AppJson comes from parent script
+    $TranslationEnabledInAppJson = $AppJson.PSObject.Properties.Name -contains 'features' -and $AppJson.features -contains 'TranslationFile' #AppJson comes from parent script
     Write-AlpacaOutput "Translation enabled in app.json: $TranslationEnabledInAppJson"
-    $TranslationEnforcedByPipelineSetting = $CompilationParams.Value.Keys.Contains('features') -and $CompilationParams.Value.features -contains 'TranslationFile' #Set by buildmodes=Translated
+    $TranslationEnforcedByPipelineSetting = $CompilationParams.Value.PSObject.Properties.Name -contains 'features' -and $CompilationParams.Value.features -contains 'TranslationFile' #Set by buildmodes=Translated
     Write-AlpacaOutput "Translation enforced by pipeline setting: $TranslationEnforcedByPipelineSetting"
     if (-not ($TranslationEnabledInAppJson -or $TranslationEnforcedByPipelineSetting)) {
         Write-AlpacaOutput "Translation feature is not enabled in app.json or enforced by pipeline settings. Skipping translation and testing translations."
