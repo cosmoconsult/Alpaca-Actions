@@ -31,73 +31,94 @@ Write-AlpacaGroupEnd #Level 1
 Write-AlpacaGroupStart "Check Preconditions" #Level 1
 try {
     if ($Settings.PSObject.Properties.Name -notcontains 'alpaca') {
-        Write-AlpacaOutput "No 'alpaca' settings found, skipping precompilation and translation."
+        Write-AlpacaOutput "No 'alpaca' settings found, skipping translation and testing translations."
         return
     }
-    if ($Settings.alpaca.PSObject.Properties.Name -notcontains 'createTranslations' -or -not $Settings.alpaca.createTranslations) {
-        Write-AlpacaOutput "Skipping precompilation and translation as 'createTranslations' setting is disabled."
-        return
-    }
-    if ($Settings.alpaca.PSObject.Properties.Name -notcontains 'translationLanguages' -or -not $Settings.alpaca.translationLanguages ) {
-        Write-AlpacaError "No translation languages configured in 'translationLanguages' setting!"
+    $Translate = $Settings.alpaca.PSObject.Properties.Name -notcontains 'createTranslations' -or -not $Settings.alpaca.createTranslations
+    $TestTranslation = $Settings.alpaca.PSObject.Properties.Name -contains 'TestTranslations' -and $Settings.alpaca.TestTranslations
+
+    if (!($Translate -or $TestTranslation)) {
+        Write-AlpacaOutput "Neither 'createTranslations' nor 'TestTranslations' is enabled in settings, skipping translation and testing translations."
         return
     }
 
+    if ($Translate -and $Settings.alpaca.PSObject.Properties.Name -notcontains 'translationLanguages' -or -not $Settings.alpaca.translationLanguages ) {
+        Write-AlpacaError "No translation languages configured in 'translationLanguages' setting!"
+        return
+    }
+   
     $AppJson = $AppJsonContent | ConvertFrom-Json #appJsonContent comes from parent script
     $TranslationEnabledInAppJson = $AppJson.PSObject.Properties.Name -contains 'features' -and $AppJson.features -contains 'TranslationFile'
     Write-AlpacaOutput "Translation enabled in app.json: $TranslationEnabledInAppJson"
     $TranslationEnforcedByPipelineSetting = $CompilationParams.Value.PSObject.Properties.Name -contains 'features' -and $CompilationParams.Value.features -contains 'TranslationFile' #Set by buildmodes=Translated
     Write-AlpacaOutput "Translation enforced by pipeline setting: $TranslationEnforcedByPipelineSetting"
     if (-not ($TranslationEnabledInAppJson -or $TranslationEnforcedByPipelineSetting)) {
-        Write-AlpacaOutput "Translation feature is not enabled in app.json or enforced by pipeline settings. Skipping precompilation and translation."
+        Write-AlpacaOutput "Translation feature is not enabled in app.json or enforced by pipeline settings. Skipping translation and testing translations."
         return
     }
+  
 }
 finally {
     Write-AlpacaGroupEnd #Level 1
 }
 #endregion CheckPreconditions
 
-Write-AlpacaGroupStart "Precompile and Translate" #Level 1
 
-#region ClearTranslations
-$TranslationFolder = Join-Path $CompilationParams.Value.appProjectFolder "Translations"
-if (-not (Test-Path $TranslationFolder)) {
-    Write-AlpacaWarning "Translation folder $TranslationFolder does not exist."
-}
-Write-AlpacaOutput "Clearing existing translation files in $TranslationFolder"
-Get-ChildItem $TranslationFolder -Recurse -File -Filter *.xlf | ForEach-Object {
-    Write-AlpacaOutput "Removing translation file: $($_.FullName)"
-    Remove-Item $_.FullName -Force -Confirm:$false
-}
-#endregion ClearTranslations
+if ($Translate) {
+    Write-AlpacaGroupStart "Precompile and Translate" #Level 1
 
-#region PreCompile
-Write-AlpacaOutput "Minimized parameters to speed up compilation"
-$CompilationParamsCopy = $CompilationParams.Value.Clone()
-$CompilationParamsCopy.OutputTo = { param($Line) }
-$CompilationParamsCopy.CopyAppToSymbolsFolder = $false
-$CompilationParamsCopy.Remove("generatecrossreferences")
-$CompilationParamsCopy.Remove("EnablePerTenantExtensionCop")
-$CompilationParamsCopy.Remove("EnableAppSourceCop")
-$CompilationParamsCopy.updateDependencies = $false
-$CompilationParamsCopy.Remove("EnableCodeCop")
-$CompilationParamsCopy.Remove("EnableUICop")
+    #region ClearTranslations
+    $TranslationFolder = Join-Path $CompilationParams.Value.appProjectFolder "Translations"
+    if (-not (Test-Path $TranslationFolder)) {
+        Write-AlpacaWarning "Translation folder $TranslationFolder does not exist."
+    }
+    Write-AlpacaOutput "Clearing existing translation files in $TranslationFolder"
+    Get-ChildItem $TranslationFolder -Recurse -File -Filter *.xlf | ForEach-Object {
+        Write-AlpacaOutput "Removing translation file: $($_.FullName)"
+        Remove-Item $_.FullName -Force -Confirm:$false
+    }
+    #endregion ClearTranslations
 
-if ($useCompilerFolder) {
-    #useCompilerFolder comes from parent scope
-    $null = Invoke-Command -ScriptBlock $CompileAppWithBcCompilerFolder -ArgumentList $CompilationParamsCopy
-}
-else {
-    $null = Invoke-Command -ScriptBlock $CompileAppInBcContainer -ArgumentList $CompilationParamsCopy
-}
-#endregion PreCompile
+    #region PreCompile
+    Write-AlpacaOutput "Minimized parameters to speed up compilation"
+    $CompilationParamsCopy = $CompilationParams.Value.Clone()
+    $CompilationParamsCopy.OutputTo = { param($Line) }
+    $CompilationParamsCopy.CopyAppToSymbolsFolder = $false
+    $CompilationParamsCopy.Remove("generatecrossreferences")
+    $CompilationParamsCopy.Remove("EnablePerTenantExtensionCop")
+    $CompilationParamsCopy.Remove("EnableAppSourceCop")
+    $CompilationParamsCopy.updateDependencies = $false
+    $CompilationParamsCopy.Remove("EnableCodeCop")
+    $CompilationParamsCopy.Remove("EnableUICop")
 
-#region Translate
-New-TranslationFile -Folder $TranslationFolder -Languages $Settings.alpaca.translationLanguages
-if ($Settings.alpaca.PSObject.Properties.Name -contains 'TestTranslations' -and $Settings.alpaca.TestTranslations) {
+    if ($useCompilerFolder) {
+        #useCompilerFolder comes from parent scope
+        $null = Invoke-Command -ScriptBlock $CompileAppWithBcCompilerFolder -ArgumentList $CompilationParamsCopy
+    }
+    else {
+        $null = Invoke-Command -ScriptBlock $CompileAppInBcContainer -ArgumentList $CompilationParamsCopy
+    }
+    #endregion PreCompile
+
+    #region Translate
+    New-TranslationFile -Folder $TranslationFolder -Languages $Settings.alpaca.translationLanguages
+    #endregion Translate
+}
+
+if ($TestTranslation) {
+    #region TestTranslations
+    $TranslationFolder = Join-Path $CompilationParams.Value.appProjectFolder "Translations"
+    if (-not (Test-Path $TranslationFolder)) {
+        Write-AlpacaWarning "Translation folder $TranslationFolder does not exist."
+    }
+    
     Test-TranslationFile -Folder $TranslationFolder -Rules $Settings.alpaca.testTranslationRules
+    #endregion TestTranslations
 }
-#endregion Translate
 
-Write-AlpacaGroupEnd #Level 1
+
+
+
+
+
+
