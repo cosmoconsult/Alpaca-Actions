@@ -21,7 +21,7 @@ $Settings = $env:Settings | ConvertFrom-Json
 Write-AlpacaOutput "Settings:"
 Write-AlpacaOutput ("Settings.alpaca.createTranslations = {0}" -f $(try { $Settings.alpaca.createTranslations }catch { '' }))
 Write-AlpacaOutput ("Settings.alpaca.translationLanguages = {0}" -f $(try { $Settings.alpaca.translationLanguages -join ', ' }catch { '' }))
-Write-AlpacaOutput ("Settings.alpaca.TestTranslations = {0}" -f $(try { $Settings.alpaca.TestTranslations }catch { '' }))
+Write-AlpacaOutput ("Settings.alpaca.testTranslations = {0}" -f $(try { $Settings.alpaca.testTranslations }catch { '' }))
 Write-AlpacaOutput ("Settings.alpaca.testTranslationRules = {0}" -f $(try { $Settings.alpaca.testTranslationRules -join ', ' }catch { '' }))
 
 Write-AlpacaGroupEnd #Level 1
@@ -35,10 +35,10 @@ try {
         return
     }
     $Translate = $Settings.alpaca.PSObject.Properties.Name -notcontains 'createTranslations' -or -not $Settings.alpaca.createTranslations
-    $TestTranslation = $Settings.alpaca.PSObject.Properties.Name -contains 'TestTranslations' -and $Settings.alpaca.TestTranslations
+    $TestTranslation = $Settings.alpaca.PSObject.Properties.Name -contains 'testTranslations' -and $Settings.alpaca.testTranslations
 
     if (!($Translate -or $TestTranslation)) {
-        Write-AlpacaOutput "Neither 'createTranslations' nor 'TestTranslations' is enabled in settings, skipping translation and testing translations."
+        Write-AlpacaOutput "Neither 'createTranslations' nor 'testTranslations' is enabled in settings, skipping translation and testing translations."
         return
     }
 
