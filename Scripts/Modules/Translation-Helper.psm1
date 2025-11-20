@@ -1,3 +1,13 @@
+function Install-XliffSync {
+    # Install XliffSync module if not already installed
+    # save state in global variable to avoid multiple installations and avoid slow Get-InstalledModule calls
+    if ($global:xliffSyncInstalled ) { 
+        return 
+    }
+    Install-Module -Name XliffSync -Scope CurrentUser -Force
+    $global:xliffSyncInstalled = $true
+}
+
 function New-TranslationFile() {
     # Create translation files (e.g. .de-DE.xlf) based on existing .g.xlf
     param(
@@ -8,7 +18,7 @@ function New-TranslationFile() {
     )
     Write-Host "##[section]Create Translations ($($Languages -join ','))"
 
-    Install-Module -Name XliffSync -Scope CurrentUser -Force
+    Install-XliffSync
     Write-AlpacaOutput "Successfully installed XliffSync module"
 
     Write-AlpacaOutput "Found $($Languages.Count) target languages"
@@ -52,7 +62,7 @@ function Test-TranslationFile() {
     )
     Write-AlpacaOutput "Testing Translations (Rules: $($Rules -join ','))"
 
-    Install-Module -Name XliffSync -Scope CurrentUser -Force
+    Install-XliffSync
     Write-AlpacaOutput "Successfully installed XliffSync module"
 
     $TranslatedXlfFiles = @() # Initialize variable to enforce an array due to strict mode
