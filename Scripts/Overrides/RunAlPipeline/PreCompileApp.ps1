@@ -49,7 +49,7 @@ try {
    
     $TranslationEnabledInAppJson = $AppJson.PSObject.Properties.Name -contains 'features' -and $AppJson.features -contains 'TranslationFile' #AppJson comes from parent script
     Write-AlpacaOutput "Translation enabled in app.json: $TranslationEnabledInAppJson"
-    $TranslationEnforcedByPipelineSetting = $CompilationParams.Value.PSObject.Properties.Name -contains 'features' -and $CompilationParams.Value.features -contains 'TranslationFile' #Set by buildmodes=Translated
+    $TranslationEnforcedByPipelineSetting = $CompilationParams.Value.Keys.Contains('features') -and $CompilationParams.Value.features -contains 'TranslationFile' #Set by buildmodes=Translated
     Write-AlpacaOutput "Translation enforced by pipeline setting: $TranslationEnforcedByPipelineSetting"
     if (-not ($TranslationEnabledInAppJson -or $TranslationEnforcedByPipelineSetting)) {
         Write-AlpacaOutput "Translation feature is not enabled in app.json or enforced by pipeline settings. Skipping translation and testing translations."
