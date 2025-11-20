@@ -34,7 +34,7 @@ try {
         Write-AlpacaOutput "No 'alpaca' settings found, skipping translation and testing translations."
         return
     }
-    $Translate = $Settings.alpaca.PSObject.Properties.Name -notcontains 'createTranslations' -or -not $Settings.alpaca.createTranslations
+    $Translate = $Settings.alpaca.PSObject.Properties.Name -contains 'createTranslations' -and $Settings.alpaca.createTranslations
     $TestTranslation = $Settings.alpaca.PSObject.Properties.Name -contains 'testTranslations' -and $Settings.alpaca.testTranslations
 
     if (!($Translate -or $TestTranslation)) {
