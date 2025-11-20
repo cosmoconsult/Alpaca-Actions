@@ -10,8 +10,12 @@ if ($env:RUNNER_DEBUG -eq '1' -or $env:GITHUB_RUN_ATTEMPT -gt 1) {
     Write-AlpacaOutput "App Type: $AppType"
 
     Write-AlpacaGroupStart "Compilation Params:" #Level 2
-    "$($CompilationParams.Value | ConvertTo-Json -Depth 2)" -split "`n" | ForEach-Object { Write-AlpacaOutput $_ }
-    Write-AlpacaGroupEnd #Level 2
+    try {
+        "$($CompilationParams.Value | ConvertTo-Json -Depth 2)" -split "`n" | ForEach-Object { Write-AlpacaOutput $_ }
+    }
+    finally {
+        Write-AlpacaGroupEnd #Level 2
+    }
 }
 $Settings = $env:Settings | ConvertFrom-Json
 Write-AlpacaOutput "Settings:"
@@ -25,33 +29,33 @@ Write-AlpacaGroupEnd #Level 1
 
 #region CheckPreconditions
 Write-AlpacaGroupStart "Check Preconditions" #Level 1
-if ($Settings.PSObject.Properties.Name -notcontains 'alpaca') {
-    Write-AlpacaOutput "No 'alpaca' settings found, skipping precompilation and translation."
-    Write-AlpacaGroupEnd #Level 1, early exit
-    return
-}
-if ($Settings.alpaca.PSObject.Properties.Name -notcontains 'createTranslations' -or -not $Settings.alpaca.createTranslations) {
-    Write-AlpacaOutput "Skipping precompilation and translation as 'createTranslations' setting is disabled."
-    Write-AlpacaGroupEnd #Level 1, early exit
-    return
-}
-if ($Settings.alpaca.PSObject.Properties.Name -notcontains 'translationLanguages' -or -not $Settings.alpaca.translationLanguages ) {
-    Write-AlpacaError "No translation languages configured in 'translationLanguages' setting!"
-    Write-AlpacaGroupEnd #Level 1, early exit
-    return
-}
+try {
+    if ($Settings.PSObject.Properties.Name -notcontains 'alpaca') {
+        Write-AlpacaOutput "No 'alpaca' settings found, skipping precompilation and translation."
+        return
+    }
+    if ($Settings.alpaca.PSObject.Properties.Name -notcontains 'createTranslations' -or -not $Settings.alpaca.createTranslations) {
+        Write-AlpacaOutput "Skipping precompilation and translation as 'createTranslations' setting is disabled."
+        return
+    }
+    if ($Settings.alpaca.PSObject.Properties.Name -notcontains 'translationLanguages' -or -not $Settings.alpaca.translationLanguages ) {
+        Write-AlpacaError "No translation languages configured in 'translationLanguages' setting!"
+        return
+    }
 
-$AppJson = $AppJsonContent | ConvertFrom-Json #appJsonContent comes from parent script
-$TranslationEnabledInAppJson = $AppJson.PSObject.Properties.Name -contains 'features' -and $AppJson.features -contains 'TranslationFile'
-Write-AlpacaOutput "Translation enabled in app.json: $TranslationEnabledInAppJson"
-$TranslationEnforcedByPipelineSetting = $CompilationParams.Value.PSObject.Properties.Name -contains 'features' -and $CompilationParams.Value.features -contains 'TranslationFile' #Set by buildmodes=Translated
-Write-AlpacaOutput "Translation enforced by pipeline setting: $TranslationEnforcedByPipelineSetting"
-if (-not ($TranslationEnabledInAppJson -or $TranslationEnforcedByPipelineSetting)) {
-    Write-AlpacaOutput "Translation feature is not enabled in app.json or enforced by pipeline settings. Skipping precompilation and translation."
-    Write-AlpacaGroupEnd #Level 1, early exit
-    return
+    $AppJson = $AppJsonContent | ConvertFrom-Json #appJsonContent comes from parent script
+    $TranslationEnabledInAppJson = $AppJson.PSObject.Properties.Name -contains 'features' -and $AppJson.features -contains 'TranslationFile'
+    Write-AlpacaOutput "Translation enabled in app.json: $TranslationEnabledInAppJson"
+    $TranslationEnforcedByPipelineSetting = $CompilationParams.Value.PSObject.Properties.Name -contains 'features' -and $CompilationParams.Value.features -contains 'TranslationFile' #Set by buildmodes=Translated
+    Write-AlpacaOutput "Translation enforced by pipeline setting: $TranslationEnforcedByPipelineSetting"
+    if (-not ($TranslationEnabledInAppJson -or $TranslationEnforcedByPipelineSetting)) {
+        Write-AlpacaOutput "Translation feature is not enabled in app.json or enforced by pipeline settings. Skipping precompilation and translation."
+        return
+    }
 }
-Write-AlpacaGroupEnd #Level 1
+finally {
+    Write-AlpacaGroupEnd #Level 1
+}
 #endregion CheckPreconditions
 
 Write-AlpacaGroupStart "Precompile and Translate" #Level 1
