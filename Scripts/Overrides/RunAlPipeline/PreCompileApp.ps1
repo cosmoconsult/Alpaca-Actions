@@ -72,7 +72,7 @@ if ($Translate) {
         Write-AlpacaWarning "Translation folder $TranslationFolder does not exist."
     }
     Write-AlpacaOutput "Clearing existing translation files in $TranslationFolder"
-    Get-ChildItem $TranslationFolder -Recurse -File -Filter *.xlf | ForEach-Object {
+    Get-ChildItem $TranslationFolder -Recurse -File -Filter *.xlf | Where-Object { $_.BaseName.EndsWith('.g') -or $Settings.alpaca.translationLanguages -contains $_.BaseName.split('.')[-1] } | ForEach-Object {
         Write-AlpacaOutput "Removing translation file: $($_.FullName)"
         Remove-Item $_.FullName -Force -Confirm:$false
     }
