@@ -16,7 +16,7 @@ Create a COSMO Alpaca container for each project
 | :-- | :-: | :-- | :-- |
 | shell | | The shell (powershell or pwsh) in which the PowerShell script in this action should run | powershell |
 | token | | The GitHub token running the action | github.token |
-| projectsJson | Yes | An array of AL-Go projects in compressed JSON format | |
+| buildOrderJson | Yes | An array of objects that determine that build order, including build dimensions | |
 
 ## OUTPUT
 

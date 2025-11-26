@@ -7,7 +7,7 @@ function Wait-AlpacaContainerImageReady {
         [string] $Token
     )
     process {
-        Write-AlpacaOutput ("[info]Checking status of service: {0}" -f $ContainerName)
+        Write-AlpacaOutput ("[info]Checking status of container: {0}" -f $ContainerName)
 
         $SleepSeconds = 60
         $SleepSecondsPending = 10
@@ -24,30 +24,29 @@ function Wait-AlpacaContainerImageReady {
         $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
         $headers.add("Content-Type", "application/json")
 
-        $apiUrl = Get-AlpacaEndpointUrlWithParam -api 'alpaca' -Controller "Container" -Endpoint "Container" -RouteSuffix "filter"
+        $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "Container" -Endpoint "Container" -Ressource $ContainerName
         Write-AlpacaOutput "Get status of container '$ContainerName' from $apiUrl"
-        $body = @{containerId = $ContainerName } | ConvertTo-Json -Depth 10
 
         $time = New-TimeSpan -Seconds ($TimeoutInMinutes * 60)
         $stoptime = (Get-Date).Add($time)
 
         $attemps = 1
         do {
-            $serviceResult = Invoke-RestMethod $apiUrl -Method Post -Headers $headers -Body $body -AllowInsecureRedirect -StatusCodeVariable 'StatusCode'
-            if ($statusCode -ne 200) {
+            $containerResult = Invoke-RestMethod $apiUrl -Method 'GET' -Headers $headers -AllowInsecureRedirect -StatusCodeVariable 'StatusCode'
+            if ($StatusCode -ne 200) {
                 $success = $false
                 return 
             }
-            Write-AlpacaOutput "[info] Response: $($serviceResult.status | ConvertTo-Json -Compress)"
-            $currentStatus = $serviceResult.status.state
+            Write-AlpacaOutput "[info] Response: $($containerResult.status | ConvertTo-Json -Compress)"
+            $currentStatus = $containerResult.status.state
             Write-AlpacaOutput ("[info] Status is: {0}" -f $currentStatus)
             $CurrentSleepSeconds = $SleepSeconds
             if ($currentStatus -in @("Unknown", "Pending")) {
                 $CurrentSleepSeconds = $SleepSecondsPending
             }
             $CurrentWaitMessage = $WaitMessage
-            if (!$serviceResult.status.imageBuilding) {
-                $CurrentWaitMessage = 'Waiting for service to start. Going to sleep for {0} seconds.'
+            if (!$containerResult.status.imageBuilding) {
+                $CurrentWaitMessage = 'Waiting for container to start. Going to sleep for {0} seconds.'
             }
             Write-AlpacaOutput ("Attempt {0}: {1}" -f $attemps, $($CurrentWaitMessage -f $CurrentSleepSeconds))
             Write-AlpacaOutput ""
