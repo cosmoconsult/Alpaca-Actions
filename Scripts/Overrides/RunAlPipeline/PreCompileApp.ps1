@@ -43,7 +43,7 @@ try {
         return
     }
     $TestTranslationRules = @()
-    if ($TestTranslation -and $Settings.alpaca.PSObject.Properties.Name -notcontains 'testTranslationRules') {
+    if ($TestTranslation -and $Settings.alpaca.PSObject.Properties.Name -contains 'testTranslationRules') {
         $TestTranslationRules = $Settings.alpaca.testTranslationRules
     }
    
