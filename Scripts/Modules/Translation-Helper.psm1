@@ -1,11 +1,13 @@
-function Install-XliffSync {
+ $script:xliffSyncInstalled = $false
+ function Install-XliffSync {
     # Install XliffSync module if not already installed
     # save state in global variable to avoid multiple installations and avoid slow Get-InstalledModule calls
-    if ($global:xliffSyncInstalled ) { 
+    if ($script:xliffSyncInstalled) { 
+        Write-AlpacaOutput "XliffSync module already installed in this session"
         return 
     }
     Install-Module -Name XliffSync -Scope CurrentUser -Force
-    $global:xliffSyncInstalled = $true
+    $script:xliffSyncInstalled = $true
 }
 
 function New-TranslationFile() {
@@ -16,7 +18,7 @@ function New-TranslationFile() {
         [ValidateScript({ <# en-US,de-DE,de-AT,... #> $_ -cmatch '^[a-z]{2}-[A-Z]{2}$' })]
         [string[]]$Languages = @()
     )
-    Write-Host "##[section]Create Translations ($($Languages -join ','))"
+    Write-AlpacaOutput "Create Translations ($($Languages -join ','))"
 
     Install-XliffSync
     Write-AlpacaOutput "Successfully installed XliffSync module"

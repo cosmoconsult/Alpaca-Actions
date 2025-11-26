@@ -10,12 +10,8 @@ if ($env:RUNNER_DEBUG -eq '1' -or $env:GITHUB_RUN_ATTEMPT -gt 1) {
     Write-AlpacaOutput "App Type: $AppType"
 
     Write-AlpacaGroupStart "Compilation Params:" #Level 2
-    try {
-        "$($CompilationParams.Value | ConvertTo-Json -Depth 2)" -split "`n" | ForEach-Object { Write-AlpacaOutput $_ }
-    }
-    finally {
-        Write-AlpacaGroupEnd #Level 2
-    }
+    "$($CompilationParams.Value | ConvertTo-Json -Depth 2)" -split "`n" | ForEach-Object { Write-AlpacaOutput $_ }
+    Write-AlpacaGroupEnd #Level 2
 }
 $Settings = $env:Settings | ConvertFrom-Json
 Write-AlpacaOutput "Settings:"
@@ -46,6 +42,10 @@ try {
         Write-AlpacaError "No translation languages configured in 'translationLanguages' setting!"
         return
     }
+    $TestTranslationRules = @()
+    if ($TestTranslation -and $Settings.alpaca.PSObject.Properties.Name -notcontains 'testTranslationRules') {
+        $TestTranslationRules = $Settings.alpaca.testTranslationRules
+    }
    
     $TranslationEnabledInAppJson = $AppJson.PSObject.Properties.Name -contains 'features' -and $AppJson.features -contains 'TranslationFile' #AppJson comes from parent script
     Write-AlpacaOutput "Translation enabled in app.json: $TranslationEnabledInAppJson"
@@ -64,7 +64,7 @@ finally {
 
 
 if ($Translate) {
-    Write-AlpacaGroupStart "Precompile and Translate" #Level 1
+    Write-AlpacaGroupStart "Translate" #Level 1
 
     #region ClearTranslations
     $TranslationFolder = Join-Path $CompilationParams.Value.appProjectFolder "Translations"
@@ -102,22 +102,18 @@ if ($Translate) {
     #region Translate
     New-TranslationFile -Folder $TranslationFolder -Languages $Settings.alpaca.translationLanguages
     #endregion Translate
+    Write-AlpacaGroupEnd #Level 1
 }
 
 if ($TestTranslation) {
     #region TestTranslations
+    Write-AlpacaGroupStart "Test Translations" #Level 1
     $TranslationFolder = Join-Path $CompilationParams.Value.appProjectFolder "Translations"
     if (-not (Test-Path $TranslationFolder)) {
         Write-AlpacaWarning "Translation folder $TranslationFolder does not exist."
     }
     
-    Test-TranslationFile -Folder $TranslationFolder -Rules $Settings.alpaca.testTranslationRules
+    Test-TranslationFile -Folder $TranslationFolder -Rules $TestTranslationRules
+    Write-AlpacaGroupEnd #Level 1
     #endregion TestTranslations
 }
-
-
-
-
-
-
-
