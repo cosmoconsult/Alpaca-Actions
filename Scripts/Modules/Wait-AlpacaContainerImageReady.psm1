@@ -13,7 +13,7 @@ function Wait-AlpacaContainerImageReady {
         $SleepSecondsPending = 10
         $TimeoutInMinutes = 50
         $WaitMessage = "Image is building. Going to sleep for {0} seconds." 
-        $ContainerStatusCode = @("Running", "Healthy")
+        $ContainerStatusCode = @("Starting", "Running", "Healthy")
         $success = $true
 
         $owner = $env:GITHUB_REPOSITORY_OWNER
