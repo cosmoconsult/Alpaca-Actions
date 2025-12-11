@@ -3,7 +3,7 @@ param (
     [string] $Token,
     [Parameter(HelpMessage = "An array of Alpaca container informations in compressed JSON format", Mandatory = $true)]
     [string] $ContainersJson,
-    [Parameter(HelpMessage = "Optional Alpaca container information to filter containers by in compressed JSON format", Mandatory = $false)]
+    [Parameter(HelpMessage = "Optional Alpaca container information to filter containers by in JSON format", Mandatory = $false)]
     [string] $FilterJson
 )
 

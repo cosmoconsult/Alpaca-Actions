@@ -14,7 +14,7 @@ inputs:
     description: An array of Alpaca container informations in compressed JSON format
     required: true
   filterJson:
-    description: Optional Alpaca container information to filter containers by in compressed JSON format
+    description: Optional Alpaca container information to filter containers by in JSON format
     required: false
 runs:
   using: composite
