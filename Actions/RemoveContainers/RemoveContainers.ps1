@@ -26,11 +26,12 @@ try {
     foreach ($container in $containers) {
         Write-AlpacaOutput "- Id: '$($container.Id)', Project: '$($container.Project)', BuildMode: '$($container.BuildMode)'"
     }
-
-    Write-AlpacaGroupEnd
 } 
 catch {
     throw "Failed to determine containers: $($_.Exception.Message)"
+}
+finally {
+    Write-AlpacaGroupEnd
 }
 
 Write-AlpacaGroupStart "Deleting $($containers.Count) containers"
@@ -46,8 +47,8 @@ foreach ($container in $containers) {
 }
 
 Write-AlpacaOutput "Deleted $($containers.Count - $failures) of $($containers.Count) containers"
+Write-AlpacaGroupEnd
+
 if ($failures) {
     throw "Failed to delete $failures containers"
 }
-
-Write-AlpacaGroupEnd
