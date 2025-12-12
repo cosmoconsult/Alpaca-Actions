@@ -44,12 +44,6 @@ function Wait-AlpacaContainerImageReady {
             if ($currentStatus -in @("Unknown", "Pending")) {
                 $CurrentSleepSeconds = $SleepSecondsPending
             }
-            $CurrentWaitMessage = $WaitMessage
-            if (!$containerResult.status.imageBuilding) {
-                $CurrentWaitMessage = 'Waiting for container to start. Going to sleep for {0} seconds.'
-            }
-            Write-AlpacaOutput ("Attempt {0}: {1}" -f $attemps, $($CurrentWaitMessage -f $CurrentSleepSeconds))
-            Write-AlpacaOutput ""
             if ($currentStatus -notin $ContainerStatusCode) {
                 switch ($currentStatus) {
                     "Error" { 
@@ -57,7 +51,13 @@ function Wait-AlpacaContainerImageReady {
                         Write-AlpacaError "An error occured during building the image."
                         return
                     }
-                    Default {                    
+                    Default {            
+                        $CurrentWaitMessage = $WaitMessage
+                        if (!$containerResult.status.imageBuilding) {
+                            $CurrentWaitMessage = 'Waiting for container to start. Going to sleep for {0} seconds.'
+                        }
+                        Write-AlpacaOutput ("Attempt {0}: {1}" -f $attemps, $($CurrentWaitMessage -f $CurrentSleepSeconds))
+                        Write-AlpacaOutput ""
                         Start-Sleep -Seconds $CurrentSleepSeconds
                     }
                 }
