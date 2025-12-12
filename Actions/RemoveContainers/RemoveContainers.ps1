@@ -35,7 +35,7 @@ catch {
     throw "Failed to determine containers: $($_.Exception.Message)"
 }
 
-Write-AlpacaGroupStart "Deleting containers"
+Write-AlpacaGroupStart "Deleting $($containers.Count) containers"
 $failures = 0
 
 foreach ($container in $containers) {
