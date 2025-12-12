@@ -4,9 +4,7 @@ param (
     [Parameter(HelpMessage = "An array of Alpaca container informations in compressed JSON format", Mandatory = $true)]
     [string] $ContainersJson,
     [Parameter(HelpMessage = "Optional Alpaca container information to filter containers by in JSON format", Mandatory = $false)]
-    [string] $FilterJson,
-    [Parameter(HelpMessage = "Continue on deletion errors and only report them instead of failing the action", Mandatory = $false)]
-    [switch] $ContinueOnDeletionError
+    [string] $FilterJson
 )
 
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
@@ -42,18 +40,14 @@ foreach ($container in $containers) {
     try {
         Remove-AlpacaContainer -Container $container -Token $Token
     } catch {
-        Write-AlpacaError "Failed to delete container '$($container.Id)':`n$($_.Exception.Message)" -WithoutGitHubAnnotation
+        Write-AlpacaError "Failed to delete container '$($container.Id)':`n$($_.Exception.Message)"
         $failures += 1
     }
 }
 
 Write-AlpacaOutput "Deleted $($containers.Count - $failures) of $($containers.Count) containers"
 if ($failures) {
-    if ($ContinueOnDeletionError) {
-        Write-AlpacaWarning "Failed to delete $failures containers" -WithoutGitHubAnnotation
-    } else {
-        throw "Failed to delete $failures containers"
-    }
+    throw "Failed to delete $failures containers"
 }
 
 Write-AlpacaGroupEnd

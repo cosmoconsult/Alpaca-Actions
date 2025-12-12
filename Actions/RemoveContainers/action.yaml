@@ -16,10 +16,6 @@ inputs:
   filterJson:
     description: Optional Alpaca container information to filter containers by in JSON format
     required: false
-  continueOnDeletionError:
-    description: Continue on deletion errors and only report them instead of failing the action
-    required: false
-    default: 'false'
 runs:
   using: composite
   steps:    
@@ -30,7 +26,6 @@ runs:
         _token: ${{ inputs.token }}
         _containersJson: ${{ inputs.containersJson }}
         _filterJson: ${{ inputs.filterJson }}
-        _continueOnDeletionError: ${{ inputs.continueOnDeletionError }}
       run: |
         ${{ github.action_path }}/RemoveContainers.ps1 -Token $env:_token -ContainersJson $env:_containersJson -FilterJson $env:_filterJson -ContinueOnDeletionError:($env:_continueOnDeletionError -eq 'true')
 branding:

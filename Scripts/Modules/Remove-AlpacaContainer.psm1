@@ -20,7 +20,13 @@ function Remove-AlpacaContainer {
         
         Invoke-RestMethod $apiUrl -Method 'DELETE' -Headers $headers -AllowInsecureRedirect | Out-Null
 
-        Write-AlpacaOutput "Deleted Container '$($Container.Id)'"
+        Write-AlpacaOutput "Container '$($Container.Id)' deleted"
+    } catch {
+        if ($_.Exception.StatusCode -eq [System.Net.HttpStatusCode]::NotFound) {
+            Write-AlpacaOutput "Container '$($Container.Id)' not found"
+        } else {
+            throw
+        }
     } finally {
         Write-AlpacaGroupEnd
     }

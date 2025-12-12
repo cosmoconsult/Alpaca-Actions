@@ -18,7 +18,6 @@ Remove COSMO Alpaca containers
 | token | | The GitHub token running the action | github.token |
 | containersJson | Yes | An array of Alpaca container informations in compressed JSON format | |
 | filterJson | | Optional Alpaca container information to filter containers by in JSON format | |
-| continueOnDeletionError | | Continue on deletion errors and only report them instead of failing the action | false |
 
 ## OUTPUT
 
