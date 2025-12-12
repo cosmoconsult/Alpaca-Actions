@@ -13,6 +13,9 @@ inputs:
   containersJson:
     description: An array of Alpaca container informations in compressed JSON format
     required: true
+  filterJson:
+    description: Optional Alpaca container information to filter containers by in JSON format
+    required: false
 runs:
   using: composite
   steps:    
@@ -22,8 +25,9 @@ runs:
       env:
         _token: ${{ inputs.token }}
         _containersJson: ${{ inputs.containersJson }}
+        _filterJson: ${{ inputs.filterJson }}
       run: |
-        ${{ github.action_path }}/RemoveContainers.ps1 -Token $env:_token -ContainersJson $env:_containersJson
+        ${{ github.action_path }}/RemoveContainers.ps1 -Token $env:_token -ContainersJson $env:_containersJson -FilterJson $env:_filterJson
 branding:
   icon: terminal
   color: blue
