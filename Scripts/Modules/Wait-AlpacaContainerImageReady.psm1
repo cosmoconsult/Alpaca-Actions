@@ -48,7 +48,7 @@ function Wait-AlpacaContainerImageReady {
                 switch ($currentStatus) {
                     "Error" { 
                         $success = $false
-                        Write-AlpacaError "An error occured during building the image."
+                        Write-AlpacaError "An error occurred during building the image."
                         return
                     }
                     Default {            
