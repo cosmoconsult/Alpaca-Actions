@@ -21,7 +21,7 @@ function Get-AlpacaEndpointUrlWithParam {
         [string] $RouteSuffix,
         [Hashtable] $QueryParams
     )
-    $url = Get-AlpacaBackendUrl + "api/alpaca/release/" + $Controller
+    $url = (Get-AlpacaBackendUrl) + "api/alpaca/release/" + $Controller
 
     if ($Endpoint) {
         $url = $url + "/" + $Endpoint
