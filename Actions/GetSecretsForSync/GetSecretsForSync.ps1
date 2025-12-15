@@ -109,7 +109,10 @@ if ($Mode -eq "GetAndUpdate") {
                 }
                 
                 $foundSecrets = Get-SecretNamesFromObject -Object $jsonObject -Patterns $secretKeyPatterns
-                $secretNames += $foundSecrets
+                if ($foundSecrets.Count -gt 0) {
+                    Write-AlpacaOutput "Found $($foundSecrets.Count) secret name(s) in '$jsonFilePath': $($foundSecrets -join ', ')"
+                    $secretNames += $foundSecrets
+                }
                 
             } catch {
                 Write-AlpacaWarning "Failed to parse JSON file '$jsonFilePath': $($_.Exception.Message)"
@@ -123,7 +126,10 @@ if ($Mode -eq "GetAndUpdate") {
             $orgSettings = $orgSettingsVariableValue | ConvertFrom-Json -ErrorAction SilentlyContinue
             if ($null -ne $orgSettings) {
                 $foundSecrets = Get-SecretNamesFromObject -Object $orgSettings -Patterns $secretKeyPatterns
-                $secretNames += $foundSecrets
+                if ($foundSecrets.Count -gt 0) {
+                    Write-AlpacaOutput "Found $($foundSecrets.Count) secret name(s) in organization settings: $($foundSecrets -join ', ')"
+                    $secretNames += $foundSecrets
+                }
             }
         } catch {
             Write-AlpacaWarning "Failed to parse organization settings: $($_.Exception.Message)"
@@ -135,7 +141,10 @@ if ($Mode -eq "GetAndUpdate") {
             $repoSettings = $repoSettingsVariableValue | ConvertFrom-Json -ErrorAction SilentlyContinue
             if ($null -ne $repoSettings) {
                 $foundSecrets = Get-SecretNamesFromObject -Object $repoSettings -Patterns $secretKeyPatterns
-                $secretNames += $foundSecrets
+                if ($foundSecrets.Count -gt 0) {
+                    Write-AlpacaOutput "Found $($foundSecrets.Count) secret name(s) in repository settings: $($foundSecrets -join ', ')"
+                    $secretNames += $foundSecrets
+                }
             }
         } catch {
             Write-AlpacaWarning "Failed to parse repository settings: $($_.Exception.Message)"
@@ -147,7 +156,10 @@ if ($Mode -eq "GetAndUpdate") {
             $envSettings = $environmentSettingsVariableValue | ConvertFrom-Json -ErrorAction SilentlyContinue
             if ($null -ne $envSettings) {
                 $foundSecrets = Get-SecretNamesFromObject -Object $envSettings -Patterns $secretKeyPatterns
-                $secretNames += $foundSecrets
+                if ($foundSecrets.Count -gt 0) {
+                    Write-AlpacaOutput "Found $($foundSecrets.Count) secret name(s) in environment settings: $($foundSecrets -join ', ')"
+                    $secretNames += $foundSecrets
+                }
             }
         } catch {
             Write-AlpacaWarning "Failed to parse environment settings: $($_.Exception.Message)"
@@ -166,6 +178,7 @@ try {
     
     $backendSecretNames = Get-AlpacaSyncedSecretNames -Token $Token
     if ($backendSecretNames.Count -gt 0) {
+        Write-AlpacaOutput "Found $($backendSecretNames.Count) secret name(s) in Alpaca backend: $($backendSecretNames -join ', ')"
         $secretNames += $backendSecretNames
     }
     

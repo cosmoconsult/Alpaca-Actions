@@ -1,4 +1,4 @@
-function Get-Alpaca-SyncedSecretNames {
+function Get-AlpacaSyncedSecretNames {
     param (
         [Parameter(Mandatory = $true)]
         [string] $Token
@@ -12,9 +12,9 @@ function Get-Alpaca-SyncedSecretNames {
     try {
         $response = Invoke-RestMethod $apiUrl -Method Get -Headers $headers -AllowInsecureRedirect
         
-        if ($response -and $response.secrets) {
-            Write-AlpacaOutput "Retrieved $($response.secrets.Count) secret names from Alpaca backend"
-            return $response.secrets
+        if ($response -and $response.secretNames) {
+            Write-AlpacaOutput "Retrieved $($response.secretNames.Count) secret names from Alpaca backend"
+            return $response.secretNames
         }
         else {
             Write-AlpacaOutput "No secret names found in Alpaca backend"
