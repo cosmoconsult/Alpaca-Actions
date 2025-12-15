@@ -9,7 +9,7 @@ function Get-AlpacaAppInfo {
         $headers = Get-AlpacaAuthenticationHeaders -Token $Token
         $headers.add("accept", "application/text")
 
-        $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "Container" -Endpoint "Exec" -Ressource $ContainerName -RouteSuffix "appInfo"
+        $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "Exec" -Ressource $ContainerName -RouteSuffix "appInfo"
         Write-AlpacaOutput "Connecting to $apiUrl"
         $result = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'Get' -Headers $headers
         return $result

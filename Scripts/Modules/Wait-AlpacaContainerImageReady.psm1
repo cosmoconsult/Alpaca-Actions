@@ -21,10 +21,10 @@ function Wait-AlpacaContainerImageReady {
         $repository = $repository.replace($owner, "")
         $repository = $repository.replace("/", "")
 
-        $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
+        $headers = Get-AlpacaAuthenticationHeaders -Token $Token
         $headers.add("Content-Type", "application/json")
 
-        $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "Container" -Endpoint "Container" -Ressource $ContainerName
+        $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "Container" -Ressource $ContainerName
         Write-AlpacaOutput "Get status of container '$ContainerName' from $apiUrl"
 
         $time = New-TimeSpan -Seconds ($TimeoutInMinutes * 60)

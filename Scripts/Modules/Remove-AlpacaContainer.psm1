@@ -14,9 +14,9 @@ function Remove-AlpacaContainer {
     try {
         Write-AlpacaGroupStart "Deleting Container '$($Container.Id)' (Project: '$($Container.Project)', BuildMode: '$($Container.BuildMode)')"
         
-        $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
+        $headers = Get-AlpacaAuthenticationHeaders -Token $Token
 
-        $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "Container" -Endpoint "Container" -Ressource $Container.Id
+        $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "Container" -Ressource $Container.Id
         
         Invoke-AlpacaApiRequest -Url $apiUrl -Method 'DELETE' -Headers $headers | Out-Null
 

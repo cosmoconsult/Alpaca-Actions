@@ -10,7 +10,7 @@ function Sync-AlpacaSecrets {
 
     $headers = Get-AlpacaAuthenticationHeaders -Token $Token
     $headers.add("Content-Type", "application/json")
-    $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "GitHub" -Endpoint "SecretSync"
+    $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "GitHub" -Endpoint "SecretSync"
 
     $body = @{ secrets = $Secrets } | ConvertTo-Json -Depth 10
     Invoke-AlpacaApiRequest -Url $apiUrl -Method Post -Headers $headers -Body $body | Out-Null

@@ -51,13 +51,13 @@ function Wait-AlpacaContainerReady {
             $repository = $repository.replace("/", "")
 
             
-            $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
+            $headers = Get-AlpacaAuthenticationHeaders -Token $Token
             $headers.add("accept", "application/text")
 
             $QueryParams = @{
                 tailLines     = 5000
             }
-            $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "Container" -Endpoint "Container" -Ressource $ContainerName -RouteSuffix "logs" -QueryParams $QueryParams
+            $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "Container" -Ressource $ContainerName -RouteSuffix "logs" -QueryParams $QueryParams
                 
             while ($waitForContainer) {  
 
