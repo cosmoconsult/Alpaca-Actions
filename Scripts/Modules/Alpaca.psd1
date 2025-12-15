@@ -27,6 +27,7 @@
         'API-Helper.psm1',
         'Get-AlpacaDependencyApps.psm1',
         'Get-AlpacaExtendedErrorMessage.psm1',
+        'Get-AlpacaSyncedSecretNames.psm1',
         'Get-AlpacaSettings.psm1',
         'New-AlpacaContainer.psm1',
         'Output-Helper.psm1',
