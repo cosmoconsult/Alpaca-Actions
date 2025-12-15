@@ -11,7 +11,7 @@ function Get-AlpacaAppInfo {
 
         $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "Container" -Endpoint "Exec" -Ressource $ContainerName -RouteSuffix "appInfo"
         Write-AlpacaOutput "Connecting to $apiUrl"
-        $result = Invoke-RestMethod $apiUrl -Method 'Get' -Headers $headers -AllowInsecureRedirect
+        $result = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'Get' -Headers $headers
         return $result
     }
 }

@@ -13,7 +13,7 @@ function Sync-AlpacaSecrets {
     $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "GitHub" -Endpoint "SecretSync"
 
     $body = @{ secrets = $Secrets } | ConvertTo-Json -Depth 10
-    Invoke-RestMethod $apiUrl -Method Post -Headers $headers -AllowInsecureRedirect -Body $body | Out-Null
+    Invoke-AlpacaApiRequest -Url $apiUrl -Method Post -Headers $headers -Body $body | Out-Null
 
     Write-AlpacaOutput "Synced secrets to Alpaca backend"
 }

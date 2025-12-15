@@ -61,17 +61,18 @@ function Wait-AlpacaContainerReady {
                 
             while ($waitForContainer) {  
 
-                $result = Invoke-RestMethod $apiUrl -Method 'Get' -Headers $headers -AllowInsecureRedirect -StatusCodeVariable 'StatusCode'
-
-                $content = $result -split "\n"
-
-                if ($StatusCode -ne 200) {
-                        
+                $content = $null
+                try {
+                    $result = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'Get' -Headers $headers
+                    $content = $result -split "\n"
+                }
+                catch {
                     if ($tries -lt $MaxTries) {
+                        Write-AlpacaDebug "Error while getting logs from container: $_"
                         $tries = $tries + 1
                     }
                     else {
-                        Write-AlpacaError "Error while getting logs from container`nContent:`n$($content)"
+                        Write-AlpacaError "Error while getting logs from container: $_"
                         $waitForContainer = $false
                         $success = $false
                         return
@@ -116,9 +117,7 @@ function Wait-AlpacaContainerReady {
 
         }
         catch {
-            $errorMessage = Get-AlpacaExtendedErrorMessage -errorRecord $_
-            $errorMessage = "Error while waiting for container '$ContainerName' to be ready`n$errorMessage"
-            Write-AlpacaError $errorMessage
+            Write-AlpacaError "Error while waiting for container '$ContainerName' to be ready`n$_"
             $success = $false
             return
         }

@@ -81,6 +81,72 @@ function Get-AlpacaAuthenticationHeaders {
 }
 Export-ModuleMember -Function Get-AlpacaAuthenticationHeaders
 
+function Invoke-AlpacaApiRequest {
+    Param(
+        [Parameter(Mandatory = $true)]
+        [string] $Url,
+        [string] $Method = 'Get',
+        [Hashtable] $Headers,
+        [object] $Body
+    )
+    
+    Write-AlpacaDebug -Message "Invoking Alpaca-Api: $Url ($Method)"
+    
+    try {
+        return Invoke-RestMethod -Uri $Url -Method $Method -Headers $Headers -Body $Body -AllowInsecureRedirect
+    }
+    catch {
+        Resolve-AlpacaApiError -ErrorRecord $_
+    }
+}
+Export-ModuleMember -Function Invoke-AlpacaApiRequest
+
+function Resolve-AlpacaApiError {
+    Param(
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.ErrorRecord] $ErrorRecord
+    )
+
+    $problemDetails = @{
+        status = $null
+        title = $null
+        detail = $null
+        instance = $null
+    }
+
+    if ($ErrorRecord.Exception) {
+        $problemDetails.detail = $ErrorRecord.Exception.Message
+    }
+
+    if ($ErrorRecord.ErrorDetails) {
+        try {
+            $errorDetails = $ErrorRecord.ErrorDetails.Message | ConvertFrom-Json
+            if ($errorDetails -and $errorDetails.PSObject.Properties) {
+                foreach ($key in @($problemDetails.Keys)) {
+                    if ($errorDetails.PSObject.Properties.Name -contains $key) {
+                        $problemDetails[$key] = $errorDetails.$key
+                    }
+                }
+            }
+        }
+        catch {}
+    }
+
+    $errorMessage = "Alpaca-API request failed"
+    if ($problemDetails.detail) {
+        $errorMessage += ": $($problemDetails.detail)"
+    }
+
+    $errorContext = @($problemDetails.status, $problemDetails.title, $problemDetails.instance) | Where-Object { $_ }
+    if ($errorContext) {
+        $errorMessage += " ($($errorContext -join " "))"
+    }
+
+    $ErrorRecord.ErrorDetails = $errorMessage
+    throw $ErrorRecord
+}
+Export-ModuleMember -Function Resolve-AlpacaApiError
+
 function Get-AlpacaConfigNameForWorkflowName {
     switch ($env:GITHUB_WORKFLOW) {
         "NextMajor" { return "NextMajor" }

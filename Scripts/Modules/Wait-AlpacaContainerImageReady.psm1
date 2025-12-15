@@ -32,10 +32,13 @@ function Wait-AlpacaContainerImageReady {
 
         $attemps = 1
         do {
-            $containerResult = Invoke-RestMethod $apiUrl -Method 'GET' -Headers $headers -AllowInsecureRedirect -StatusCodeVariable 'StatusCode'
-            if ($StatusCode -ne 200) {
+            try {
+                $containerResult = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'GET' -Headers $headers
+            }
+            catch {
+                Write-AlpacaError "Error while getting container status: $_"
                 $success = $false
-                return 
+                return
             }
             Write-AlpacaOutput "[info] Response: $($containerResult.status | ConvertTo-Json -Compress)"
             $currentStatus = $containerResult.status.state
