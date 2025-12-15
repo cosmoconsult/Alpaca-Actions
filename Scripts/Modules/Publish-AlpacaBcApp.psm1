@@ -86,13 +86,15 @@ function Publish-AlpacaBcApp {
             $success = $true
         }
         catch {
-            Write-AlpacaError "Error Publishing App '$appName'`n$_" -WithoutGitHubAnnotation
+            $errorMessage = "Error Publishing App '$appName'`n$_"
 
             $tries = $tries + 1
             if ($tries -ge $maxTries) {
+                Write-AlpacaError $errorMessage
                 throw "Error Publishing App '$appName'"
             }
             else {
+                Write-AlpacaError $errorMessage -WithoutGitHubAnnotation
                 Write-AlpacaOutput "Failed to publish app, retry after 15 sec"
                 Start-Sleep 15
             }
