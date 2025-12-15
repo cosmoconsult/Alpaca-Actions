@@ -70,7 +70,7 @@ function Invoke-AlpacaApiRequest {
     Write-AlpacaDebug -Message "Invoking Alpaca-Api: $Url ($Method)"
     
     try {
-        return Invoke-RestMethod -Uri $Url -Method $Method -Headers $Headers -Body $Body -AllowInsecureRedirect
+        Invoke-RestMethod -Uri $Url -Method $Method -Headers $Headers -Body $Body -AllowInsecureRedirect
     }
     catch {
         Resolve-AlpacaApiError -ErrorRecord $_
