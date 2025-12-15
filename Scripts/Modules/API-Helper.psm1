@@ -110,13 +110,14 @@ function Resolve-AlpacaApiError {
     }
 
     $errorMessage = "Alpaca-API request failed"
-    if ($problemDetails.detail) {
-        $errorMessage += ": $($problemDetails.detail)"
-    }
-
+    
     $errorContext = @($problemDetails.status, $problemDetails.title, $problemDetails.instance) | Where-Object { $_ }
     if ($errorContext) {
         $errorMessage += " ($($errorContext -join " "))"
+    }
+
+    if ($problemDetails.detail) {
+        $errorMessage += "`n$($problemDetails.detail)"
     }
 
     $ErrorRecord.ErrorDetails = $errorMessage
