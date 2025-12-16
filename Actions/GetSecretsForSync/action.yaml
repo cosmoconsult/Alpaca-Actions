@@ -17,15 +17,15 @@ inputs:
   orgSettingsVariableValue:
     description: AL-Go organization settings as JSON string
     required: false
-    default: ${{ env.ALGoOrgSettings }}
+    default: ${{ vars.ALGoOrgSettings }}
   repoSettingsVariableValue:
     description: AL-Go repository settings as JSON string
     required: false
-    default: ${{ env.ALGoRepoSettings }}
+    default: ${{ vars.ALGoRepoSettings }}
   environmentSettingsVariableValue:
     description: AL-Go environment settings as JSON string
     required: false
-    default: ${{ env.ALGoEnvSettings }}
+    default: ${{ vars.ALGoEnvSettings }}
   additionalSecrets:
     description: Comma-separated list of additional secret names to always include
     required: false
@@ -43,9 +43,9 @@ runs:
       env:
         _token: ${{ inputs.token }}
         _mode: ${{ inputs.mode }}
-        _orgSettingsVariableValue: ${{ inputs.orgSettingsVariableValue }}
-        _repoSettingsVariableValue: ${{ inputs.repoSettingsVariableValue }}
-        _environmentSettingsVariableValue: ${{ inputs.environmentSettingsVariableValue }}
+        _orgSettingsVariableValue: ${{ inputs.orgSettingsVariableValue || vars.ALGoOrgSettings }}
+        _repoSettingsVariableValue: ${{ inputs.repoSettingsVariableValue || vars.ALGoRepoSettings }}
+        _environmentSettingsVariableValue: ${{ inputs.environmentSettingsVariableValue || vars.ALGoEnvSettings }}
         _additionalSecrets: ${{ inputs.additionalSecrets }}
       run: |
         ${{ github.action_path }}/GetSecretsForSync.ps1 -Token $env:_token -Mode $env:_mode -orgSettingsVariableValue $env:_orgSettingsVariableValue -repoSettingsVariableValue $env:_repoSettingsVariableValue -environmentSettingsVariableValue $env:_environmentSettingsVariableValue -AdditionalSecrets $env:_additionalSecrets
