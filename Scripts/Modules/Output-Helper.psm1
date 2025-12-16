@@ -149,14 +149,15 @@ function Write-AlpacaAnnotation {
     if ($WithoutGitHubAnnotation) {
         $formattedMessages += Format-AlpacaMessage -Message "$($Annotation): $($Message)" -Color $color
     } else {
+        $lineBreak = $script:annotationGitHubLineBreak
+        $lineBreakByteCount = [System.Text.Encoding]::UTF8.GetByteCount($LineBreak)
         $gitHubCommand = $($script:annotationGitHubCommands[$Annotation])
         $gitHubCommandByteCount = [System.Text.Encoding]::UTF8.GetByteCount($gitHubCommand)
 
         $annotationByteLimit = 4096 - $gitHubCommandByteCount # 4KB limit minus command length
-        $formattedMessage = Format-AlpacaMessage -Message $Message -Color $color -LineBreak $script:annotationGitHubLineBreak -LineByteLimit $annotationByteLimit
+        $formattedMessage = Format-AlpacaMessage -Message $Message -Color $color -LineBreak $lineBreak -LineByteLimit $annotationByteLimit
         if ([System.Text.Encoding]::UTF8.GetByteCount($formattedMessage) -gt $annotationByteLimit) {
-            $lines = $formattedMessage -split $script:annotationGitHubLineBreak
-            $lineBreakByteCount = [System.Text.Encoding]::UTF8.GetByteCount($LineBreak)
+            $lines = $formattedMessage -split $lineBreak
             $splitLines = @()
             $splitByteCount = 0
             foreach ($line in $lines) {
@@ -174,7 +175,7 @@ function Write-AlpacaAnnotation {
                     continue
                 }
                 # Line does not fit, flush current annotation
-                $formattedMessages += "$($gitHubCommand)$($splitLines -join $script:annotationGitHubLineBreak)"
+                $formattedMessages += "$($gitHubCommand)$($splitLines -join $lineBreak)"
                 $splitLines = @()
                 $splitByteCount = 0
             }
