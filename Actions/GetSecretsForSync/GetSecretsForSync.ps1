@@ -108,8 +108,13 @@ if ($Mode -eq "GetAndUpdate") {
     }
     
     # Parse JSON files and extract secret names
+    if ($jsonFilePaths.Count -gt 0) {
+        Write-AlpacaOutput "Searching $($jsonFilePaths.Count) JSON file(s) in repository"
+    }
+    
     foreach ($jsonFilePath in $jsonFilePaths) {
         if (Test-Path $jsonFilePath) {
+            Write-AlpacaDebug "Searching file: $jsonFilePath"
             try {
                 $content = Get-Content -Path $jsonFilePath -Raw -ErrorAction SilentlyContinue
                 if ([string]::IsNullOrWhiteSpace($content)) {
@@ -134,7 +139,10 @@ if ($Mode -eq "GetAndUpdate") {
     }
     
     # Parse JSON from AL-Go settings parameters
+    Write-AlpacaOutput "Searching AL-Go settings variables"
+    
     if (-not [string]::IsNullOrWhiteSpace($OrgSettingsVariableValue)) {
+        Write-AlpacaDebug "Searching organization settings variable"
         try {
             $orgSettings = $OrgSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
             if ($null -ne $orgSettings) {
@@ -151,6 +159,7 @@ if ($Mode -eq "GetAndUpdate") {
     }
     
     if (-not [string]::IsNullOrWhiteSpace($RepoSettingsVariableValue)) {
+        Write-AlpacaDebug "Searching repository settings variable"
         try {
             $repoSettings = $RepoSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
             if ($null -ne $repoSettings) {
@@ -167,6 +176,7 @@ if ($Mode -eq "GetAndUpdate") {
     }
     
     if (-not [string]::IsNullOrWhiteSpace($EnvironmentSettingsVariableValue)) {
+        Write-AlpacaDebug "Searching environment settings variable"
         try {
             $envSettings = $EnvironmentSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
             if ($null -ne $envSettings) {
