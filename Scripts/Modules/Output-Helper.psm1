@@ -232,7 +232,8 @@ function Write-AlpacaGitHubAnnotation {
 
     if ($annotationLines) {
         $annotationLines += $truncatedInfo
-        $annotationMessage = "$($gitHubAnnotationCommand)$($annotationLines -join $gitHubAnnotationLineBreak)"
+        $annotationMessage = $annotationLines -join $gitHubAnnotationLineBreak
+        $annotationMessage = "$($gitHubAnnotationCommand)$($annotationMessage)"
         Write-Host $annotationMessage
     }
     if ($overflowLines) {
