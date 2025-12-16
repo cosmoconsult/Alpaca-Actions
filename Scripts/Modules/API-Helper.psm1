@@ -120,8 +120,9 @@ function Resolve-AlpacaApiError {
         $errorMessage += "`n$($problemDetails.detail)"
     }
 
-    $ErrorRecord.ErrorDetails = $errorMessage
-    throw $ErrorRecord
+    $updatedErrorRecord  = [System.Management.Automation.ErrorRecord]::new($ErrorRecord, $ErrorRecord.Exception)
+    $updatedErrorRecord.ErrorDetails = [System.Management.Automation.ErrorDetails]::new($errorMessage)
+    throw $updatedErrorRecord
 }
 Export-ModuleMember -Function Resolve-AlpacaApiError
 
