@@ -176,13 +176,13 @@ else {
 try {
     Write-AlpacaGroupStart -Message "Fetching secret names from Alpaca backend"
     
-    $backendSecretNames = Get-AlpacaSyncedSecretNames -Token $Token
-    if ($backendSecretNames.Count -gt 0) {
-        Write-AlpacaOutput "Found $($backendSecretNames.Count) secret name(s) in Alpaca backend: $($backendSecretNames -join ', ')"
-        $secretNames += $backendSecretNames
+    $backendSecretSyncStatus = Get-AlpacaSecretSyncStatus -Token $Token
+    if ($backendSecretSyncStatus -and $backendSecretSyncStatus.syncedSecretNames.Count -gt 0) {
+        Write-AlpacaOutput "Found $($backendSecretSyncStatus.syncedSecretNames.Count) secret name(s) in Alpaca backend: $($backendSecretSyncStatus.syncedSecretNames -join ', ')"
+        $secretNames += $backendSecretSyncStatus.syncedSecretNames
     }
-    
-    Write-AlpacaGroupEnd -Message "Found $($backendSecretNames.Count) secrets in Alpaca backend"
+
+    Write-AlpacaGroupEnd -Message "Found $($backendSecretSyncStatus.syncedSecretNames.Count) secrets in Alpaca backend"
 } catch {
     Write-AlpacaError "Failed to fetch secrets from Alpaca backend: $($_.Exception.Message)"
     Write-AlpacaGroupEnd
