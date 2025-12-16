@@ -123,9 +123,9 @@ if ($Mode -eq "GetAndUpdate") {
     }
     
     # Parse JSON from AL-Go settings parameters
-    if (-not [string]::IsNullOrWhiteSpace($orgSettingsVariableValue)) {
+    if (-not [string]::IsNullOrWhiteSpace($OrgSettingsVariableValue)) {
         try {
-            $orgSettings = $orgSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
+            $orgSettings = $OrgSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
             if ($null -ne $orgSettings) {
                 $foundSecrets = Get-SecretNamesFromObject -Object $orgSettings -Patterns $secretKeyPatterns
                 if ($foundSecrets.Count -gt 0) {
@@ -139,9 +139,9 @@ if ($Mode -eq "GetAndUpdate") {
         }
     }
     
-    if (-not [string]::IsNullOrWhiteSpace($repoSettingsVariableValue)) {
+    if (-not [string]::IsNullOrWhiteSpace($RepoSettingsVariableValue)) {
         try {
-            $repoSettings = $repoSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
+            $repoSettings = $RepoSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
             if ($null -ne $repoSettings) {
                 $foundSecrets = Get-SecretNamesFromObject -Object $repoSettings -Patterns $secretKeyPatterns
                 if ($foundSecrets.Count -gt 0) {
@@ -155,9 +155,9 @@ if ($Mode -eq "GetAndUpdate") {
         }
     }
     
-    if (-not [string]::IsNullOrWhiteSpace($environmentSettingsVariableValue)) {
+    if (-not [string]::IsNullOrWhiteSpace($EnvironmentSettingsVariableValue)) {
         try {
-            $envSettings = $environmentSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
+            $envSettings = $EnvironmentSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
             if ($null -ne $envSettings) {
                 $foundSecrets = Get-SecretNamesFromObject -Object $envSettings -Patterns $secretKeyPatterns
                 if ($foundSecrets.Count -gt 0) {
