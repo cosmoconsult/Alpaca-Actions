@@ -25,7 +25,7 @@ $script:annotationGitHubCommands = @{
     Debug = '::debug::'
 }
 $script:annotationGitHubLineBreak = '%0A'
-$script:annotationGitHubByteLimit = 4096
+$script:annotationGitHubByteLimit = 4096 # 4KB
 
 # Groups
 $script:groupIndentation = "  "
@@ -42,6 +42,7 @@ function Format-AlpacaMessage {
         [string] $LinePrefix = "",
         [string] $LineSuffix = "",
         [string] $LineBreak = "`n",
+        [ValidateRange(0, [int]::MaxValue)]
         [int]    $LineByteLimit = 0,
 
         [switch] $AllowFun
@@ -51,8 +52,10 @@ function Format-AlpacaMessage {
         return $Message
     }
 
-    $LinePrefix = "`e[$($script:colorCodes[$Color])m$($LinePrefix)"
-    $LineSuffix = "$($LineSuffix)`e[0m"
+    if ($Color -ne 'None') {
+        $LinePrefix = "`e[$($script:colorCodes[$Color])m$($LinePrefix)"
+        $LineSuffix = "$($LineSuffix)`e[0m"
+    }
 
     $actualLineByteLimit = $LineByteLimit
     if ($LineByteLimit -gt 0) {
@@ -77,6 +80,7 @@ Export-ModuleMember -Function Format-AlpacaMessage
 function Split-AlpacaMessage {
     Param(
         [string] $Message = "",
+        [ValidateRange(0, [int]::MaxValue)]
         [int]    $LineByteLimit = 0
     )
 
@@ -88,10 +92,6 @@ function Split-AlpacaMessage {
 
     if ($LineByteLimit -eq 0) {
         return $lines
-    }
-
-    if ($LineByteLimit -lt 0) {
-        throw "Alpaca Message split failed: Line byte limit must not be negative"
     }
 
     $truncatedLines = @()
@@ -136,7 +136,7 @@ function Write-AlpacaOutput {
     $lineSuffix = ""
 
     $date = Get-Date
-    if ($date.Month -eq 12 -and $date.Day -lt 25) {
+    if ($date.Month -eq 12 -and $date.Day -le 26) {
         $emoji = $null
         while ($emoji -in $null, $script:xmasEmojiLastUsed) {
             $emoji = $script:xmasEmojis | Get-Random
@@ -168,7 +168,7 @@ function Write-AlpacaAnnotation {
         $lineBreak = $script:annotationGitHubLineBreak
         $gitHubCommand = $($script:annotationGitHubCommands[$Annotation])
         $gitHubCommandByteCount = [System.Text.Encoding]::UTF8.GetByteCount($gitHubCommand)
-        $gitHubAnnotationByteLimit = $script:annotationGitHubByteLimit - $gitHubCommandByteCount # 4KB limit minus command length
+        $gitHubAnnotationByteLimit = $script:annotationGitHubByteLimit - $gitHubCommandByteCount
 
         $annotationMessage = Format-AlpacaMessage -Message $Message -Color $color -LineBreak $lineBreak -LineByteLimit $gitHubAnnotationByteLimit
         $annotationMessages += Split-GitHubAnnotationMessage -Message $annotationMessage -ByteLimit $gitHubAnnotationByteLimit |
@@ -212,7 +212,7 @@ function Split-GitHubAnnotationMessage {
                 $splitLines += $line
                 $splitByteCount += $lineByteCount
                 break
-            } elseif ($splitByteCount + $lineBreakByteCount + $lineByteCount -le $annotationByteLimit) {
+            } elseif ($splitByteCount + $lineBreakByteCount + $lineByteCount -le $ByteLimit) {
                 # Can fit in current split
                 $splitLines += $line
                 $splitByteCount += $lineBreakByteCount + $lineByteCount
