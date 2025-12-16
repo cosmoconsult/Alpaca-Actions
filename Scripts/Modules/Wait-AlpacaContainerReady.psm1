@@ -61,7 +61,7 @@ function Wait-AlpacaContainerReady {
                 
             while ($waitForContainer) {  
 
-                $content = $null
+                $content = @()
                 try {
                     $result = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'Get' -Headers $headers
                     $content = $result -split "\n"
@@ -69,18 +69,19 @@ function Wait-AlpacaContainerReady {
                 catch {
                     if ($tries -lt $MaxTries) {
                         Write-AlpacaDebug "Error while getting logs from container: $_"
+                        Start-Sleep -Seconds $SleepSeconds
                         $tries = $tries + 1
+                        continue
                     }
                     else {
                         Write-AlpacaError "Error while getting logs from container: $_"
-                        $waitForContainer = $false
                         $success = $false
                         return
                     }
                 }
                     
                 # Check for Errors, Warnings, Ready-String
-                foreach ($line in ($content | Select-Object -Skip $takenLines -First ($content.Length - 1))) {                    
+                foreach ($line in ($content | Select-Object -Skip $takenLines -First ($content.Length - 1))) {
                     if ($errorRegex -and ($line -match $errorRegex)) {
                         Write-AlpacaError $line
                         $success = $false                                
