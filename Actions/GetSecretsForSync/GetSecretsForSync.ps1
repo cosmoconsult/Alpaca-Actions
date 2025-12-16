@@ -100,6 +100,12 @@ if ($Mode -eq "GetAndUpdate") {
     if ($algoSettingsJsonFiles) {
         $jsonFilePaths += $algoSettingsJsonFiles | Select-Object -ExpandProperty FullName
     }
+
+    # Add all .AL-Go/settings.json files from root and subdirectories
+    $algoSettingJsonFiles = Get-ChildItem -Path $env:GITHUB_WORKSPACE -Filter "settings.json" -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.Directory.Name -eq ".AL-Go" }
+    if ($algoSettingJsonFiles) {
+        $jsonFilePaths += $algoSettingJsonFiles | Select-Object -ExpandProperty FullName
+    }
     
     # Add all *.settings.json files from .github directory
     $githubPath = Join-Path $env:GITHUB_WORKSPACE ".github"
