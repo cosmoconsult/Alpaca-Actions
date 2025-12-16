@@ -43,9 +43,9 @@ runs:
       env:
         _token: ${{ inputs.token }}
         _mode: ${{ inputs.mode }}
-        _orgSettingsVariableValue: ${{ inputs.orgSettingsVariableValue || vars.ALGoOrgSettings }}
-        _repoSettingsVariableValue: ${{ inputs.repoSettingsVariableValue || vars.ALGoRepoSettings }}
-        _environmentSettingsVariableValue: ${{ inputs.environmentSettingsVariableValue || vars.ALGoEnvSettings }}
+        _orgSettingsVariableValue: ${{ inputs.orgSettingsVariableValue }}
+        _repoSettingsVariableValue: ${{ inputs.repoSettingsVariableValue }}
+        _environmentSettingsVariableValue: ${{ inputs.environmentSettingsVariableValue }}
         _additionalSecrets: ${{ inputs.additionalSecrets }}
       run: |
         ${{ github.action_path }}/GetSecretsForSync.ps1 -Token $env:_token -Mode $env:_mode -orgSettingsVariableValue $env:_orgSettingsVariableValue -repoSettingsVariableValue $env:_repoSettingsVariableValue -environmentSettingsVariableValue $env:_environmentSettingsVariableValue -AdditionalSecrets $env:_additionalSecrets

@@ -5,14 +5,25 @@ param (
     [ValidateSet("GetAndUpdate", "Update")]
     [string] $Mode = "GetAndUpdate",
     [Parameter(HelpMessage = "AL-Go organization settings as JSON string", Mandatory = $false)]
-    [string] $OrgSettingsVariableValue = "$ENV:ALGoOrgSettings",
+    [string] $OrgSettingsVariableValue = "",
     [Parameter(HelpMessage = "AL-Go repository settings as JSON string", Mandatory = $false)]
-    [string] $RepoSettingsVariableValue = "$ENV:ALGoRepoSettings",
+    [string] $RepoSettingsVariableValue = "",
     [Parameter(HelpMessage = "AL-Go environment settings as JSON string", Mandatory = $false)]
-    [string] $EnvironmentSettingsVariableValue = "$ENV:ALGoEnvSettings",
+    [string] $EnvironmentSettingsVariableValue = "",
     [Parameter(HelpMessage = "Comma-separated list of additional secret names to always include", Mandatory = $false)]
     [string] $AdditionalSecrets = ""
 )
+
+# Fall back to environment variables if parameters are empty
+if ([string]::IsNullOrWhiteSpace($OrgSettingsVariableValue)) {
+    $OrgSettingsVariableValue = $ENV:ALGoOrgSettings
+}
+if ([string]::IsNullOrWhiteSpace($RepoSettingsVariableValue)) {
+    $RepoSettingsVariableValue = $ENV:ALGoRepoSettings
+}
+if ([string]::IsNullOrWhiteSpace($EnvironmentSettingsVariableValue)) {
+    $EnvironmentSettingsVariableValue = $ENV:ALGoEnvSettings
+}
 
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
 
