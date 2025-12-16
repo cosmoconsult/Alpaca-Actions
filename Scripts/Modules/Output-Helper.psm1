@@ -25,10 +25,14 @@ $script:annotationGitHubCommands = @{
     Debug = '::debug::'
 }
 $script:annotationGitHubLineBreak = '%0A'
+$script:annotationGitHubByteLimit = 4096
 
 # Groups
 $script:groupIndentation = "  "
 $script:groupLevel = 0
+
+$script:xmasEmojis = @("🎄", "❄️", "⛄", "🎅", "🤶", "🦌", "🛷", "🎁", "🍪", "☃️")
+$script:xmasEmojiLastUsed = $null
 
 function Format-AlpacaMessage {
     Param(
@@ -38,7 +42,9 @@ function Format-AlpacaMessage {
         [string] $LinePrefix = "",
         [string] $LineSuffix = "",
         [string] $LineBreak = "`n",
-        [int]    $LineByteLimit = 0
+        [int]    $LineByteLimit = 0,
+
+        [switch] $AllowFun
     )
 
     if ([string]::IsNullOrWhiteSpace($Message)) {
@@ -52,11 +58,10 @@ function Format-AlpacaMessage {
     if ($LineByteLimit -gt 0) {
         $actualLineByteLimit = $actualLineByteLimit `
             - [System.Text.Encoding]::UTF8.GetByteCount($LinePrefix) `
-            - [System.Text.Encoding]::UTF8.GetByteCount($LineSuffix) `
-            - [System.Text.Encoding]::UTF8.GetByteCount($LineBreak)
+            - [System.Text.Encoding]::UTF8.GetByteCount($LineSuffix)
 
         if ($actualLineByteLimit -le 0) {
-            throw "Alpaca Message formation failed: Line byte limit $($LineByteLimit) is too low to accommodate color, prefix, suffix and line break"
+            throw "Alpaca Message formation failed: Line byte limit $($LineByteLimit) is too low to accommodate color, prefix and suffix"
         }
     }
 
@@ -128,8 +133,19 @@ function Write-AlpacaOutput {
     )
 
     $linePrefix = $script:groupIndentation * $script:groupLevel;
+    $lineSuffix = ""
 
-    $formattedMessage = Format-AlpacaMessage -Message $Message -Color $Color -LinePrefix $linePrefix
+    $date = Get-Date
+    if ($date.Month -eq 12 -and $date.Day -lt 25) {
+        $emoji = $null
+        while ($emoji -in $null, $script:xmasEmojiLastUsed) {
+            $emoji = $script:xmasEmojis | Get-Random
+        }
+        $script:xmasEmojiLastUsed = $emoji
+        $lineSuffix = " $emoji"
+    }
+
+    $formattedMessage = Format-AlpacaMessage -Message $Message -Color $Color -LinePrefix $linePrefix -LineSuffix $lineSuffix
 
     Write-Host $formattedMessage
 }
@@ -145,56 +161,78 @@ function Write-AlpacaAnnotation {
     )
     $color = $script:annotationColors[$Annotation]
 
-    $formattedMessages = @()
+    $annotationMessages = @()
     if ($WithoutGitHubAnnotation) {
-        $formattedMessages += Format-AlpacaMessage -Message "$($Annotation): $($Message)" -Color $color
+        $annotationMessages += Format-AlpacaMessage -Message "$($Annotation): $($Message)" -Color $color
     } else {
         $lineBreak = $script:annotationGitHubLineBreak
-        $lineBreakByteCount = [System.Text.Encoding]::UTF8.GetByteCount($LineBreak)
         $gitHubCommand = $($script:annotationGitHubCommands[$Annotation])
         $gitHubCommandByteCount = [System.Text.Encoding]::UTF8.GetByteCount($gitHubCommand)
+        $gitHubAnnotationByteLimit = $script:annotationGitHubByteLimit - $gitHubCommandByteCount # 4KB limit minus command length
 
-        $annotationByteLimit = 4096 - $gitHubCommandByteCount # 4KB limit minus command length
-        $formattedMessage = Format-AlpacaMessage -Message $Message -Color $color -LineBreak $lineBreak -LineByteLimit $annotationByteLimit
-        if ([System.Text.Encoding]::UTF8.GetByteCount($formattedMessage) -gt $annotationByteLimit) {
-            $lines = $formattedMessage -split $lineBreak
-            $splitLines = @()
-            $splitByteCount = 0
-            foreach ($line in $lines) {
-                $lineByteCount = [System.Text.Encoding]::UTF8.GetByteCount("$line")
-                while ($true) {
-                    if ($splitByteCount -eq 0) {
-                        # First line in split
-                        $splitLines += $line
-                        $splitByteCount += $lineByteCount
-                        break
-                    } elseif ($splitByteCount + $lineBreakByteCount + $lineByteCount -le $annotationByteLimit) {
-                        # Can fit in current split
-                        $splitLines += $line
-                        $splitByteCount += $lineBreakByteCount + $lineByteCount
-                        break
-                    } else {
-                        # Cannot fit in current split, flush current split and retry
-                        $formattedMessages += "$($gitHubCommand)$($splitLines -join $lineBreak)" 
-                        $splitLines = @()
-                        $splitByteCount = 0
-                    }
-                }
-            }
-            # Flush remaining split
-            if ($splitLines) {
-                $formattedMessages += "$($gitHubCommand)$($splitLines -join $lineBreak)" 
-            }
-        } else {
-            $formattedMessages += "$($gitHubCommand)$($formattedMessage)"
-        }
+        $annotationMessage = Format-AlpacaMessage -Message $Message -Color $color -LineBreak $lineBreak -LineByteLimit $gitHubAnnotationByteLimit
+        $annotationMessages += Split-GitHubAnnotationMessage -Message $annotationMessage -ByteLimit $gitHubAnnotationByteLimit |
+            ForEach-Object { "$($gitHubCommand)$($_)" }
     }
 
-    foreach ($formattedMessage in $formattedMessages) {
-        Write-Host $formattedMessage
+    foreach ($annotationMessage in $annotationMessages) {
+        Write-Host $annotationMessage
     }
 }
 Export-ModuleMember -Function Write-AlpacaAnnotation
+
+function Split-GitHubAnnotationMessage {
+    Param(
+        [string] $Message = "",
+        [ValidateRange(1, [int]::MaxValue)]
+        [int]    $ByteLimit = $script:annotationGitHubByteLimit
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Message)) {
+        return @()
+    }
+
+    if ([System.Text.Encoding]::UTF8.GetByteCount($Message) -le $ByteLimit) {
+        return @($Message)
+    }
+
+    $lineBreak = $script:annotationGitHubLineBreak
+    $lineBreakByteCount = [System.Text.Encoding]::UTF8.GetByteCount($LineBreak)
+
+    $splitMessages = @()
+    $splitLines = @()
+    $splitByteCount = 0
+
+    $lines = $Message -split $lineBreak
+    foreach ($line in $lines) {
+        $lineByteCount = [System.Text.Encoding]::UTF8.GetByteCount("$line")
+        while ($true) {
+            if ($splitByteCount -eq 0) {
+                # First line in split
+                $splitLines += $line
+                $splitByteCount += $lineByteCount
+                break
+            } elseif ($splitByteCount + $lineBreakByteCount + $lineByteCount -le $annotationByteLimit) {
+                # Can fit in current split
+                $splitLines += $line
+                $splitByteCount += $lineBreakByteCount + $lineByteCount
+                break
+            } else {
+                # Cannot fit in current split, flush current split and retry
+                $splitMessages += $splitLines -join $lineBreak
+                $splitLines = @()
+                $splitByteCount = 0
+            }
+        }
+    }
+    # Flush remaining split
+    if ($splitLines) {
+        $splitMessages += $splitLines -join $lineBreak
+    }
+
+    return $splitMessages
+}
+Export-ModuleMember -Function Split-GitHubAnnotationMessage
 
 function Write-AlpacaNotice {
     Param(
