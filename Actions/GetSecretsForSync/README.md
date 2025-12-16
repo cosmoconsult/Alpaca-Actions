@@ -23,6 +23,7 @@ Find all secret names from AL-Go settings files and Alpaca backend to prepare fo
 | orgSettingsVariableValue | | AL-Go organization settings as JSON string | env.ALGoOrgSettings |
 | repoSettingsVariableValue | | AL-Go repository settings as JSON string | env.ALGoRepoSettings |
 | environmentSettingsVariableValue | | AL-Go environment settings as JSON string | env.ALGoEnvSettings |
+| additionalSecrets | | Comma-separated list of additional secret names to always include | (empty) |
 
 ## Behavior
 
@@ -39,10 +40,12 @@ Find all secret names from AL-Go settings files and Alpaca backend to prepare fo
 4. Extracts the values of these keys as potential secret names
 5. Calls the Alpaca API to retrieve all secret names currently stored in the backend (in a k8s secret)
 6. Combines secret names from AL-Go settings with backend secrets
-7. Removes duplicates and outputs a comma-separated list
+7. Adds any additional secret names from the `additionalSecrets` parameter (if provided)
+8. Removes duplicates and outputs a comma-separated list
 
 ### Mode: Update
 - Only calls the Alpaca API to retrieve all secret names currently stored in the backend (in a k8s secret)
+- Adds any additional secret names from the `additionalSecrets` parameter (if provided)
 - Outputs a comma-separated list of backend secret names
 
 ## OUTPUT
@@ -79,4 +82,13 @@ none
   with:
     token: ${{ github.token }}
     mode: Update
+
+# Example 3: With additional secrets added
+- name: Get Secrets For Sync
+  uses: ./Actions/GetSecretsForSync
+  id: getSecrets
+  with:
+    token: ${{ github.token }}
+    mode: GetAndUpdate
+    additionalSecrets: 'AuthContext,LicenseFileSecret,MyCustomSecret'
 ```

@@ -26,6 +26,10 @@ inputs:
     description: AL-Go environment settings as JSON string
     required: false
     default: ${{ env.ALGoEnvSettings }}
+  additionalSecrets:
+    description: Comma-separated list of additional secret names to always include
+    required: false
+    default: ''
 outputs:
   secretsForSync:
     description: Comma-separated list of distinct secret names found in AL-Go settings and Alpaca backend
@@ -42,8 +46,9 @@ runs:
         _orgSettingsVariableValue: ${{ inputs.orgSettingsVariableValue }}
         _repoSettingsVariableValue: ${{ inputs.repoSettingsVariableValue }}
         _environmentSettingsVariableValue: ${{ inputs.environmentSettingsVariableValue }}
+        _additionalSecrets: ${{ inputs.additionalSecrets }}
       run: |
-        ${{ github.action_path }}/GetSecretsForSync.ps1 -Token $env:_token -Mode $env:_mode -orgSettingsVariableValue $env:_orgSettingsVariableValue -repoSettingsVariableValue $env:_repoSettingsVariableValue -environmentSettingsVariableValue $env:_environmentSettingsVariableValue
+        ${{ github.action_path }}/GetSecretsForSync.ps1 -Token $env:_token -Mode $env:_mode -orgSettingsVariableValue $env:_orgSettingsVariableValue -repoSettingsVariableValue $env:_repoSettingsVariableValue -environmentSettingsVariableValue $env:_environmentSettingsVariableValue -AdditionalSecrets $env:_additionalSecrets
 branding:
   icon: list
   color: blue

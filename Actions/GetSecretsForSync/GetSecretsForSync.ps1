@@ -9,7 +9,9 @@ param (
     [Parameter(HelpMessage = "AL-Go repository settings as JSON string", Mandatory = $false)]
     [string] $repoSettingsVariableValue = "$ENV:ALGoRepoSettings",
     [Parameter(HelpMessage = "AL-Go environment settings as JSON string", Mandatory = $false)]
-    [string] $environmentSettingsVariableValue = "$ENV:ALGoEnvSettings"
+    [string] $environmentSettingsVariableValue = "$ENV:ALGoEnvSettings",
+    [Parameter(HelpMessage = "Comma-separated list of additional secret names to always include", Mandatory = $false)]
+    [string] $AdditionalSecrets = ""
 )
 
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
@@ -189,7 +191,16 @@ try {
     # Don't throw - continue with secrets found in files
 }
 
-# Step 3: Remove duplicates and create comma-separated list of distinct secret names
+# Step 3: Add additional secrets from AdditionalSecrets parameter
+if (-not [string]::IsNullOrWhiteSpace($AdditionalSecrets)) {
+    $additionalSecretsList = $AdditionalSecrets -split ',' | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    if ($additionalSecretsList.Count -gt 0) {
+        Write-AlpacaOutput "Adding $($additionalSecretsList.Count) additional secret name(s): $($additionalSecretsList -join ', ')"
+        $secretNames += $additionalSecretsList
+    }
+}
+
+# Step 4: Remove duplicates and create comma-separated list of distinct secret names
 $secretNames = $secretNames | Select-Object -Unique | Sort-Object
 $secretNamesList = $secretNames -join ","
 
