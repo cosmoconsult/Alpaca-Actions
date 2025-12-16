@@ -202,7 +202,7 @@ function Write-AlpacaGitHubAnnotation {
         if ($splitByteCount -ge 1) {
             # Split the line and add first part to annotation
             $splitLine, $null = Split-AlpacaMessage -Message $line -LineByteLimit $splitByteCount
-            $annotationLines += Format-AlpacaMessage -Color $color -Message $splitLine
+            $annotationLines += Format-AlpacaMessage -Message $splitLine -Color $color
             $annotationByteCount += [System.Text.Encoding]::UTF8.GetByteCount($splitLine)
         }
         # Add full line to overflow
