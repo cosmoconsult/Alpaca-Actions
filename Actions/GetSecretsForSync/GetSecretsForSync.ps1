@@ -59,6 +59,15 @@ function Get-SecretNamesFromObject {
                 }
             }
             
+            # Also check if property value contains ${{SECRETNAME}} pattern
+            if ($propValue -is [string] -and $propValue -match '\$\{\{([^}]+)\}\}') {
+                # Extract secret name from ${{SECRETNAME}} pattern
+                $secretName = $Matches[1].Trim()
+                if (-not [string]::IsNullOrWhiteSpace($secretName)) {
+                    $names += $secretName
+                }
+            }
+            
             # Recursively search nested objects
             if ($propValue -is [PSCustomObject] -or $propValue -is [array]) {
                 $names += Get-SecretNamesFromObject -Object $propValue -Patterns $Patterns
