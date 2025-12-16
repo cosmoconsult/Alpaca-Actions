@@ -108,11 +108,11 @@ if ($Mode -eq "GetAndUpdate") {
     }
     
     # Parse JSON files and extract secret names
-    Write-AlpacaOutput "Searching AL-Go settings JSON files in repository"
+    Write-AlpacaOutput "Searching $($jsonFilePaths.Count) AL-Go settings JSON files in repository"
     
     foreach ($jsonFilePath in $jsonFilePaths) {
         if (Test-Path $jsonFilePath) {
-            Write-AlpacaDebug "Searching file: $jsonFilePath"
+            Write-AlpacaOutput "Searching file: $jsonFilePath"
             try {
                 $content = Get-Content -Path $jsonFilePath -Raw -ErrorAction SilentlyContinue
                 if ([string]::IsNullOrWhiteSpace($content)) {
@@ -140,7 +140,7 @@ if ($Mode -eq "GetAndUpdate") {
     Write-AlpacaOutput "Searching AL-Go settings variables"
     
     if (-not [string]::IsNullOrWhiteSpace($OrgSettingsVariableValue)) {
-        Write-AlpacaDebug "Searching organization settings variable"
+        Write-AlpacaOutput "Searching organization settings variable"
         try {
             $orgSettings = $OrgSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
             if ($null -ne $orgSettings) {
@@ -157,7 +157,7 @@ if ($Mode -eq "GetAndUpdate") {
     }
     
     if (-not [string]::IsNullOrWhiteSpace($RepoSettingsVariableValue)) {
-        Write-AlpacaDebug "Searching repository settings variable"
+        Write-AlpacaOutput "Searching repository settings variable"
         try {
             $repoSettings = $RepoSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
             if ($null -ne $repoSettings) {
@@ -174,7 +174,7 @@ if ($Mode -eq "GetAndUpdate") {
     }
     
     if (-not [string]::IsNullOrWhiteSpace($EnvironmentSettingsVariableValue)) {
-        Write-AlpacaDebug "Searching environment settings variable"
+        Write-AlpacaOutput "Searching environment settings variable"
         try {
             $envSettings = $EnvironmentSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
             if ($null -ne $envSettings) {
@@ -193,7 +193,7 @@ if ($Mode -eq "GetAndUpdate") {
     Write-AlpacaGroupEnd -Message "Found $($secretNames.Count) secret names in AL-Go settings"
 }
 else {
-    Write-AlpacaDebug "Skipping AL-Go settings search (Mode: $Mode)"
+    Write-AlpacaOutput "Skipping AL-Go settings search (Mode: $Mode)"
 }
 
 # Step 2: Call Alpaca API to get all secret names from backend
@@ -229,11 +229,11 @@ $secretNamesList = $secretNames -join ","
 
 Write-AlpacaNotice "Total unique secret names: $($secretNames.Count)"
 if ($secretNames.Count -gt 0) {
-    Write-AlpacaDebug "Secret names: $secretNamesList"
+    Write-AlpacaOutput "Secret names: $secretNamesList"
 }
 
 # Set output for GitHub Actions
 if ($env:GITHUB_OUTPUT) {
     "secretsForSync=$secretNamesList" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-    Write-AlpacaDebug "Set output variable 'secretsForSync'"
+    Write-AlpacaOutput "Set output variable 'secretsForSync'"
 }
