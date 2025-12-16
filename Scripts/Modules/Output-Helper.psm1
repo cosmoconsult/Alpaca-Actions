@@ -197,12 +197,13 @@ function Write-AlpacaGitHubAnnotation {
     if ($annotationByteCount + $formattedLineByteCount -gt $gitHubAnnotationByteLimit) {
         # First line exceeds byte limit, split further
         $formatByteCount = $formattedLineByteCount - [System.Text.Encoding]::UTF8.GetByteCount("$line")
-        $splitByteCount = $gitHubAnnotationByteLimit - $annotationByteCount - $formatByteCount
-        if ($splitByteCount -ge 1) {
+        $chunkByteCount = $gitHubAnnotationByteLimit - $annotationByteCount - $formatByteCount
+        if ($chunkByteCount -ge 1) {
             # Split the line and add first part to annotation
-            $splitLine = Split-AlpacaMessage -Message $line -LineByteLimit $splitByteCount | Select-Object -First 1
-            $annotationLines += Format-AlpacaMessage -Message $splitLine -Color $color
-            $annotationByteCount += [System.Text.Encoding]::UTF8.GetByteCount("$splitLine")
+            $chunk = Split-AlpacaMessage -Message $line -LineByteLimit $chunkByteCount | Select-Object -First 1
+            $formattedChunk = Format-AlpacaMessage -Message $chunk -Color $color
+            $annotationLines += $formattedChunk
+            $annotationByteCount += [System.Text.Encoding]::UTF8.GetByteCount("$formattedChunk")
         }
         # Add full line to overflow
         $overflowLines += $formattedLine
