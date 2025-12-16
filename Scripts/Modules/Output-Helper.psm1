@@ -179,7 +179,7 @@ function Write-AlpacaGitHubAnnotation {
     $gitHubAnnotationCommandByteCount = [System.Text.Encoding]::UTF8.GetByteCount($gitHubAnnotationCommand)
     $gitHubAnnotationLineBreakByteCount = [System.Text.Encoding]::UTF8.GetByteCount($gitHubAnnotationLineBreak)
 
-    $truncatedInfo = Format-AlpacaMessage -Message "--- Truncated (see logs for full message) ---" -Color $color
+    $truncatedInfo = Format-AlpacaMessage -Message "--- Annotation truncated (see logs for full details) ---" -Color $color
     $truncatedInfoByteCount = [System.Text.Encoding]::UTF8.GetByteCount($truncatedInfo)
 
     $annotationLines = @()
