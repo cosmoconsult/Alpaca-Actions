@@ -125,7 +125,7 @@ if ($Mode -eq "GetAndUpdate") {
     # Parse JSON from AL-Go settings parameters
     if (-not [string]::IsNullOrWhiteSpace($orgSettingsVariableValue)) {
         try {
-            $orgSettings = $orgSettingsVariableValue | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $orgSettings = $orgSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
             if ($null -ne $orgSettings) {
                 $foundSecrets = Get-SecretNamesFromObject -Object $orgSettings -Patterns $secretKeyPatterns
                 if ($foundSecrets.Count -gt 0) {
@@ -134,13 +134,14 @@ if ($Mode -eq "GetAndUpdate") {
                 }
             }
         } catch {
-            Write-AlpacaWarning "Failed to parse organization settings: $($_.Exception.Message)"
+            Write-AlpacaError "Failed to parse organization settings: $($_.Exception.Message)"
+            throw "Cannot proceed with invalid organization settings"
         }
     }
     
     if (-not [string]::IsNullOrWhiteSpace($repoSettingsVariableValue)) {
         try {
-            $repoSettings = $repoSettingsVariableValue | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $repoSettings = $repoSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
             if ($null -ne $repoSettings) {
                 $foundSecrets = Get-SecretNamesFromObject -Object $repoSettings -Patterns $secretKeyPatterns
                 if ($foundSecrets.Count -gt 0) {
@@ -149,13 +150,14 @@ if ($Mode -eq "GetAndUpdate") {
                 }
             }
         } catch {
-            Write-AlpacaWarning "Failed to parse repository settings: $($_.Exception.Message)"
+            Write-AlpacaError "Failed to parse repository settings: $($_.Exception.Message)"
+            throw "Cannot proceed with invalid repository settings"
         }
     }
     
     if (-not [string]::IsNullOrWhiteSpace($environmentSettingsVariableValue)) {
         try {
-            $envSettings = $environmentSettingsVariableValue | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $envSettings = $environmentSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
             if ($null -ne $envSettings) {
                 $foundSecrets = Get-SecretNamesFromObject -Object $envSettings -Patterns $secretKeyPatterns
                 if ($foundSecrets.Count -gt 0) {
@@ -164,7 +166,8 @@ if ($Mode -eq "GetAndUpdate") {
                 }
             }
         } catch {
-            Write-AlpacaWarning "Failed to parse environment settings: $($_.Exception.Message)"
+            Write-AlpacaError "Failed to parse environment settings: $($_.Exception.Message)"
+            throw "Cannot proceed with invalid environment settings"
         }
     }
     
@@ -188,7 +191,8 @@ try {
 } catch {
     Write-AlpacaError "Failed to fetch secrets from Alpaca backend: $($_.Exception.Message)"
     Write-AlpacaGroupEnd
-    # Don't throw - continue with secrets found in files
+    # Throw to prevent potential secret deletion due to incomplete data
+    throw "Cannot proceed without backend secret information"
 }
 
 # Step 3: Add additional secrets from AdditionalSecrets parameter
