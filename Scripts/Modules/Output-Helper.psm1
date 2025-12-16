@@ -161,23 +161,29 @@ function Write-AlpacaAnnotation {
             $splitLines = @()
             $splitByteCount = 0
             foreach ($line in $lines) {
-                if ($splitByteCount -eq 0) {
-                    # First line in annotation
-                    $splitLines += $line
-                    $splitByteCount += $lineByteCount
-                    continue
-                }
                 $lineByteCount = [System.Text.Encoding]::UTF8.GetByteCount("$line")
-                if ($splitByteCount + $lineBreakByteCount + $lineByteCount -le $annotationByteLimit) {
-                    # Line fits into annotation
-                    $splitLines += $line
-                    $splitByteCount += $lineBreakByteCount + $lineByteCount
-                    continue
+                while ($true) {
+                    if ($splitByteCount -eq 0) {
+                        # First line in split
+                        $splitLines += $line
+                        $splitByteCount += $lineByteCount
+                        break
+                    } elseif ($splitByteCount + $lineBreakByteCount + $lineByteCount -le $annotationByteLimit) {
+                        # Can fit in current split
+                        $splitLines += $line
+                        $splitByteCount += $lineBreakByteCount + $lineByteCount
+                        break
+                    } else {
+                        # Cannot fit in current split, flush current split and retry
+                        $formattedMessages += "$($gitHubCommand)$($splitLines -join $lineBreak)" 
+                        $splitLines = @()
+                        $splitByteCount = 0
+                    }
                 }
-                # Line does not fit, flush current annotation
-                $formattedMessages += "$($gitHubCommand)$($splitLines -join $lineBreak)"
-                $splitLines = @()
-                $splitByteCount = 0
+            }
+            # Flush remaining split
+            if ($splitLines) {
+                $formattedMessages += "$($gitHubCommand)$($splitLines -join $lineBreak)" 
             }
         } else {
             $formattedMessages += "$($gitHubCommand)$($formattedMessage)"
