@@ -17,15 +17,15 @@ inputs:
   orgSettingsVariableValue:
     description: AL-Go organization settings as JSON string
     required: false
-    default: ${{ vars.ALGoOrgSettings }}
+    default: ''
   repoSettingsVariableValue:
     description: AL-Go repository settings as JSON string
     required: false
-    default: ${{ vars.ALGoRepoSettings }}
+    default: ''
   environmentSettingsVariableValue:
     description: AL-Go environment settings as JSON string
     required: false
-    default: ${{ vars.ALGoEnvSettings }}
+    default: ''
   additionalSecrets:
     description: Comma-separated list of additional secret names to always include
     required: false
