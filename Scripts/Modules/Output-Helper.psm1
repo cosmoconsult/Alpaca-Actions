@@ -179,7 +179,7 @@ function Write-AlpacaGitHubAnnotation {
     $gitHubAnnotationCommandByteCount = [System.Text.Encoding]::UTF8.GetByteCount($gitHubAnnotationCommand)
     $gitHubAnnotationLineBreakByteCount = [System.Text.Encoding]::UTF8.GetByteCount($gitHubAnnotationLineBreak)
 
-    $truncatedInfo = Format-AlpacaMessage -Message " --- Truncated (see logs for full message)" -Color $color
+    $truncatedInfo = Format-AlpacaMessage -Message "--- Truncated (see logs for full message) ---" -Color $color
     $truncatedInfoByteCount = [System.Text.Encoding]::UTF8.GetByteCount($truncatedInfo)
 
     $annotationLines = @()
@@ -187,7 +187,7 @@ function Write-AlpacaGitHubAnnotation {
     $overflowLines = @()
 
     # Calculate reserved byte count for command and truncated info (<command>[message]<info>)
-    $annotationByteCount = $gitHubAnnotationCommandByteCount + $truncatedInfoByteCount
+    $annotationByteCount = $gitHubAnnotationCommandByteCount + $gitHubAnnotationLineBreakByteCount + $truncatedInfoByteCount
 
     # Split message into lines
     $line, $lines = Split-AlpacaMessage -Message $Message
@@ -231,8 +231,8 @@ function Write-AlpacaGitHubAnnotation {
     }
 
     if ($annotationLines) {
-        $annotationMessage = '{0}{1}{2}' -f 
-            $gitHubAnnotationCommand, ($annotationLines -join $gitHubAnnotationLineBreak), $truncatedInfo
+        $annotationLines += $truncatedInfo
+        $annotationMessage = "$($gitHubAnnotationCommand)$($annotationLines -join $gitHubAnnotationLineBreak)"
         Write-Host $annotationMessage
     }
     if ($overflowLines) {
