@@ -80,9 +80,8 @@ function Split-AlpacaMessage {
         return $lines
     }
 
-    $resultLines = @()
     foreach ($line in $lines) {
-        $lineBytes = [System.Text.Encoding]::UTF8.GetBytes($line)
+        $lineBytes = [System.Text.Encoding]::UTF8.GetBytes("$line")
 
         # Split line if it exceeds byte limit
         while ($lineBytes.Length -gt $LineByteLimit) {
@@ -100,15 +99,13 @@ function Split-AlpacaMessage {
             }
 
             $chunkBytes = $lineBytes[0..($chunkByteCount - 1)]
-            $resultLines += [System.Text.Encoding]::UTF8.GetString($chunkBytes)
+            Write-Output ([System.Text.Encoding]::UTF8.GetString($chunkBytes))
 
-            $lineBytes = $lineBytes[$chunkBytes.Length..($lineBytes.Length - 1)]
+            $lineBytes = $lineBytes[$chunkByteCount..($lineBytes.Length - 1)]
         }
 
-        $resultLines += [System.Text.Encoding]::UTF8.GetString($lineBytes)
+        Write-Output ([System.Text.Encoding]::UTF8.GetString($lineBytes))
     }
-
-    return $resultLines
 }
 Export-ModuleMember -Function Split-AlpacaMessage
 
@@ -174,17 +171,17 @@ function Write-AlpacaGitHubAnnotation {
     # First, check if the entire message fits within the byte limit
     $formattedMessage = Format-AlpacaMessage -Message $Message -Color $color -LineBreak $gitHubAnnotationLineBreak
     $annotationMessage = "$($gitHubAnnotationCommand)$($formattedMessage)"
-    if ([System.Text.Encoding]::UTF8.GetByteCount($annotationMessage) -le $gitHubAnnotationByteLimit) {
+    if ([System.Text.Encoding]::UTF8.GetByteCount("$annotationMessage") -le $gitHubAnnotationByteLimit) {
         # Fits within byte limit, write directly
         Write-Host $annotationMessage
         return
     }
 
-    $gitHubAnnotationCommandByteCount = [System.Text.Encoding]::UTF8.GetByteCount($gitHubAnnotationCommand)
-    $gitHubAnnotationLineBreakByteCount = [System.Text.Encoding]::UTF8.GetByteCount($gitHubAnnotationLineBreak)
+    $gitHubAnnotationCommandByteCount = [System.Text.Encoding]::UTF8.GetByteCount("$gitHubAnnotationCommand")
+    $gitHubAnnotationLineBreakByteCount = [System.Text.Encoding]::UTF8.GetByteCount("$gitHubAnnotationLineBreak")
 
     $truncatedInfo = Format-AlpacaMessage -Message "--- Annotation truncated (see logs for full details) ---" -Color $color
-    $truncatedInfoByteCount = [System.Text.Encoding]::UTF8.GetByteCount($truncatedInfo)
+    $truncatedInfoByteCount = [System.Text.Encoding]::UTF8.GetByteCount("$truncatedInfo")
 
     $annotationLines = @()
     $annotationByteCount = 0
@@ -205,9 +202,9 @@ function Write-AlpacaGitHubAnnotation {
         $splitByteCount = $gitHubAnnotationByteLimit - $annotationByteCount - $formatByteCount
         if ($splitByteCount -ge 1) {
             # Split the line and add first part to annotation
-            $splitLine, $null = Split-AlpacaMessage -Message $line -LineByteLimit $splitByteCount
+            $splitLine = Split-AlpacaMessage -Message $line -LineByteLimit $splitByteCount | Select-Object -First 1
             $annotationLines += Format-AlpacaMessage -Message $splitLine -Color $color
-            $annotationByteCount += [System.Text.Encoding]::UTF8.GetByteCount($splitLine)
+            $annotationByteCount += [System.Text.Encoding]::UTF8.GetByteCount("$splitLine")
         }
         # Add full line to overflow
         $overflowLines += $formattedLine
@@ -220,7 +217,7 @@ function Write-AlpacaGitHubAnnotation {
     # Process remaining lines
     foreach ($line in $lines) {
         $formattedLine = Format-AlpacaMessage -Message $line -Color $color
-        $formattedLineByteCount = [System.Text.Encoding]::UTF8.GetByteCount($formattedLine)
+        $formattedLineByteCount = [System.Text.Encoding]::UTF8.GetByteCount("$formattedLine")
         if ($overflowLines.Count -gt 0) {
             # Already in overflow, add line to overflow
             $overflowLines += $formattedLine
