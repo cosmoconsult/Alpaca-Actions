@@ -108,9 +108,7 @@ if ($Mode -eq "GetAndUpdate") {
     }
     
     # Parse JSON files and extract secret names
-    if ($jsonFilePaths.Count -gt 0) {
-        Write-AlpacaOutput "Searching $($jsonFilePaths.Count) JSON file(s) in repository"
-    }
+    Write-AlpacaOutput "Searching AL-Go settings JSON files in repository"
     
     foreach ($jsonFilePath in $jsonFilePaths) {
         if (Test-Path $jsonFilePath) {
