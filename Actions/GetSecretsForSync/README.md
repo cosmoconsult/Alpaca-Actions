@@ -30,14 +30,16 @@ Find all secret names from AL-Go settings files and Alpaca backend to prepare fo
 ### Mode: GetAndUpdate
 1. Searches for the following specific JSON files:
    - `.github/AL-Go-Settings.json`
+   - `.AL-Go/settings.json` (all files matching this pattern in root and subdirectories)
    - `.AL-Go/*.settings.json` (all files matching this pattern in root and subdirectories)
    - `.github/*.settings.json` (all files matching this pattern)
 2. Parses JSON from parameters:
    - `orgSettingsVariableValue` (defaults to `ALGoOrgSettings` environment variable)
    - `repoSettingsVariableValue` (defaults to `ALGoRepoSettings` environment variable)
    - `environmentSettingsVariableValue` (defaults to `ALGoEnvSettings` environment variable)
-3. Looks for keys ending with `*SecretName` or `*Secret`
-4. Extracts the values of these keys as potential secret names
+3. Scans all JSON keys and string values for potential secret names:
+   - Looks for keys ending with `*SecretName` or `*Secret` and extracts their values as potential secret names
+   - Additionally, searches all string values for GitHub Actions expression patterns like `${{SECRETNAME}}` and extracts `SECRETNAME` as a potential secret name
 5. Calls the Alpaca API to retrieve all secret names currently stored in the backend (in a k8s secret)
 6. Combines secret names from AL-Go settings with backend secrets
 7. Adds any additional secret names from the `additionalSecrets` parameter (if provided)
