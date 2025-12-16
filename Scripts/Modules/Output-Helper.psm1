@@ -41,11 +41,7 @@ function Format-AlpacaMessage {
         [string] $Color = 'None',
         [string] $LinePrefix = "",
         [string] $LineSuffix = "",
-        [string] $LineBreak = "`n",
-        [ValidateRange(0, [int]::MaxValue)]
-        [int]    $LineByteLimit = 0,
-
-        [switch] $AllowFun
+        [string] $LineBreak = "`n"
     )
 
     if ([string]::IsNullOrWhiteSpace($Message)) {
@@ -57,18 +53,7 @@ function Format-AlpacaMessage {
         $LineSuffix = "$($LineSuffix)`e[0m"
     }
 
-    $actualLineByteLimit = $LineByteLimit
-    if ($LineByteLimit -gt 0) {
-        $actualLineByteLimit = $actualLineByteLimit `
-            - [System.Text.Encoding]::UTF8.GetByteCount($LinePrefix) `
-            - [System.Text.Encoding]::UTF8.GetByteCount($LineSuffix)
-
-        if ($actualLineByteLimit -le 0) {
-            throw "Alpaca Message formation failed: Line byte limit $($LineByteLimit) is too low to accommodate color, prefix and suffix"
-        }
-    }
-
-    $messageLines = Split-AlpacaMessage -Message $Message -LineByteLimit $actualLineByteLimit
+    $messageLines = Split-AlpacaMessage -Message $Message
     $formattedMessageLines = $messageLines |
         ForEach-Object { "$($LinePrefix)$($_)$($LineSuffix)" }
     $formattedMessage = $formattedMessageLines -join $LineBreak
@@ -194,15 +179,15 @@ function Write-AlpacaGitHubAnnotation {
     $gitHubAnnotationCommandByteCount = [System.Text.Encoding]::UTF8.GetByteCount($gitHubAnnotationCommand)
     $gitHubAnnotationLineBreakByteCount = [System.Text.Encoding]::UTF8.GetByteCount($gitHubAnnotationLineBreak)
 
-    $truncatedInfo = "--- Truncated (see logs for full message) ---"
+    $truncatedInfo = Format-AlpacaMessage -Message " --- Truncated (see logs for full message)" -Color $color
     $truncatedInfoByteCount = [System.Text.Encoding]::UTF8.GetByteCount($truncatedInfo)
 
     $annotationLines = @()
     $annotationByteCount = 0
     $overflowLines = @()
 
-    # Calculate reserved byte count for command and truncated info (<command>[message]\n<truncated info>)
-    $annotationByteCount = $gitHubAnnotationCommandByteCount + $gitHubAnnotationLineBreakByteCount + $truncatedInfoByteCount
+    # Calculate reserved byte count for command and truncated info (<command>[message]<info>)
+    $annotationByteCount = $gitHubAnnotationCommandByteCount + $truncatedInfoByteCount
 
     # Split message into lines
     $line, $lines = Split-AlpacaMessage -Message $Message
@@ -214,14 +199,14 @@ function Write-AlpacaGitHubAnnotation {
         # First line exceeds byte limit, split further
         $formatByteCount = $formattedLineByteCount - [System.Text.Encoding]::UTF8.GetByteCount("$line")
         $splitByteCount = $gitHubAnnotationByteLimit - $annotationByteCount - $formatByteCount
-        $splitLines = Split-AlpacaMessage -Message $line -LineByteLimit $splitByteCount
-        # Add first split line to annotation
-        $annotationLines += Format-AlpacaMessage -Color $color -Message $splitLines[0]
-        $annotationByteCount += [System.Text.Encoding]::UTF8.GetByteCount($formattedLine)
-        if ($splitLines.Count -gt 1) {
-            # Add remaining split lines to overflow
-            $overflowLines += Format-AlpacaMessage -Color $color -Message ($splitLines[1..($splitLines.Count - 1)] -join "")
+        if ($splitByteCount -ge 1) {
+            # Split the line and add first part to annotation
+            $splitLine, $null = Split-AlpacaMessage -Message $line -LineByteLimit $splitByteCount
+            $annotationLines += Format-AlpacaMessage -Color $color -Message $splitLine
+            $annotationByteCount += [System.Text.Encoding]::UTF8.GetByteCount($splitLine)
         }
+        # Add full line to overflow
+        $overflowLines += $formattedLine
     } else {
         # First line fits, add to annotation
         $annotationLines += $formattedLine
@@ -246,8 +231,8 @@ function Write-AlpacaGitHubAnnotation {
     }
 
     if ($annotationLines) {
-        $annotationLines += $truncatedInfo
-        $annotationMessage = "$($gitHubAnnotationCommand)$($annotationLines -join $gitHubAnnotationLineBreak)"
+        $annotationMessage = '{0}{1}{2}' -f 
+            $gitHubAnnotationCommand, ($annotationLines -join $gitHubAnnotationLineBreak), $truncatedInfo
         Write-Host $annotationMessage
     }
     if ($overflowLines) {
