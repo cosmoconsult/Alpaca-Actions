@@ -196,7 +196,7 @@ function Write-AlpacaGitHubAnnotation {
     # Process first line separately to handle if it exceeds byte limit
     $formattedLine = Format-AlpacaMessage -Message $line -Color $color
     $formattedLineByteCount = [System.Text.Encoding]::UTF8.GetByteCount("$formattedLine")
-    if ($annotationByteCount + $formattedLineByteCount -ge $gitHubAnnotationByteLimit) {
+    if ($annotationByteCount + $formattedLineByteCount -gt $gitHubAnnotationByteLimit) {
         # First line exceeds byte limit, split further
         $formatByteCount = $formattedLineByteCount - [System.Text.Encoding]::UTF8.GetByteCount("$line")
         $splitByteCount = $gitHubAnnotationByteLimit - $annotationByteCount - $formatByteCount
