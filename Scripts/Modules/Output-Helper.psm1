@@ -119,16 +119,14 @@ function Write-AlpacaOutput {
     $linePrefix = $script:groupIndentation * $script:groupLevel;
     $lineSuffix = ""
 
-    if ($false) {
-        $date = Get-Date
-        if ($date.Month -eq 12 -and $date.Day -in 24,25,26) {
-            $emoji = $null
-            while ($emoji -in $null, $script:xmasEmojiLastUsed) {
-                $emoji = $script:xmasEmojis | Get-Random
-            }
-            $script:xmasEmojiLastUsed = $emoji
-            $lineSuffix = " $emoji"
+    $date = Get-Date
+    if ($date.Month -eq 12 -and $date.Day -in 24,25,26) {
+        $emoji = $null
+        while ($emoji -in $null, $script:xmasEmojiLastUsed) {
+            $emoji = $script:xmasEmojis | Get-Random
         }
+        $script:xmasEmojiLastUsed = $emoji
+        $lineSuffix = " $emoji"
     }
 
     $formattedMessage = Format-AlpacaMessage -Message $Message -Color $Color -LinePrefix $linePrefix -LineSuffix $lineSuffix
