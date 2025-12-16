@@ -76,37 +76,39 @@ function Split-AlpacaMessage {
     $lines = $Message -split '\r?\n'
 
     if ($LineByteLimit -eq 0) {
+        # No byte limit specified, return original lines
         return $lines
     }
 
-    $truncatedLines = @()
+    $resultLines = @()
     foreach ($line in $lines) {
         $lineBytes = [System.Text.Encoding]::UTF8.GetBytes($line)
 
+        # Split line if it exceeds byte limit
         while ($lineBytes.Length -gt $LineByteLimit) {
-            $truncatedLineByteCount = $LineByteLimit
+            $chunkByteCount = $LineByteLimit
 
             # Ensure we do not cut off in the middle of a UTF-8 character
             # Check if we're cutting inside a multi-byte UTF-8 sequence (continuation byte: 10xxxxxx)
             # Start by checking the last byte after the limit and move backwards until non-continuation byte is found
-            while ($truncatedLineByteCount -gt 0 -and ($lineBytes[$truncatedLineByteCount] -band 0xC0) -eq 0x80) {
-                $truncatedLineByteCount -= 1
+            while ($chunkByteCount -gt 0 -and ($lineBytes[$chunkByteCount] -band 0xC0) -eq 0x80) {
+                $chunkByteCount -= 1
             }
 
-            if ($truncatedLineByteCount -eq 0) {
+            if ($chunkByteCount -eq 0) {
                 throw "Alpaca Message split failed: Unable to find valid UTF-8 character boundary within byte limit"
             }
 
-            $truncatedLineBytes = $lineBytes[0..($truncatedLineByteCount - 1)]
-            $truncatedLines += [System.Text.Encoding]::UTF8.GetString($truncatedLineBytes)
+            $chunkBytes = $lineBytes[0..($chunkByteCount - 1)]
+            $resultLines += [System.Text.Encoding]::UTF8.GetString($chunkBytes)
 
-            $lineBytes = $lineBytes[$truncatedLineBytes.Length..($lineBytes.Length - 1)]
+            $lineBytes = $lineBytes[$chunkBytes.Length..($lineBytes.Length - 1)]
         }
 
-        $truncatedLines += [System.Text.Encoding]::UTF8.GetString($lineBytes)
+        $resultLines += [System.Text.Encoding]::UTF8.GetString($lineBytes)
     }
 
-    return $truncatedLines
+    return $resultLines
 }
 Export-ModuleMember -Function Split-AlpacaMessage
 
