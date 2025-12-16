@@ -5,11 +5,11 @@ param (
     [ValidateSet("GetAndUpdate", "Update")]
     [string] $Mode = "GetAndUpdate",
     [Parameter(HelpMessage = "AL-Go organization settings as JSON string", Mandatory = $false)]
-    [string] $orgSettingsVariableValue = "$ENV:ALGoOrgSettings",
+    [string] $OrgSettingsVariableValue = "$ENV:ALGoOrgSettings",
     [Parameter(HelpMessage = "AL-Go repository settings as JSON string", Mandatory = $false)]
-    [string] $repoSettingsVariableValue = "$ENV:ALGoRepoSettings",
+    [string] $RepoSettingsVariableValue = "$ENV:ALGoRepoSettings",
     [Parameter(HelpMessage = "AL-Go environment settings as JSON string", Mandatory = $false)]
-    [string] $environmentSettingsVariableValue = "$ENV:ALGoEnvSettings",
+    [string] $EnvironmentSettingsVariableValue = "$ENV:ALGoEnvSettings",
     [Parameter(HelpMessage = "Comma-separated list of additional secret names to always include", Mandatory = $false)]
     [string] $AdditionalSecrets = ""
 )
