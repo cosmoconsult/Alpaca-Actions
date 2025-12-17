@@ -185,7 +185,7 @@ function Write-AlpacaGitHubAnnotation {
     $truncatedInfoByteCount = [System.Text.Encoding]::UTF8.GetByteCount("$truncatedInfo")
     $reservedByteCount = $gitHubAnnotationCommandByteCount + $gitHubAnnotationLineBreakByteCount + $truncatedInfoByteCount
 
-    # Extract the chunk of the formatted message that fits within the byte limit (+ additional line break length)
+    # Extract the chunk of the formatted message that fits within the byte limit (+ additional line break bytes in case chunk ends with line break)
     $formattedMessageBytes = [System.Text.Encoding]::UTF8.GetBytes("$formattedMessage")
     $chunkByteLimit = $gitHubAnnotationByteLimit - $reservedByteCount
     $chunkBytes = $formattedMessageBytes[0..($chunkByteLimit + $gitHubAnnotationLineBreakByteCount - 1)]
