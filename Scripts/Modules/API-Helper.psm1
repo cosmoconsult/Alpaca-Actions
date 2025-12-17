@@ -21,24 +21,18 @@ function Get-AlpacaEndpointUrlWithParam {
         [string] $RouteSuffix,
         [Hashtable] $QueryParams
     )
-    $url = (Get-AlpacaBackendUrl) + "api/alpaca/release/" + $Controller
+    $url = (Get-AlpacaBackendUrl) + "api/alpaca/release"
 
-    if ($Endpoint) {
-        $url = $url + "/" + $Endpoint
-    }
-
-    if ($Ressource) {
-        $url = $url + "/" + $Ressource
-    }
-
-    if ($RouteSuffix) {
-        $url = $url + "/" + $RouteSuffix
-    }
+    $Controller, $Endpoint, $Ressource, $RouteSuffix | 
+        Where-Object { $_ } | 
+        ForEach-Object {
+            $url = $url + "/" + [System.Uri]::EscapeDataString($_)
+        }
     
     if ($QueryParams) {
         $url = $url + "?"
         $QueryParams.GetEnumerator() | ForEach-Object {
-            $url = $url + $_.Key + "=" + $_.Value + "&"
+            $url = $url + [System.Uri]::EscapeDataString($_.Key) + "=" + [System.Uri]::EscapeDataString($_.Value) + "&"
         }
         $url = $url.TrimEnd("&")
     }
