@@ -14,15 +14,15 @@ function Remove-AlpacaContainer {
     try {
         Write-AlpacaGroupStart "Deleting Container '$($Container.Id)' (Project: '$($Container.Project)', BuildMode: '$($Container.BuildMode)')"
         
-        $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
+        $headers = Get-AlpacaAuthenticationHeaders -Token $Token
 
-        $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "Container" -Endpoint "Container" -Ressource $Container.Id
+        $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "Container" -Ressource $Container.Id
         
-        Invoke-RestMethod $apiUrl -Method 'DELETE' -Headers $headers -AllowInsecureRedirect | Out-Null
+        Invoke-AlpacaApiRequest -Url $apiUrl -Method 'DELETE' -Headers $headers | Out-Null
 
         Write-AlpacaOutput "Container '$($Container.Id)' deleted"
     } catch {
-        if ($_.Exception.StatusCode -eq [System.Net.HttpStatusCode]::NotFound) {
+        if ($_.Exception -is [System.Net.Http.HttpRequestException] -and $_.Exception.StatusCode -eq [System.Net.HttpStatusCode]::NotFound) {
             Write-AlpacaOutput "Container '$($Container.Id)' not found"
         } else {
             throw
