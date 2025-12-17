@@ -157,7 +157,7 @@ function Write-AlpacaGitHubAnnotation {
     Param(
         [Parameter(Mandatory = $true)]
         [string] $Message,
-        [ValidateSet('Notice', 'Warning', 'Error', 'Debug')]
+        [ValidateSet('Notice', 'Warning', 'Error')]
         [string] $Annotation = 'Notice'
     )
     $color = $script:annotationColors[$Annotation]
