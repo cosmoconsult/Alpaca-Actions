@@ -24,10 +24,9 @@ function Get-AlpacaEndpointUrlWithParam {
     $url = (Get-AlpacaBackendUrl) + "api/alpaca/release"
 
     $Controller, $Endpoint, $Ressource, $RouteSuffix | 
-        Where-Object { $_ } | 
-        ForEach-Object {
-            $url = $url + "/" + [System.Uri]::EscapeDataString($_)
-        }
+        Where-Object   { $_ } | 
+        ForEach-Object { $_ -split "/" } |
+        ForEach-Object { $url = $url + "/" + [System.Uri]::EscapeDataString($_) }
     
     if ($QueryParams) {
         $url = $url + "?"
