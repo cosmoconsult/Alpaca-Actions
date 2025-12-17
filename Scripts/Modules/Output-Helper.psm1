@@ -124,8 +124,7 @@ Export-ModuleMember -Function Write-AlpacaError
 function Write-AlpacaDebug {
     param(
         [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
-        [string] $Message,
-        [switch] $WithoutGitHubAnnotation
+        [string] $Message
     )
     if (-not (Get-AlpacaIsDebugMode)) {
         return
