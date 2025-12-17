@@ -175,73 +175,53 @@ function Write-AlpacaGitHubAnnotation {
         return
     }
 
-    $gitHubAnnotationCommandByteCount = [System.Text.Encoding]::UTF8.GetByteCount("$gitHubAnnotationCommand")
-    $gitHubAnnotationLineBreakByteCount = [System.Text.Encoding]::UTF8.GetByteCount("$gitHubAnnotationLineBreak")
+    # Message exceeds byte limit, need to truncate
 
     $truncatedInfo = Format-AlpacaMessage -Message "--- Annotation truncated (see logs for full details) ---" -Color $color
+
+    # Calculate byte counts of fixed parts
+    $gitHubAnnotationLineBreakByteCount = [System.Text.Encoding]::UTF8.GetByteCount("$gitHubAnnotationLineBreak")
+    $gitHubAnnotationCommandByteCount = [System.Text.Encoding]::UTF8.GetByteCount("$gitHubAnnotationCommand")
     $truncatedInfoByteCount = [System.Text.Encoding]::UTF8.GetByteCount("$truncatedInfo")
+    $reservedByteCount = $gitHubAnnotationCommandByteCount + $gitHubAnnotationLineBreakByteCount + $truncatedInfoByteCount
 
-    $annotationLines = @()
-    $annotationByteCount = 0
-    $overflowLines = @()
+    # Extract the chunk of the formatted message that fits within the byte limit (+ additional line break bytes in case chunk ends with line break)
+    $formattedMessageBytes = [System.Text.Encoding]::UTF8.GetBytes("$formattedMessage")
+    $chunkByteLimit = $gitHubAnnotationByteLimit - $reservedByteCount
+    $chunkBytes = $formattedMessageBytes[0..($chunkByteLimit + $gitHubAnnotationLineBreakByteCount - 1)]
+    $chunk = [System.Text.Encoding]::UTF8.GetString($chunkBytes)
 
-    # Calculate reserved byte count for command and truncated info (<command>[message]<info>)
-    $annotationByteCount = $gitHubAnnotationCommandByteCount + $gitHubAnnotationLineBreakByteCount + $truncatedInfoByteCount
-
-    # Split message into lines
-    $line, $lines = Split-AlpacaMessage -Message $Message
-
-    # Process first line separately to handle if it exceeds byte limit
-    $formattedLine = Format-AlpacaMessage -Message $line -Color $color
-    $formattedLineByteCount = [System.Text.Encoding]::UTF8.GetByteCount("$formattedLine")
-    if ($annotationByteCount + $formattedLineByteCount -gt $gitHubAnnotationByteLimit) {
-        # First line exceeds byte limit, split further
-        $formatByteCount = $formattedLineByteCount - [System.Text.Encoding]::UTF8.GetByteCount("$line")
-        $chunkByteCount = $gitHubAnnotationByteLimit - $annotationByteCount - $formatByteCount
-        if ($chunkByteCount -ge 1) {
-            # Split the line and add first part to annotation
-            $chunk = Split-AlpacaMessage -Message $line -LineByteLimit $chunkByteCount | Select-Object -First 1
-            $formattedChunk = Format-AlpacaMessage -Message $chunk -Color $color
-            $annotationLines += $formattedChunk
-            $annotationByteCount += [System.Text.Encoding]::UTF8.GetByteCount("$formattedChunk")
-        }
-        # Add full line to overflow
-        $overflowLines += $formattedLine
+    # Find last line break to avoid cutting lines in half
+    $annotationMessageLength = $chunk.LastIndexOf($gitHubAnnotationLineBreak)
+    if ($annotationMessageLength -gt 0) {
+        # Line break found, split there
+        $annotationMessage = $formattedMessage.Substring(0, $annotationMessageLength)
+        $overflowMessage = $formattedMessage.Substring($annotationMessageLength + $gitHubAnnotationLineBreak.Length)
     } else {
-        # First line fits, add to annotation
-        $annotationLines += $formattedLine
-        $annotationByteCount += $formattedLineByteCount
-    }
-
-    # Process remaining lines
-    foreach ($line in $lines) {
+        # No line break found, need to split first line
+        # Get first line of original message
+        $line = Split-AlpacaMessage -Message $Message | Select-Object -First 1
+        # Calculate byte count added by formatting
         $formattedLine = Format-AlpacaMessage -Message $line -Color $color
-        $formattedLineByteCount = [System.Text.Encoding]::UTF8.GetByteCount("$formattedLine")
-        if ($overflowLines.Count -gt 0) {
-            # Already in overflow, add line to overflow
-            $overflowLines += $formattedLine
-        } elseif ($annotationByteCount + $gitHubAnnotationLineBreakByteCount + $formattedLineByteCount -le $gitHubAnnotationByteLimit) {
-            # Line fits, add to annotation
-            $annotationLines += $formattedLine
-            $annotationByteCount += $gitHubAnnotationLineBreakByteCount + $formattedLineByteCount
-        } else {
-            # Line exceeds byte limit, add to overflow
-            $overflowLines += $formattedLine
-        }
+        $formatByteCount = [System.Text.Encoding]::UTF8.GetByteCount("$formattedLine") - [System.Text.Encoding]::UTF8.GetByteCount("$line")
+        # Extract chunk of first line that fits within byte limit
+        $chunkByteLimit = $gitHubAnnotationByteLimit - $reservedByteCount - $formatByteCount
+        $chunk = Split-AlpacaMessage -Message $line -LineByteLimit $chunkByteLimit | Select-Object -First 1
+
+        # Create annotation message with chunk of first line
+        $annotationMessage = Format-AlpacaMessage -Message $chunk -Color $color
+        # Create overflow message with original formatted message
+        $overflowMessage = $formattedMessage
     }
 
-    if ($annotationLines) {
-        $annotationLines += $truncatedInfo
-        $annotationMessage = $annotationLines -join $gitHubAnnotationLineBreak
-        $annotationMessage = "$($gitHubAnnotationCommand)$($annotationMessage)"
-        Write-Host $annotationMessage
-    }
-    if ($overflowLines) {
-        $overflowMessage = $overflowLines -join "`n"
-        Write-Host $overflowMessage
-    }
+    $annotationMessage = "$($gitHubAnnotationCommand)$($annotationMessage)$($gitHubAnnotationLineBreak)$($truncatedInfo)"
+    Write-Host $annotationMessage
+
+    $overflowMessage = $overflowMessage -replace $gitHubAnnotationLineBreak, "`n"
+    Write-Host $overflowMessage
 }
 Export-ModuleMember -Function Write-AlpacaGitHubAnnotation
+
 function Write-AlpacaNotice {
     Param(
         [Parameter(Mandatory = $true)]
