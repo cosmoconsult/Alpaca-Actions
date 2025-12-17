@@ -69,16 +69,12 @@ function Get-SecretNamesFromObject {
             }
             
             # Recursively search nested objects
-            if ($propValue -is [PSCustomObject] -or $propValue -is [array]) {
-                $names += Get-SecretNamesFromObject -Object $propValue -Patterns $Patterns
-            }
+            $names += Get-SecretNamesFromObject -Object $propValue -Patterns $Patterns
         }
     }
     elseif ($Object -is [array]) {
         foreach ($item in $Object) {
-            if ($item -is [PSCustomObject] -or $item -is [array]) {
-                $names += Get-SecretNamesFromObject -Object $item -Patterns $Patterns
-            }
+            $names += Get-SecretNamesFromObject -Object $item -Patterns $Patterns
         }
     }
     
@@ -103,6 +99,17 @@ if ($Mode -eq "GetAndUpdate") {
     if (Test-Path $algoSettingsPath) {
         $jsonFilePaths += $algoSettingsPath
     }
+
+    # Add custom template settings files
+    $ghTemplateProjectSettings = Join-Path $env:GITHUB_WORKSPACE ".github/AL-Go-TemplateProjectSettings.doNotEdit.json"
+    if (Test-Path $ghTemplateProjectSettings) {
+        $jsonFilePaths += $ghTemplateProjectSettings
+    }
+
+    $ghTemplateRepoSettings = Join-Path $env:GITHUB_WORKSPACE ".github/AL-Go-TemplateRepoSettings.doNotEdit.json"
+    if (Test-Path $ghTemplateRepoSettings) {
+        $jsonFilePaths += $ghTemplateRepoSettings
+    }
     
     # Add all .AL-Go/*.settings.json and .AL-Go/settings.json files from root and subdirectories
     $algoSettingsJsonFiles = Get-ChildItem -Path $env:GITHUB_WORKSPACE -Filter "*.settings.json" -Recurse -File -Force -ErrorAction SilentlyContinue | Where-Object { $_.Directory.Name -eq ".AL-Go" }
@@ -111,10 +118,10 @@ if ($Mode -eq "GetAndUpdate") {
         $jsonFilePaths += $algoSettingsJsonFiles | Select-Object -ExpandProperty FullName
     }
     
-    $algoSettingsFile = Get-ChildItem -Path $env:GITHUB_WORKSPACE -Filter "settings.json" -Recurse -File -Force -ErrorAction SilentlyContinue | Where-Object { $_.Directory.Name -eq ".AL-Go" }
-    Write-AlpacaOutput "Found $($algoSettingsFile.Count) settings.json files in .AL-Go directories"
-    if ($algoSettingsFile) {
-        $jsonFilePaths += $algoSettingsFile | Select-Object -ExpandProperty FullName
+    $algoSettingsFiles = Get-ChildItem -Path $env:GITHUB_WORKSPACE -Filter "settings.json" -Recurse -File -Force -ErrorAction SilentlyContinue | Where-Object { $_.Directory.Name -eq ".AL-Go" }
+    Write-AlpacaOutput "Found $($algoSettingsFiles.Count) settings.json files in .AL-Go directories"
+    if ($algoSettingsFiles) {
+        $jsonFilePaths += $algoSettingsFiles | Select-Object -ExpandProperty FullName
     }
     
     # Add all *.settings.json files from .github directory
@@ -128,28 +135,31 @@ if ($Mode -eq "GetAndUpdate") {
     
     foreach ($jsonFilePath in $jsonFilePaths) {
         if (Test-Path $jsonFilePath) {
-            Write-AlpacaOutput "Searching file: $jsonFilePath"
-            try {
-                $content = Get-Content -Path $jsonFilePath -Raw -ErrorAction SilentlyContinue
-                if ([string]::IsNullOrWhiteSpace($content)) {
-                    continue
-                }
-                
-                $jsonObject = $content | ConvertFrom-Json -ErrorAction SilentlyContinue
-                if ($null -eq $jsonObject) {
-                    continue
-                }
-                
-                $foundSecrets = Get-SecretNamesFromObject -Object $jsonObject -Patterns $secretKeyPatterns
-                if ($foundSecrets.Count -gt 0) {
-                    Write-AlpacaOutput "Found $($foundSecrets.Count) secret name(s) in '$jsonFilePath': $($foundSecrets -join ', ')"
-                    $secretNames += $foundSecrets
-                }
-                
-            } catch {
-                Write-AlpacaWarning "Failed to parse JSON file '$jsonFilePath': $($_.Exception.Message)"
-            }
+            continue;
         }
+
+        Write-AlpacaOutput "Searching file: $jsonFilePath"
+        try {
+            $content = Get-Content -Path $jsonFilePath -Raw -ErrorAction SilentlyContinue
+            if ([string]::IsNullOrWhiteSpace($content)) {
+                continue
+            }
+            
+            $jsonObject = $content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            if ($null -eq $jsonObject) {
+                continue
+            }
+            
+            $foundSecrets = Get-SecretNamesFromObject -Object $jsonObject -Patterns $secretKeyPatterns
+            if ($foundSecrets.Count -gt 0) {
+                Write-AlpacaOutput "Found $($foundSecrets.Count) secret name(s) in '$jsonFilePath': $($foundSecrets -join ', ')"
+                $secretNames += $foundSecrets
+            }
+            
+        } catch {
+            Write-AlpacaWarning "Failed to parse JSON file '$jsonFilePath': $($_.Exception.Message)"
+        }
+        
     }
     
     # Parse JSON from AL-Go settings parameters
