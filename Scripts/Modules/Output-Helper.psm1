@@ -193,7 +193,6 @@ function Write-AlpacaGitHubAnnotation {
 
     # Find last line break to avoid cutting lines in half
     $annotationMessageLength = $chunk.LastIndexOf($gitHubAnnotationLineBreak)
-    Write-Host "Length: $annotationMessageLength"
     if ($annotationMessageLength -gt 0) {
         # Line break found, split there
         $annotationMessage = $formattedMessage.Substring(0, $annotationMessageLength)
@@ -222,6 +221,7 @@ function Write-AlpacaGitHubAnnotation {
     Write-Host $overflowMessage
 }
 Export-ModuleMember -Function Write-AlpacaGitHubAnnotation
+
 function Write-AlpacaNotice {
     Param(
         [Parameter(Mandatory = $true)]
