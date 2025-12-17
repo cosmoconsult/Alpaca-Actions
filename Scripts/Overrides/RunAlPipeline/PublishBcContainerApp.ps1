@@ -14,7 +14,7 @@ if ($env:ALPACA_CONTAINER_IMAGE_READY) {
 }
 else {
     Write-AlpacaGroupStart "Wait for image to be ready"
-    Wait-AlpacaContainerImageReady -Token $env:_token -ContainerName $env:ALPACA_CONTAINER_ID 
+    Wait-AlpacaContainerImageReady -Token $env:_token -ContainerName $env:ALPACA_CONTAINER_ID
     Write-AlpacaDebug "Set ALPACA_CONTAINER_IMAGE_READY to '$true'"
     $env:ALPACA_CONTAINER_IMAGE_READY = $true
     Write-AlpacaGroupEnd
