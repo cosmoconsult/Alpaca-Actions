@@ -43,8 +43,8 @@ if ($Mode -eq "GetAndUpdate") {
     Write-AlpacaOutput "Searching $($jsonFilePaths.Count) AL-Go settings JSON files in repository"
     
     foreach ($jsonFilePath in $jsonFilePaths) {
-        if (Test-Path $jsonFilePath) {
-            continue;
+        if (-not (Test-Path $jsonFilePath)) {
+            continue
         }
 
         Write-AlpacaOutput "Searching file: $jsonFilePath"
@@ -82,7 +82,7 @@ if ($Mode -eq "GetAndUpdate") {
     
     foreach ($settingsVar in $settingsVariables) {
         if ([string]::IsNullOrWhiteSpace($settingsVar.Value)) {
-            continue;
+            continue
         }
 
         Write-AlpacaOutput "Searching $($settingsVar.Name) settings variable"
