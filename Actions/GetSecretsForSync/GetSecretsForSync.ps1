@@ -74,54 +74,30 @@ if ($Mode -eq "GetAndUpdate") {
     # Parse JSON from AL-Go settings parameters
     Write-AlpacaOutput "Searching AL-Go settings variables"
     
-    if (-not [string]::IsNullOrWhiteSpace($OrgSettingsVariableValue)) {
-        Write-AlpacaOutput "Searching organization settings variable"
-        try {
-            $orgSettings = $OrgSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
-            if ($null -ne $orgSettings) {
-                $foundSecrets = Find-SecretSyncSecretsInObject -Object $orgSettings -Patterns $secretKeyPatterns
-                if ($foundSecrets.Count -gt 0) {
-                    Write-AlpacaOutput "Found $($foundSecrets.Count) secret name(s) in organization settings: $($foundSecrets -join ', ')"
-                    $secretNames += $foundSecrets
-                }
-            }
-        } catch {
-            Write-AlpacaError "Failed to parse organization settings: $($_.Exception.Message)"
-            throw "Cannot proceed with invalid organization settings"
-        }
-    }
+    $settingsVariables = @(
+        @{ Name = "organization"; Value = $OrgSettingsVariableValue; ErrorMessage = "organization settings" },
+        @{ Name = "repository"; Value = $RepoSettingsVariableValue; ErrorMessage = "repository settings" },
+        @{ Name = "environment"; Value = $EnvironmentSettingsVariableValue; ErrorMessage = "environment settings" }
+    )
     
-    if (-not [string]::IsNullOrWhiteSpace($RepoSettingsVariableValue)) {
-        Write-AlpacaOutput "Searching repository settings variable"
-        try {
-            $repoSettings = $RepoSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
-            if ($null -ne $repoSettings) {
-                $foundSecrets = Find-SecretSyncSecretsInObject -Object $repoSettings -Patterns $secretKeyPatterns
-                if ($foundSecrets.Count -gt 0) {
-                    Write-AlpacaOutput "Found $($foundSecrets.Count) secret name(s) in repository settings: $($foundSecrets -join ', ')"
-                    $secretNames += $foundSecrets
-                }
-            }
-        } catch {
-            Write-AlpacaError "Failed to parse repository settings: $($_.Exception.Message)"
-            throw "Cannot proceed with invalid repository settings"
+    foreach ($settingsVar in $settingsVariables) {
+        if ([string]::IsNullOrWhiteSpace($settingsVar.Value)) {
+            continue;
         }
-    }
-    
-    if (-not [string]::IsNullOrWhiteSpace($EnvironmentSettingsVariableValue)) {
-        Write-AlpacaOutput "Searching environment settings variable"
+
+        Write-AlpacaOutput "Searching $($settingsVar.Name) settings variable"
         try {
-            $envSettings = $EnvironmentSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
-            if ($null -ne $envSettings) {
-                $foundSecrets = Find-SecretSyncSecretsInObject -Object $envSettings -Patterns $secretKeyPatterns
+            $settings = $settingsVar.Value | ConvertFrom-Json -ErrorAction Stop
+            if ($null -ne $settings) {
+                $foundSecrets = Find-SecretSyncSecretsInObject -Object $settings -Patterns $secretKeyPatterns
                 if ($foundSecrets.Count -gt 0) {
-                    Write-AlpacaOutput "Found $($foundSecrets.Count) secret name(s) in environment settings: $($foundSecrets -join ', ')"
+                    Write-AlpacaOutput "Found $($foundSecrets.Count) secret name(s) in $($settingsVar.Name) settings: $($foundSecrets -join ', ')"
                     $secretNames += $foundSecrets
                 }
             }
         } catch {
-            Write-AlpacaError "Failed to parse environment settings: $($_.Exception.Message)"
-            throw "Cannot proceed with invalid environment settings"
+            Write-AlpacaError "Failed to parse $($settingsVar.ErrorMessage): $($_.Exception.Message)"
+            throw "Cannot proceed with invalid $($settingsVar.ErrorMessage)"
         }
     }
     
