@@ -91,44 +91,8 @@ if ($Mode -eq "GetAndUpdate") {
     # Define search patterns for secret keys
     $secretKeyPatterns = @("*SecretName", "*Secret")
     
-    # Define specific JSON files to check
-    $jsonFilePaths = @()
-    
-    # Add .github/AL-Go-Settings.json
-    $algoSettingsPath = Join-Path $env:GITHUB_WORKSPACE ".github/AL-Go-Settings.json"
-    if (Test-Path $algoSettingsPath) {
-        $jsonFilePaths += $algoSettingsPath
-    }
-
-    # Add custom template settings files
-    $ghTemplateProjectSettings = Join-Path $env:GITHUB_WORKSPACE ".github/AL-Go-TemplateProjectSettings.doNotEdit.json"
-    if (Test-Path $ghTemplateProjectSettings) {
-        $jsonFilePaths += $ghTemplateProjectSettings
-    }
-
-    $ghTemplateRepoSettings = Join-Path $env:GITHUB_WORKSPACE ".github/AL-Go-TemplateRepoSettings.doNotEdit.json"
-    if (Test-Path $ghTemplateRepoSettings) {
-        $jsonFilePaths += $ghTemplateRepoSettings
-    }
-    
-    # Add all .AL-Go/*.settings.json and .AL-Go/settings.json files from root and subdirectories
-    $algoSettingsJsonFiles = Get-ChildItem -Path $env:GITHUB_WORKSPACE -Filter "*.settings.json" -Recurse -File -Force -ErrorAction SilentlyContinue | Where-Object { $_.Directory.Name -eq ".AL-Go" }
-    Write-AlpacaOutput "Found $($algoSettingsJsonFiles.Count) *.settings.json files in .AL-Go directories"
-    if ($algoSettingsJsonFiles) {
-        $jsonFilePaths += $algoSettingsJsonFiles | Select-Object -ExpandProperty FullName
-    }
-    
-    $algoSettingsFiles = Get-ChildItem -Path $env:GITHUB_WORKSPACE -Filter "settings.json" -Recurse -File -Force -ErrorAction SilentlyContinue | Where-Object { $_.Directory.Name -eq ".AL-Go" }
-    Write-AlpacaOutput "Found $($algoSettingsFiles.Count) settings.json files in .AL-Go directories"
-    if ($algoSettingsFiles) {
-        $jsonFilePaths += $algoSettingsFiles | Select-Object -ExpandProperty FullName
-    }
-    
-    # Add all *.settings.json files from .github directory
-    $githubPath = Join-Path $env:GITHUB_WORKSPACE ".github"
-    if (Test-Path $githubPath) {
-        $jsonFilePaths += Get-ChildItem -Path $githubPath -Filter "*.settings.json" -File -Force | Select-Object -ExpandProperty FullName
-    }
+    # Find all AL-Go settings files
+    $jsonFilePaths = Find-ALGoSettingsFiles -WorkspacePath $env:GITHUB_WORKSPACE
     
     # Parse JSON files and extract secret names
     Write-AlpacaOutput "Searching $($jsonFilePaths.Count) AL-Go settings JSON files in repository"
