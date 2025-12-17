@@ -27,61 +27,6 @@ if ([string]::IsNullOrWhiteSpace($EnvironmentSettingsVariableValue)) {
 
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
 
-# Recursively search for keys matching the patterns
-function Get-SecretNamesFromObject {
-    param (
-        [Parameter(Mandatory = $true)]
-        $Object,
-        [string[]] $Patterns
-    )
-    
-    $names = @()
-    
-    if ($Object -is [PSCustomObject]) {
-        $properties = $Object | Get-Member -MemberType NoteProperty
-        foreach ($prop in $properties) {
-            $propName = $prop.Name
-            $propValue = $Object.$propName
-            
-            # Check if property name matches any pattern
-            $matchesPattern = $false
-            foreach ($pattern in $Patterns) {
-                if ($propName -like $pattern) {
-                    $matchesPattern = $true
-                    break
-                }
-            }
-            
-            if ($matchesPattern -and (-not [string]::IsNullOrWhiteSpace($propValue))) {
-                # If the value is a string, add it to the list
-                if ($propValue -is [string]) {
-                    $names += $propValue
-                }
-            }
-            
-            # Also check if property value contains ${{SECRETNAME}} pattern
-            if ($propValue -is [string] -and $propValue -match '\$\{\{([^}]+)\}\}') {
-                # Extract secret name from ${{SECRETNAME}} pattern
-                $secretName = $Matches[1].Trim()
-                if (-not [string]::IsNullOrWhiteSpace($secretName)) {
-                    $names += $secretName
-                }
-            }
-            
-            # Recursively search nested objects
-            $names += Get-SecretNamesFromObject -Object $propValue -Patterns $Patterns
-        }
-    }
-    elseif ($Object -is [array]) {
-        foreach ($item in $Object) {
-            $names += Get-SecretNamesFromObject -Object $item -Patterns $Patterns
-        }
-    }
-    
-    return $names
-}
-
-
 $secretNames = @()
 
 # Step 1: Find all relevant secret names for sync (only for GetAndUpdate mode)
@@ -114,7 +59,7 @@ if ($Mode -eq "GetAndUpdate") {
                 continue
             }
             
-            $foundSecrets = Get-SecretNamesFromObject -Object $jsonObject -Patterns $secretKeyPatterns
+            $foundSecrets = Find-SecretSyncSecretsInObject -Object $jsonObject -Patterns $secretKeyPatterns
             if ($foundSecrets.Count -gt 0) {
                 Write-AlpacaOutput "Found $($foundSecrets.Count) secret name(s) in '$jsonFilePath': $($foundSecrets -join ', ')"
                 $secretNames += $foundSecrets
@@ -134,7 +79,7 @@ if ($Mode -eq "GetAndUpdate") {
         try {
             $orgSettings = $OrgSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
             if ($null -ne $orgSettings) {
-                $foundSecrets = Get-SecretNamesFromObject -Object $orgSettings -Patterns $secretKeyPatterns
+                $foundSecrets = Find-SecretSyncSecretsInObject -Object $orgSettings -Patterns $secretKeyPatterns
                 if ($foundSecrets.Count -gt 0) {
                     Write-AlpacaOutput "Found $($foundSecrets.Count) secret name(s) in organization settings: $($foundSecrets -join ', ')"
                     $secretNames += $foundSecrets
@@ -151,7 +96,7 @@ if ($Mode -eq "GetAndUpdate") {
         try {
             $repoSettings = $RepoSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
             if ($null -ne $repoSettings) {
-                $foundSecrets = Get-SecretNamesFromObject -Object $repoSettings -Patterns $secretKeyPatterns
+                $foundSecrets = Find-SecretSyncSecretsInObject -Object $repoSettings -Patterns $secretKeyPatterns
                 if ($foundSecrets.Count -gt 0) {
                     Write-AlpacaOutput "Found $($foundSecrets.Count) secret name(s) in repository settings: $($foundSecrets -join ', ')"
                     $secretNames += $foundSecrets
@@ -168,7 +113,7 @@ if ($Mode -eq "GetAndUpdate") {
         try {
             $envSettings = $EnvironmentSettingsVariableValue | ConvertFrom-Json -ErrorAction Stop
             if ($null -ne $envSettings) {
-                $foundSecrets = Get-SecretNamesFromObject -Object $envSettings -Patterns $secretKeyPatterns
+                $foundSecrets = Find-SecretSyncSecretsInObject -Object $envSettings -Patterns $secretKeyPatterns
                 if ($foundSecrets.Count -gt 0) {
                     Write-AlpacaOutput "Found $($foundSecrets.Count) secret name(s) in environment settings: $($foundSecrets -join ', ')"
                     $secretNames += $foundSecrets
