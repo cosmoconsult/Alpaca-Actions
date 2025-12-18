@@ -34,7 +34,7 @@ if ($Mode -eq "GetAndUpdate") {
     Write-AlpacaGroupStart -Message "Searching for secret names in AL-Go settings files"
     
     # Define search patterns for secret keys
-    $secretKeyPatterns = @("*SecretName", "*Secret")
+    $secretKeyPatterns = @("*Secret")
     
     # Find all AL-Go settings files
     $jsonFilePaths = Find-ALGoSettingsFiles -WorkspacePath $env:GITHUB_WORKSPACE
@@ -75,9 +75,9 @@ if ($Mode -eq "GetAndUpdate") {
     Write-AlpacaOutput "Searching AL-Go settings variables"
     
     $settingsVariables = @(
-        @{ Name = "organization"; Value = $OrgSettingsVariableValue; ErrorMessage = "organization settings" },
-        @{ Name = "repository"; Value = $RepoSettingsVariableValue; ErrorMessage = "repository settings" },
-        @{ Name = "environment"; Value = $EnvironmentSettingsVariableValue; ErrorMessage = "environment settings" }
+        @{ Name = "organization"; Value = $OrgSettingsVariableValue},
+        @{ Name = "repository"; Value = $RepoSettingsVariableValue},
+        @{ Name = "environment"; Value = $EnvironmentSettingsVariableValue}
     )
     
     foreach ($settingsVar in $settingsVariables) {
@@ -96,8 +96,8 @@ if ($Mode -eq "GetAndUpdate") {
                 }
             }
         } catch {
-            Write-AlpacaError "Failed to parse $($settingsVar.ErrorMessage): $($_.Exception.Message)"
-            throw "Cannot proceed with invalid $($settingsVar.ErrorMessage)"
+            Write-AlpacaError "Failed to parse $($settingsVar.Name) settings: $($_.Exception.Message)"
+            throw "Cannot proceed with invalid $($settingsVar.Name) settings"
         }
     }
     
