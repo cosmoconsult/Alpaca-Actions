@@ -6,19 +6,19 @@ Write-AlpacaOutput "Using COSMO Alpaca override"
 
 #region DebugInfo
 Write-AlpacaGroupStart "DebugInfo" #Level 1
-if ($env:RUNNER_DEBUG -eq '1' -or $env:GITHUB_RUN_ATTEMPT -gt 1) {
-    Write-AlpacaOutput "App Type: $AppType"
+if (Get-AlpacaIsDebugMode) {
+    Write-AlpacaDebug "App Type: $AppType"
 
     Write-AlpacaGroupStart "Compilation Params:" #Level 2
-    "$($CompilationParams.Value | ConvertTo-Json -Depth 2)" -split "`n" | ForEach-Object { Write-AlpacaOutput $_ }
+    "$($CompilationParams.Value | ConvertTo-Json -Depth 2)" -split "`n" | ForEach-Object { Write-AlpacaDebug $_ }
     Write-AlpacaGroupEnd #Level 2
 }
 $Settings = $env:Settings | ConvertFrom-Json
-Write-AlpacaOutput "Settings:"
-Write-AlpacaOutput ("Settings.alpaca.createTranslations = {0}" -f $(try { $Settings.alpaca.createTranslations }catch { '' }))
-Write-AlpacaOutput ("Settings.alpaca.translationLanguages = {0}" -f $(try { $Settings.alpaca.translationLanguages -join ', ' }catch { '' }))
-Write-AlpacaOutput ("Settings.alpaca.testTranslations = {0}" -f $(try { $Settings.alpaca.testTranslations }catch { '' }))
-Write-AlpacaOutput ("Settings.alpaca.testTranslationRules = {0}" -f $(try { $Settings.alpaca.testTranslationRules -join ', ' }catch { '' }))
+Write-AlpacaDebug "Settings:"
+Write-AlpacaDebug ("Settings.alpaca.createTranslations = {0}" -f $(try { $Settings.alpaca.createTranslations }catch { '' }))
+Write-AlpacaDebug ("Settings.alpaca.translationLanguages = {0}" -f $(try { $Settings.alpaca.translationLanguages -join ', ' }catch { '' }))
+Write-AlpacaDebug ("Settings.alpaca.testTranslations = {0}" -f $(try { $Settings.alpaca.testTranslations }catch { '' }))
+Write-AlpacaDebug ("Settings.alpaca.testTranslationRules = {0}" -f $(try { $Settings.alpaca.testTranslationRules -join ', ' }catch { '' }))
 
 Write-AlpacaGroupEnd #Level 1
 #endregion DebugInfo
@@ -73,7 +73,7 @@ if ($Translate) {
     }
     Write-AlpacaOutput "Clearing existing translation files in $TranslationFolder"
     Get-ChildItem $TranslationFolder -Recurse -File -Filter *.xlf | Where-Object { $_.BaseName.EndsWith('.g') -or $Settings.alpaca.translationLanguages -contains $_.BaseName.split('.')[-1] } | ForEach-Object {
-        Write-AlpacaOutput "Removing translation file: $($_.FullName)"
+        Write-AlpacaDebug "Removing translation file: $($_.FullName)"
         Remove-Item $_.FullName -Force -Confirm:$false
     }
     #endregion ClearTranslations
