@@ -31,7 +31,9 @@ function Get-AlpacaEndpointUrlWithParam {
     if ($QueryParams) {
         $url = $url + "?"
         $QueryParams.GetEnumerator() | ForEach-Object {
-            $url = $url + [System.Uri]::EscapeDataString($_.Key) + "=" + [System.Uri]::EscapeDataString($_.Value) + "&"
+            $encodedKey = $_.Key -replace '[&?#=+ ]', { [System.Uri]::EscapeDataString($_.Value) }
+            $encodedValue = [System.Uri]::EscapeDataString($_.Value)
+            $url = $url + $encodedKey + "=" + $encodedValue + "&"
         }
         $url = $url.TrimEnd("&")
     }
