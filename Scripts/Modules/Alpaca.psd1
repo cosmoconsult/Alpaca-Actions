@@ -28,7 +28,6 @@
         'Find-ALGoSettingsFiles.psm1',
         'Find-SecretSyncSecretsInObject.psm1',
         'Get-AlpacaDependencyApps.psm1',
-        'Get-AlpacaExtendedErrorMessage.psm1',
         'Get-AlpacaSecretSyncStatus.psm1',
         'Get-AlpacaSettings.psm1',
         'New-AlpacaContainer.psm1',
