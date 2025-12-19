@@ -1,0 +1,54 @@
+name: Get Secrets For Sync
+description: This action finds all secret names from AL-Go settings and Alpaca backend to prepare for synchronization
+author: COSMO CONSULT
+inputs:
+  shell:
+    description: Shell in which you want to run the action (powershell or pwsh)
+    required: false
+    default: powershell
+  token:
+    description: The GitHub token running the action
+    required: false
+    default: ${{ github.token }}
+  mode:
+    description: Mode for the action - 'GetAndUpdate' searches AL-Go settings files and backend, 'Update' only queries backend
+    required: false
+    default: GetAndUpdate
+  orgSettingsVariableValue:
+    description: AL-Go organization settings as JSON string
+    required: false
+    default: ''
+  repoSettingsVariableValue:
+    description: AL-Go repository settings as JSON string
+    required: false
+    default: ''
+  environmentSettingsVariableValue:
+    description: AL-Go environment settings as JSON string
+    required: false
+    default: ''
+  additionalSecrets:
+    description: Comma-separated list of additional secret names to always include
+    required: false
+    default: ''
+outputs:
+  secretsForSync:
+    description: Comma-separated list of distinct secret names found in AL-Go settings and Alpaca backend
+    value: ${{ steps.GetSecretsForSync.outputs.secretsForSync }}
+runs:
+  using: composite
+  steps:
+    - id: GetSecretsForSync
+      name: Get COSMO Alpaca Secrets For Sync
+      shell: ${{ inputs.shell }}
+      env:
+        _token: ${{ inputs.token }}
+        _mode: ${{ inputs.mode }}
+        _orgSettingsVariableValue: ${{ inputs.orgSettingsVariableValue }}
+        _repoSettingsVariableValue: ${{ inputs.repoSettingsVariableValue }}
+        _environmentSettingsVariableValue: ${{ inputs.environmentSettingsVariableValue }}
+        _additionalSecrets: ${{ inputs.additionalSecrets }}
+      run: |
+        ${{ github.action_path }}/GetSecretsForSync.ps1 -Token $env:_token -Mode $env:_mode -orgSettingsVariableValue $env:_orgSettingsVariableValue -repoSettingsVariableValue $env:_repoSettingsVariableValue -environmentSettingsVariableValue $env:_environmentSettingsVariableValue -AdditionalSecrets $env:_additionalSecrets
+branding:
+  icon: list
+  color: blue
