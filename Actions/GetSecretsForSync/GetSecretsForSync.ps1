@@ -36,6 +36,16 @@ if ($Mode -eq "GetAndUpdate") {
     # Define search patterns for secret keys
     $secretKeyPatterns = @("*Secret")
     
+    # Add additional patterns from AdditionalSecrets parameter
+    if (-not [string]::IsNullOrWhiteSpace($AdditionalSecrets)) {
+        $additionalSecretsList = $AdditionalSecrets -split ',' | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+        foreach ($secretName in $additionalSecretsList) {
+            $pattern = "${secretName}SecretName"
+            $secretKeyPatterns += $pattern
+            Write-AlpacaOutput "Added search pattern: $pattern"
+        }
+    }
+    
     # Find all AL-Go settings files
     $jsonFilePaths = Find-ALGoSettingsFiles -WorkspacePath $env:GITHUB_WORKSPACE
     
@@ -96,8 +106,7 @@ if ($Mode -eq "GetAndUpdate") {
                 }
             }
         } catch {
-            Write-AlpacaError "Failed to parse $($settingsVar.Name) settings: $($_.Exception.Message)"
-            throw "Cannot proceed with invalid $($settingsVar.Name) settings"
+            Write-AlpacaWarning "Failed to parse $($settingsVar.Name) settings: $($_)"
         }
     }
     
@@ -119,10 +128,8 @@ try {
 
     Write-AlpacaGroupEnd -Message "Found $($backendSecretSyncStatus.syncedSecretNames.Count) secrets in Alpaca backend"
 } catch {
-    Write-AlpacaError "Failed to fetch secrets from Alpaca backend: $($_.Exception.Message)"
+    Write-AlpacaWarning "Failed to fetch secrets from Alpaca backend: $($_)"
     Write-AlpacaGroupEnd
-    # Throw to prevent potential secret deletion due to incomplete data
-    throw "Cannot proceed without backend secret information"
 }
 
 # Step 3: Add additional secrets from AdditionalSecrets parameter

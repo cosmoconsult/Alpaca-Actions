@@ -7,13 +7,12 @@ function Get-AlpacaSecretSyncStatus {
     Write-AlpacaOutput "Getting secret names from Alpaca backend"
 
     $headers = Get-AlpacaAuthenticationHeaders -Token $Token
-    $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "GitHub" -Endpoint "SecretSync"
-
+    $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "GitHub" -Endpoint "SecretSync"
     try {
-        return Invoke-RestMethod $apiUrl -Method Get -Headers $headers -AllowInsecureRedirect
+        return Invoke-AlpacaApiRequest -Url $apiUrl -Method Get -Headers $headers
     }
     catch {
-        Write-AlpacaError "Failed to get secret sync status from Alpaca backend: $($_.Exception.Message)"
+        Write-AlpacaError "Failed to get secret sync status from Alpaca backend: $_"
         throw
     }
 }
