@@ -34,7 +34,7 @@ if ($Mode -eq "GetAndUpdate") {
     Write-AlpacaGroupStart -Message "Searching for secret names in AL-Go settings files"
     
     # Define search patterns for secret keys
-    $secretKeyPatterns = @("AuthTokenSecrets")
+    $secretKeyPatterns = @("AuthTokenSecret")
     
     # Add additional patterns from AdditionalSecrets parameter
     if (-not [string]::IsNullOrWhiteSpace($AdditionalSecrets)) {
