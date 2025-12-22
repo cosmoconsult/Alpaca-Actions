@@ -57,15 +57,6 @@ function Find-SecretSyncSecretsInObject {
                 }
             }
             
-            # Also check if property value contains ${{SECRETNAME}} pattern
-            if ($propValue -is [string] -and $propValue -match '\$\{\{([^}]+)\}\}') {
-                # Extract secret name from ${{SECRETNAME}} pattern
-                $secretName = $Matches[1].Trim()
-                if (-not [string]::IsNullOrWhiteSpace($secretName)) {
-                    $names += $secretName
-                }
-            }
-            
             # Recursively search nested objects
             $names += Find-SecretSyncSecretsInObject -Object $propValue -Patterns $Patterns
         }
@@ -73,6 +64,15 @@ function Find-SecretSyncSecretsInObject {
     elseif ($Object -is [array]) {
         foreach ($item in $Object) {
             $names += Find-SecretSyncSecretsInObject -Object $item -Patterns $Patterns
+        }
+    }
+    elseif ($Object -is [string]) {
+        # Check if string contains ${{SECRETNAME}} pattern
+        if ($Object -match '\$\{\{([^}]+)\}\}') {
+            $secretName = $Matches[1].Trim()
+            if (-not [string]::IsNullOrWhiteSpace($secretName)) {
+                $names += $secretName
+            }
         }
     }
     
