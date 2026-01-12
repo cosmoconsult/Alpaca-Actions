@@ -49,7 +49,14 @@ $compilerFolder = (GetCompilerFolder)
 $outputAppFiles = $apps + $testApps + $bcptTestApps
 $outputAppInfos = @()
 if ($outputAppFiles) {
-    $outputAppInfos += GetAppInfo -AppFiles $outputAppFiles -compilerFolder $compilerFolder -cacheAppInfoPath (Join-Path $outputFolder 'cache_AppInfo.json')
+    $GetAppInfoSplat = @{
+        AppFiles       = $outputAppFiles
+        compilerFolder = $compilerFolder
+    }
+    if (Test-Path $outputFolder) {
+        $GetAppInfoSplat.cacheAppInfoPath = (Join-Path $outputFolder 'cache_AppInfo.json')
+    }
+    $outputAppInfos += GetAppInfo @GetAppInfoSplat
 }
 
 # Collect parameter app infos
