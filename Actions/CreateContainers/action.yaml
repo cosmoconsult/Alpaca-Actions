@@ -34,7 +34,7 @@ runs:
       shell: ${{ inputs.shell }}
       env:
         _token: ${{ inputs.token }}
-        _containersJson: ${{ env.ALPACA_CONTAINERS_JSON }}
+        _containersJson: ${{ env.ALPACA_CONTAINERS_JSON || '[]' }}
       run: |
         ${{ github.action_path }}/../RemoveContainers/RemoveContainers.ps1 -Token $env:_token -ContainersJson $env:_containersJson
 branding:
