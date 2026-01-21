@@ -35,7 +35,7 @@ foreach ($file in $helperFiles.Keys) {
         Invoke-RestMethod -Uri $url -Headers @{ "Authorization" = "token $(gh auth token)" } -OutFile $dest -ErrorAction Stop
     }
     catch {
-        throw "Failed to download ${file} from ${url}: " + $_.Exception.Message
+        throw "Failed to download ${file} from ${url}:`n$_"
     }
 }
 . (Join-Path $PSScriptRoot "AL-Go-Helper.ps1")
@@ -123,9 +123,9 @@ try {
 }
 catch {
     if ($DirectCommit) {
-        throw "Failed to update COSMO Alpaca System Files. Make sure that the personal access token, defined in the secret called GhTokenWorkflow, is not expired and it has permission to update workflows. Read https://github.com/microsoft/AL-Go/blob/main/Scenarios/GhTokenWorkflow.md for more information. (Error was $($_.Exception.Message))"
+        throw "Failed to update COSMO Alpaca System Files. Make sure that the personal access token, defined in the secret called GhTokenWorkflow, is not expired and it has permission to update workflows. Read https://github.com/microsoft/AL-Go/blob/main/Scenarios/GhTokenWorkflow.md for more information. (Error was $_)"
     }
     else {
-        throw "Failed to create a pull-request to COSMO Alpaca System Files. Make sure that the personal access token, defined in the secret called GhTokenWorkflow, is not expired and it has permission to update workflows. Read https://github.com/microsoft/AL-Go/blob/main/Scenarios/GhTokenWorkflow.md for more information. (Error was $($_.Exception.Message))"
+        throw "Failed to create a pull-request to COSMO Alpaca System Files. Make sure that the personal access token, defined in the secret called GhTokenWorkflow, is not expired and it has permission to update workflows. Read https://github.com/microsoft/AL-Go/blob/main/Scenarios/GhTokenWorkflow.md for more information. (Error was $_)"
     }
 }
