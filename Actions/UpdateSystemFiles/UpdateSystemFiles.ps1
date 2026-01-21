@@ -114,7 +114,7 @@ try {
     }
     else {
         # Copy everything if destination does not exist
-        Copy-Item -Path (Join-Path $alpacaSource "*") -Destination $alpacaDest -Recurse -Force -ErrorAction Stop
+        Copy-Item -Path $alpacaSource -Destination $alpacaDest -Recurse -Force -ErrorAction Stop
     }
 
     if (!(CommitFromNewFolder -serverUrl $serverUrl -commitMessage $commitMessage -branch $branch -headBranch $UpdateBranch)) {
