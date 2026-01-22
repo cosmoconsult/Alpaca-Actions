@@ -21,13 +21,13 @@ try {
     Write-AlpacaOutput "Syncing secrets: '$(($secretNames) -join "', '")' [$($secretNames.Count)]"
 } 
 catch {
-    throw "Failed to determine secrets: $($_.Exception.Message)"
+    throw "Failed to determine secrets:`n$_"
 }
 
 try {
     Sync-AlpacaSecrets -Secrets $secrets -Token $Token
     Write-AlpacaOutput "Synced $($secretNames.Count) secrets"
 } catch {
-    Write-AlpacaError "Failed to sync $($secretNames.Count) secrets:`n$($_.Exception.Message)"
+    Write-AlpacaError "Failed to sync $($secretNames.Count) secrets:`n$_"
     throw "Failed to sync $($secretNames.Count) secrets"
 }
