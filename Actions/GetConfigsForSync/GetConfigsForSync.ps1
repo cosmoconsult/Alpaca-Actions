@@ -94,7 +94,7 @@ if ($Mode -eq "GetAndUpdate") {
             }
             
         } catch {
-            Write-AlpacaWarning "Failed to parse JSON file '$jsonFilePath': $($_.Exception.Message)"
+            Write-AlpacaWarning "Failed to parse JSON file '$jsonFilePath':`n$_"
         }
         
     }
