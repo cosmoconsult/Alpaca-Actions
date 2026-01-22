@@ -30,11 +30,11 @@ runs:
         ${{ github.action_path }}/CreateContainers.ps1 -Token $env:_token -BuildOrderJson $env:_buildOrderJson
 
     - name: Remove COSMO Alpaca Containers on failure
-      if: failure()
+      if: (failure() || cancelled()) && env.ALPACA_CONTAINERS_JSON != ''
       shell: ${{ inputs.shell }}
       env:
         _token: ${{ inputs.token }}
-        _containersJson: ${{ env.ALPACA_CONTAINERS_JSON || '[]' }}
+        _containersJson: ${{ env.ALPACA_CONTAINERS_JSON }}
       run: |
         ${{ github.action_path }}/../RemoveContainers/RemoveContainers.ps1 -Token $env:_token -ContainersJson $env:_containersJson
 branding:
