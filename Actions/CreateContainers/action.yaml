@@ -22,6 +22,7 @@ runs:
   steps:
     - id: CreateContainers
       name: Create COSMO Alpaca Containers
+      if: (success() || cancelled()) # Continue on cancelled to not terminate directly after a api call without processing its response
       shell: ${{ inputs.shell }}
       env:
         _token: ${{ inputs.token }}
