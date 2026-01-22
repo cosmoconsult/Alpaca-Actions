@@ -4,17 +4,35 @@ param (
     [Parameter(HelpMessage = "Mode for the action: 'GetAndUpdate' searches AL-Go settings files and backend, 'Update' only queries backend", Mandatory = $false)]
     [ValidateSet("GetAndUpdate", "Update")]
     [string] $Mode = "GetAndUpdate",
-    [Parameter(HelpMessage = "AL-Go organization settings as JSON string", Mandatory = $false)]
-    [string] $OrgSettingsVariableValue = "",
-    [Parameter(HelpMessage = "AL-Go repository settings as JSON string", Mandatory = $false)]
-    [string] $RepoSettingsVariableValue = "",
-    [Parameter(HelpMessage = "AL-Go environment settings as JSON string", Mandatory = $false)]
-    [string] $EnvironmentSettingsVariableValue = "",
     [Parameter(HelpMessage = "Comma-separated list of additional secret names to always include", Mandatory = $false)]
-    [string] $AdditionalSecrets = ""
+    [string] $AdditionalSecrets = "",
+    [Parameter(HelpMessage = "All GitHub variables as JSON string", Mandatory = $false)]
+    [string] $AllVariables = "{}",
+    [Parameter(HelpMessage = "Comma-separated list of variable names to include", Mandatory = $false)]
+    [string] $AdditionalVariables = ""
 )
 
-# Fall back to environment variables if parameters are empty
+# Extract AL-Go settings from AllVariables
+$OrgSettingsVariableValue = ""
+$RepoSettingsVariableValue = ""
+$EnvironmentSettingsVariableValue = ""
+
+try {
+    $allVarsJson = $AllVariables | ConvertFrom-Json -ErrorAction Stop
+    if ($allVarsJson.PSObject.Properties.Name -contains "ALGoOrgSettings") {
+        $OrgSettingsVariableValue = $allVarsJson.ALGoOrgSettings
+    }
+    if ($allVarsJson.PSObject.Properties.Name -contains "ALGoRepoSettings") {
+        $RepoSettingsVariableValue = $allVarsJson.ALGoRepoSettings
+    }
+    if ($allVarsJson.PSObject.Properties.Name -contains "ALGoEnvSettings") {
+        $EnvironmentSettingsVariableValue = $allVarsJson.ALGoEnvSettings
+    }
+} catch {
+    Write-AlpacaWarning "Failed to parse AllVariables JSON: $($_)"
+}
+
+# Fall back to environment variables if not found in AllVariables
 if ([string]::IsNullOrWhiteSpace($OrgSettingsVariableValue)) {
     $OrgSettingsVariableValue = $ENV:ALGoOrgSettings
 }
@@ -120,7 +138,7 @@ else {
 try {
     Write-AlpacaGroupStart -Message "Fetching secret names from Alpaca backend"
     
-    $backendSecretSyncStatus = Get-AlpacaSecretSyncStatus -Token $Token
+    $backendSecretSyncStatus = Get-AlpacaConfigSyncStatus -Token $Token
     if ($backendSecretSyncStatus -and $backendSecretSyncStatus.syncedSecretNames.Count -gt 0) {
         Write-AlpacaOutput "Found $($backendSecretSyncStatus.syncedSecretNames.Count) secret name(s) in Alpaca backend: $($backendSecretSyncStatus.syncedSecretNames -join ', ')"
         $secretNames += $backendSecretSyncStatus.syncedSecretNames
@@ -150,8 +168,37 @@ if ($secretNames.Count -gt 0) {
     Write-AlpacaOutput "Secret names: $secretNamesList"
 }
 
+# Step 5: Process variables from AllVariables parameter
+$variablesObject = @{}
+if (-not [string]::IsNullOrWhiteSpace($AdditionalVariables)) {
+    Write-AlpacaGroupStart -Message "Processing variables for sync"
+    
+    $additionalVariablesList = $AdditionalVariables -split ',' | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    
+    try {
+        $allVarsJson = $AllVariables | ConvertFrom-Json -ErrorAction Stop
+        
+        foreach ($varName in $additionalVariablesList) {
+            if ($allVarsJson.PSObject.Properties.Name -contains $varName) {
+                $variablesObject[$varName] = $allVarsJson.$varName
+            }
+        }
+        
+        Write-AlpacaNotice "Total variables: $($variablesObject.Count)"
+    } catch {
+        Write-AlpacaWarning "Failed to parse variables JSON: $($_)"
+    }
+    
+    Write-AlpacaGroupEnd -Message "Processed $($variablesObject.Count) variables"
+}
+
+$variablesJson = $variablesObject | ConvertTo-Json -Compress -Depth 10
+
 # Set output for GitHub Actions
 if ($env:GITHUB_OUTPUT) {
     "secretsForSync=$secretNamesList" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
     Write-AlpacaOutput "Set output variable 'secretsForSync'"
+    
+    "Variables=$variablesJson" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+    Write-AlpacaOutput "Set output variable 'Variables'"
 }
