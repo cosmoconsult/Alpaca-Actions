@@ -20,8 +20,8 @@ Find all secret names from AL-Go settings files and Alpaca backend, and gets spe
 | shell | | The shell (powershell or pwsh) in which the PowerShell script in this action should run | powershell |
 | token | | The GitHub token running the action | github.token |
 | mode | | Mode for the action: 'GetAndUpdate' or 'Update' - determines if AL-Go settings should be scanned | GetAndUpdate |
+| gitHubVariablesJson | true | GitHub variables as JSON string (from toJson(vars)) | |
 | includeSecrets | | Comma-separated list of secret names to include | (empty) |
-| workflowVariablesJson | | Workflow variables as JSON string (from toJson(vars)) | {} |
 | includeVariables | | Comma-separated list of variable names to include | (empty) |
 
 ## Behavior
@@ -32,7 +32,7 @@ Find all secret names from AL-Go settings files and Alpaca backend, and gets spe
    - `.AL-Go/settings.json` (all files matching this pattern in root and subdirectories)
    - `.AL-Go/*.settings.json` (all files matching this pattern in root and subdirectories)
    - `.github/*.settings.json` (all files matching this pattern)
-1. Extracts AL-Go settings from `workflowVariablesJson` parameter:
+1. Extracts AL-Go settings from `gitHubVariablesJson` parameter:
    - `ALGoOrgSettings` (falls back to environment variable if not found)
    - `ALGoRepoSettings` (falls back to environment variable if not found)
    - `ALGoEnvSettings` (falls back to environment variable if not found)
@@ -45,7 +45,7 @@ Find all secret names from AL-Go settings files and Alpaca backend, and gets spe
 1. Combines secret names from AL-Go settings with backend secrets
 1. Adds any secret names from the `includeSecrets` parameter (if provided)
 1. Adds any variable names from the `includeVariables` parameter (if provided)
-1. Removes duplicates and processes variables by looking up each variable name in `workflowVariablesJson`
+1. Removes duplicates and processes variables by looking up each variable name in `gitHubVariablesJson`
 1. Removes duplicates and outputs a comma-separated list of secret names and a JSON object of variables
 
 ### Mode: Update
@@ -54,7 +54,7 @@ Find all secret names from AL-Go settings files and Alpaca backend, and gets spe
    - Retrieves variable names from `syncedVariableNames`
 1. Adds any secret names from the `includeSecrets` parameter (if provided)
 1. Adds any variable names from the `includeVariables` parameter (if provided)
-1. Removes duplicates and processes variables by looking up each variable name in `workflowVariablesJson`
+1. Removes duplicates and processes variables by looking up each variable name in `gitHubVariablesJson`
 1. Removes duplicates and outputs a comma-separated list of secret names and a JSON object of variables
 
 ## OUTPUT
@@ -80,7 +80,7 @@ none
   with:
     token: ${{ github.token }}
     mode: GetAndUpdate
-    workflowVariablesJson: ${{ toJson(vars) }}
+    gitHubVariablesJson: ${{ toJson(vars) }}
 
 - name: Use Secret Names
   run: |
@@ -97,7 +97,7 @@ none
   with:
     token: ${{ github.token }}
     mode: Update
-    workflowVariablesJson: ${{ toJson(vars) }}
+    gitHubVariablesJson: ${{ toJson(vars) }}
 
 # Example 3: With additional secrets and variables
 - name: Get Configs For Sync
@@ -106,7 +106,7 @@ none
   with:
     token: ${{ github.token }}
     mode: GetAndUpdate
+    gitHubVariablesJson: ${{ toJson(vars) }}
     includeSecrets: 'AuthContext,LicenseFileSecret,MyCustomSecret'
-    workflowVariablesJson: ${{ toJson(vars) }}
     includeVariables: 'ALGoOrgSettings,ALGoRepoSettings,CustomVariable'
 ```

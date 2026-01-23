@@ -4,42 +4,42 @@ param (
     [Parameter(HelpMessage = "Mode for the action: 'GetAndUpdate' searches AL-Go settings files and backend, 'Update' only queries backend", Mandatory = $false)]
     [ValidateSet("GetAndUpdate", "Update")]
     [string] $Mode = "GetAndUpdate",
+    [Parameter(HelpMessage = "GitHub variables as JSON string (from toJson(vars))", Mandatory = $true)]
+    [string] $GitHubVariablesJson = "",
     [Parameter(HelpMessage = "Comma-separated list of secret names to include", Mandatory = $false)]
     [string] $IncludeSecrets = "",
-    [Parameter(HelpMessage = "Workflow variables as JSON string (from toJson(vars))", Mandatory = $false)]
-    [string] $WorkflowVariablesJson = "{}",
     [Parameter(HelpMessage = "Comma-separated list of variable names to include", Mandatory = $false)]
     [string] $IncludeVariables = ""
 )
 
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
 
-# Parse workflow variables JSON once
-$workflowVariables = $null
+# Parse GitHub variables JSON once
+$gitHubVariables = $null
 try {
-    $workflowVariables = $WorkflowVariablesJson | ConvertFrom-Json -ErrorAction Stop
+    $gitHubVariables = $GitHubVariablesJson | ConvertFrom-Json -ErrorAction Stop
 } catch {
-    Write-AlpacaWarning "Failed to parse WorkflowVariablesJson: $($_)"
+    Write-AlpacaWarning "Failed to parse GitHubVariablesJson: $($_)"
 }
 
-# Extract AL-Go settings from workflow variables
+# Extract AL-Go settings from GitHub variables
 $OrgSettingsVariableValue = ""
 $RepoSettingsVariableValue = ""
 $EnvironmentSettingsVariableValue = ""
 
-if ($workflowVariables) {
-    if ($workflowVariables.PSObject.Properties["ALGoOrgSettings"]) {
-        $OrgSettingsVariableValue = $workflowVariables.ALGoOrgSettings
+if ($gitHubVariables) {
+    if ($gitHubVariables.PSObject.Properties["ALGoOrgSettings"]) {
+        $OrgSettingsVariableValue = $gitHubVariables.ALGoOrgSettings
     }
-    if ($workflowVariables.PSObject.Properties["ALGoRepoSettings"]) {
-        $RepoSettingsVariableValue = $workflowVariables.ALGoRepoSettings
+    if ($gitHubVariables.PSObject.Properties["ALGoRepoSettings"]) {
+        $RepoSettingsVariableValue = $gitHubVariables.ALGoRepoSettings
     }
-    if ($workflowVariables.PSObject.Properties["ALGoEnvSettings"]) {
-        $EnvironmentSettingsVariableValue = $workflowVariables.ALGoEnvSettings
+    if ($gitHubVariables.PSObject.Properties["ALGoEnvSettings"]) {
+        $EnvironmentSettingsVariableValue = $gitHubVariables.ALGoEnvSettings
     }
 }
 
-# Fall back to environment variables if not found in workflow variables
+# Fall back to environment variables if not found in GitHub variables
 if ([string]::IsNullOrWhiteSpace($OrgSettingsVariableValue)) {
     $OrgSettingsVariableValue = $ENV:ALGoOrgSettings
 }
@@ -194,15 +194,15 @@ if ($secretNames.Count -gt 0) {
 $variableNames = $variableNames | Select-Object -Unique | Sort-Object
 
 $variablesObject = @{}
-if ($workflowVariables -and $variableNames.Count -gt 0) {
+if ($gitHubVariables -and $variableNames.Count -gt 0) {
     Write-AlpacaGroupStart -Message "Processing variables for sync"
     
     foreach ($varName in $variableNames) {
-        if ($workflowVariables.PSObject.Properties[$varName]) {
-            $variablesObject[$varName] = $workflowVariables.$varName
+        if ($gitHubVariables.PSObject.Properties[$varName]) {
+            $variablesObject[$varName] = $gitHubVariables.$varName
             Write-AlpacaOutput "Added variable: $varName"
         } else {
-            Write-AlpacaOutput "Variable not found in workflow variables, skipping: $varName"
+            Write-AlpacaOutput "Variable not found in GitHub variables, skipping: $varName"
         }
     }
     

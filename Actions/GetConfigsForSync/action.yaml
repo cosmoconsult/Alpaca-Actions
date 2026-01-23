@@ -14,14 +14,13 @@ inputs:
     description: Mode for the action - 'GetAndUpdate' searches AL-Go settings files and backend, 'Update' only queries backend
     required: false
     default: GetAndUpdate
+  gitHubVariablesJson:
+    description: GitHub variables as JSON string (from toJson(vars))
+    required: true
   includeSecrets:
     description: Comma-separated list of secret names to include
     required: false
     default: ''
-  workflowVariablesJson:
-    description: Workflow variables as JSON string (from toJson(vars))
-    required: false
-    default: '{}'
   includeVariables:
     description: Comma-separated list of variable names to include
     required: false
@@ -42,11 +41,11 @@ runs:
       env:
         _token: ${{ inputs.token }}
         _mode: ${{ inputs.mode }}
+        _gitHubVariablesJson: ${{ inputs.gitHubVariablesJson }}
         _includeSecrets: ${{ inputs.includeSecrets }}
-        _workflowVariablesJson: ${{ inputs.workflowVariablesJson }}
         _includeVariables: ${{ inputs.includeVariables }}
       run: |
-        ${{ github.action_path }}/GetConfigsForSync.ps1 -Token $env:_token -Mode $env:_mode -IncludeSecrets $env:_includeSecrets -WorkflowVariablesJson $env:_workflowVariablesJson -IncludeVariables $env:_includeVariables
+        ${{ github.action_path }}/GetConfigsForSync.ps1 -Token $env:_token -Mode $env:_mode -GitHubVariablesJson $env:_gitHubVariablesJson -IncludeSecrets $env:_includeSecrets -IncludeVariables $env:_includeVariables
 branding:
   icon: list
   color: blue
