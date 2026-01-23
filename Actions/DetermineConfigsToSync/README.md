@@ -1,4 +1,4 @@
-# Get Configs For Sync
+# Determine Configs To Sync
 
 Find all secret names from AL-Go settings files and Alpaca backend, and gets specified variables to prepare for synchronization. This action can run in two modes to either scan AL-Go settings files and query the backend, or only query the backend.
 
@@ -74,8 +74,8 @@ none
 
 ```yaml
 # Example 1: GetAndUpdate mode (default) - scans AL-Go settings and backend
-- name: Get Configs For Sync
-  uses: cosmoconsult/Alpaca-Actions/Actions/GetConfigsForSync@main
+- name: Determine Configs To Sync
+  uses: cosmoconsult/Alpaca-Actions/Actions/DetermineConfigsToSync@main
   id: getConfigs
   with:
     token: ${{ github.token }}
@@ -91,8 +91,8 @@ none
     echo "Variables: ${{ steps.getConfigs.outputs.variablesJson }}"
 
 # Example 2: Update mode - only queries backend
-- name: Get Configs For Sync
-  uses: cosmoconsult/Alpaca-Actions/Actions/GetConfigsForSync@main
+- name: Determine Configs To Sync
+  uses: cosmoconsult/Alpaca-Actions/Actions/DetermineConfigsToSync@main
   id: getConfigs
   with:
     token: ${{ github.token }}
@@ -100,8 +100,8 @@ none
     gitHubVariablesJson: ${{ toJson(vars) }}
 
 # Example 3: With additional secrets and variables
-- name: Get Configs For Sync
-  uses: cosmoconsult/Alpaca-Actions/Actions/GetConfigsForSync@main
+- name: Determine Configs To Sync
+  uses: cosmoconsult/Alpaca-Actions/Actions/DetermineConfigsToSync@main
   id: getConfigs
   with:
     token: ${{ github.token }}

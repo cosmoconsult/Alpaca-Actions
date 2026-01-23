@@ -1,4 +1,4 @@
-name: Get Configs For Sync
+name: Determine Configs To Sync
 description: This action finds all secret names from AL-Go settings and Alpaca backend, and encodes specified variables to prepare for synchronization
 author: COSMO CONSULT
 inputs:
@@ -28,15 +28,15 @@ inputs:
 outputs:
   secretNames:
     description: Comma-separated list of distinct secret names found in AL-Go settings, Alpaca backend and IncludeSecrets
-    value: ${{ steps.GetConfigsForSync.outputs.secretNames }}
+    value: ${{ steps.DetermineConfigsToSync.outputs.secretNames }}
   variablesJson:
     description: JSON object with variable values found in workflow variables for variable names defined in Alpaca backend and IncludeVariables
-    value: ${{ steps.GetConfigsForSync.outputs.variablesJson }}
+    value: ${{ steps.DetermineConfigsToSync.outputs.variablesJson }}
 runs:
   using: composite
   steps:
-    - id: GetConfigsForSync
-      name: Get COSMO Alpaca Configs For Sync
+    - id: DetermineConfigsToSync
+      name: Determine COSMO Alpaca Configs To Sync
       shell: ${{ inputs.shell }}
       env:
         _token: ${{ inputs.token }}
@@ -45,7 +45,7 @@ runs:
         _includeSecrets: ${{ inputs.includeSecrets }}
         _includeVariables: ${{ inputs.includeVariables }}
       run: |
-        ${{ github.action_path }}/GetConfigsForSync.ps1 -Token $env:_token -Mode $env:_mode -GitHubVariablesJson $env:_gitHubVariablesJson -IncludeSecrets $env:_includeSecrets -IncludeVariables $env:_includeVariables
+        ${{ github.action_path }}/DetermineConfigsToSync.ps1 -Token $env:_token -Mode $env:_mode -GitHubVariablesJson $env:_gitHubVariablesJson -IncludeSecrets $env:_includeSecrets -IncludeVariables $env:_includeVariables
 branding:
   icon: list
   color: blue

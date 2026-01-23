@@ -1,4 +1,4 @@
-function Find-SecretSyncSecretsInObject {
+function Find-SecretsToSyncInObject {
     <#
     .SYNOPSIS
         Recursively searches for secret names in a JSON object.
@@ -17,11 +17,11 @@ function Find-SecretSyncSecretsInObject {
 
     .EXAMPLE
         $json = Get-Content "settings.json" | ConvertFrom-Json
-        $secrets = Find-SecretSyncSecretsInObject -Object $json -Patterns @("*SecretName", "*Secret")
+        $secrets = Find-SecretsToSyncInObject -Object $json -Patterns @("*SecretName", "*Secret")
         Finds all secret names in the JSON object.
 
     .EXAMPLE
-        $secrets = Find-SecretSyncSecretsInObject -Object $settings -Patterns "*Secret"
+        $secrets = Find-SecretsToSyncInObject -Object $settings -Patterns "*Secret"
         Finds all properties ending with "Secret" and extracts their values.
     #>
     [CmdletBinding()]
@@ -58,12 +58,12 @@ function Find-SecretSyncSecretsInObject {
             }
             
             # Recursively search nested objects
-            $names += Find-SecretSyncSecretsInObject -Object $propValue -Patterns $Patterns
+            $names += Find-SecretsToSyncInObject -Object $propValue -Patterns $Patterns
         }
     }
     elseif ($Object -is [array]) {
         foreach ($item in $Object) {
-            $names += Find-SecretSyncSecretsInObject -Object $item -Patterns $Patterns
+            $names += Find-SecretsToSyncInObject -Object $item -Patterns $Patterns
         }
     }
     elseif ($Object -is [string]) {
@@ -79,4 +79,4 @@ function Find-SecretSyncSecretsInObject {
     return $names
 }
 
-Export-ModuleMember -Function Find-SecretSyncSecretsInObject
+Export-ModuleMember -Function Find-SecretsToSyncInObject

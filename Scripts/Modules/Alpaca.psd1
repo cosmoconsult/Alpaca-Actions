@@ -26,7 +26,7 @@
     NestedModules     = @(
         'API-Helper.psm1',
         'Find-ALGoSettingsFiles.psm1',
-        'Find-SecretSyncSecretsInObject.psm1',
+        'Find-SecretsToSyncInObject.psm1',
         'Get-AlpacaDependencyApps.psm1',
         'Get-AlpacaConfigSyncStatus.psm1',
         'Get-AlpacaSettings.psm1',

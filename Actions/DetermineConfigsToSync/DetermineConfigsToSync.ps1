@@ -93,7 +93,7 @@ if ($Mode -eq "GetAndUpdate") {
                 continue
             }
             
-            $foundSecrets = Find-SecretSyncSecretsInObject -Object $jsonObject -Patterns $secretKeyPatterns
+            $foundSecrets = Find-SecretsToSyncInObject -Object $jsonObject -Patterns $secretKeyPatterns
             if ($foundSecrets.Count -gt 0) {
                 Write-AlpacaOutput "Found $($foundSecrets.Count) secret name(s) in '$jsonFilePath': $($foundSecrets -join ', ')"
                 $secretNames += $foundSecrets
@@ -123,7 +123,7 @@ if ($Mode -eq "GetAndUpdate") {
         try {
             $settings = $settingsVar.Value | ConvertFrom-Json -ErrorAction Stop
             if ($null -ne $settings) {
-                $foundSecrets = Find-SecretSyncSecretsInObject -Object $settings -Patterns $secretKeyPatterns
+                $foundSecrets = Find-SecretsToSyncInObject -Object $settings -Patterns $secretKeyPatterns
                 if ($foundSecrets.Count -gt 0) {
                     Write-AlpacaOutput "Found $($foundSecrets.Count) secret name(s) in $($settingsVar.Name) settings: $($foundSecrets -join ', ')"
                     $secretNames += $foundSecrets
