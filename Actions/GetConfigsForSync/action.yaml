@@ -23,7 +23,7 @@ inputs:
     required: false
     default: '{}'
   additionalVariables:
-    description: Comma-separated list of variable names to include and base64-encode
+    description: Comma-separated list of variable names to include
     required: false
     default: ''
 outputs:

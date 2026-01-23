@@ -21,7 +21,7 @@ Find all secret names from AL-Go settings files and Alpaca backend, and gets spe
 | token | | The GitHub token running the action | github.token |
 | mode | | Mode for the action: 'GetAndUpdate' or 'Update' - determines if AL-Go settings should be scanned | GetAndUpdate |
 | additionalSecrets | | Comma-separated list of additional secret names to always include | (empty) |
-| allVariables | | All GitHub variables as JSON string (from toJson(vars)) - should contain ALGoOrgSettings, ALGoRepoSettings, ALGoEnvSettings | {} |
+| allVariables | | All GitHub variables as JSON string (from toJson(vars)) | {} |
 | additionalVariables | | Comma-separated list of variable names to include | (empty) |
 
 ## Behavior
