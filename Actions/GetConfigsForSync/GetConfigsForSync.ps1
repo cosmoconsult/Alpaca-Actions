@@ -4,35 +4,42 @@ param (
     [Parameter(HelpMessage = "Mode for the action: 'GetAndUpdate' searches AL-Go settings files and backend, 'Update' only queries backend", Mandatory = $false)]
     [ValidateSet("GetAndUpdate", "Update")]
     [string] $Mode = "GetAndUpdate",
-    [Parameter(HelpMessage = "Comma-separated list of additional secret names to always include", Mandatory = $false)]
-    [string] $AdditionalSecrets = "",
-    [Parameter(HelpMessage = "All GitHub variables as JSON string", Mandatory = $false)]
-    [string] $AllVariables = "{}",
+    [Parameter(HelpMessage = "Comma-separated list of secret names to include", Mandatory = $false)]
+    [string] $IncludeSecrets = "",
+    [Parameter(HelpMessage = "Workflow variables as JSON string (from toJson(vars))", Mandatory = $false)]
+    [string] $WorkflowVariablesJson = "{}",
     [Parameter(HelpMessage = "Comma-separated list of variable names to include", Mandatory = $false)]
-    [string] $AdditionalVariables = ""
+    [string] $IncludeVariables = ""
 )
 
-# Extract AL-Go settings from AllVariables
+Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
+
+# Parse workflow variables JSON once
+$workflowVariables = $null
+try {
+    $workflowVariables = $WorkflowVariablesJson | ConvertFrom-Json -ErrorAction Stop
+} catch {
+    Write-AlpacaWarning "Failed to parse WorkflowVariablesJson: $($_)"
+}
+
+# Extract AL-Go settings from workflow variables
 $OrgSettingsVariableValue = ""
 $RepoSettingsVariableValue = ""
 $EnvironmentSettingsVariableValue = ""
 
-try {
-    $allVarsJson = $AllVariables | ConvertFrom-Json -ErrorAction Stop
-    if ($allVarsJson.PSObject.Properties.Name -contains "ALGoOrgSettings") {
-        $OrgSettingsVariableValue = $allVarsJson.ALGoOrgSettings
+if ($workflowVariables) {
+    if ($workflowVariables.PSObject.Properties["ALGoOrgSettings"]) {
+        $OrgSettingsVariableValue = $workflowVariables.ALGoOrgSettings
     }
-    if ($allVarsJson.PSObject.Properties.Name -contains "ALGoRepoSettings") {
-        $RepoSettingsVariableValue = $allVarsJson.ALGoRepoSettings
+    if ($workflowVariables.PSObject.Properties["ALGoRepoSettings"]) {
+        $RepoSettingsVariableValue = $workflowVariables.ALGoRepoSettings
     }
-    if ($allVarsJson.PSObject.Properties.Name -contains "ALGoEnvSettings") {
-        $EnvironmentSettingsVariableValue = $allVarsJson.ALGoEnvSettings
+    if ($workflowVariables.PSObject.Properties["ALGoEnvSettings"]) {
+        $EnvironmentSettingsVariableValue = $workflowVariables.ALGoEnvSettings
     }
-} catch {
-    Write-AlpacaWarning "Failed to parse AllVariables JSON: $($_)"
 }
 
-# Fall back to environment variables if not found in AllVariables
+# Fall back to environment variables if not found in workflow variables
 if ([string]::IsNullOrWhiteSpace($OrgSettingsVariableValue)) {
     $OrgSettingsVariableValue = $ENV:ALGoOrgSettings
 }
@@ -43,9 +50,8 @@ if ([string]::IsNullOrWhiteSpace($EnvironmentSettingsVariableValue)) {
     $EnvironmentSettingsVariableValue = $ENV:ALGoEnvSettings
 }
 
-Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
-
 $secretNames = @()
+$variableNames = @()
 
 # Step 1: Find all relevant secret names for sync (only for GetAndUpdate mode)
 if ($Mode -eq "GetAndUpdate") {
@@ -54,10 +60,10 @@ if ($Mode -eq "GetAndUpdate") {
     # Define search patterns for secret keys
     $secretKeyPatterns = @("AuthTokenSecret")
     
-    # Add additional patterns from AdditionalSecrets parameter
-    if (-not [string]::IsNullOrWhiteSpace($AdditionalSecrets)) {
-        $additionalSecretsList = $AdditionalSecrets -split ',' | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-        foreach ($secretName in $additionalSecretsList) {
+    # Add additional patterns from IncludeSecrets parameter
+    if (-not [string]::IsNullOrWhiteSpace($IncludeSecrets)) {
+        $includeSecretsList = $IncludeSecrets -split ',' | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+        foreach ($secretName in $includeSecretsList) {
             $pattern = "${secretName}SecretName"
             $secretKeyPatterns += $pattern
             Write-AlpacaOutput "Added search pattern: $pattern"
@@ -134,28 +140,44 @@ else {
     Write-AlpacaOutput "Skipping AL-Go settings search (Mode: $Mode)"
 }
 
-# Step 2: Call Alpaca API to get all secret names from backend
+# Step 2: Call Alpaca API to get config names from backend
 try {
-    Write-AlpacaGroupStart -Message "Fetching secret names from Alpaca backend"
+    Write-AlpacaGroupStart -Message "Fetching config names from Alpaca backend"
     
-    $backendSecretSyncStatus = Get-AlpacaConfigSyncStatus -Token $Token
-    if ($backendSecretSyncStatus -and $backendSecretSyncStatus.syncedSecretNames.Count -gt 0) {
-        Write-AlpacaOutput "Found $($backendSecretSyncStatus.syncedSecretNames.Count) secret name(s) in Alpaca backend: $($backendSecretSyncStatus.syncedSecretNames -join ', ')"
-        $secretNames += $backendSecretSyncStatus.syncedSecretNames
+    $backendConfigSyncStatus = Get-AlpacaConfigSyncStatus -Token $Token
+    
+    # Add synced secret names from backend
+    if ($backendConfigSyncStatus -and $backendConfigSyncStatus.syncedSecretNames.Count -gt 0) {
+        Write-AlpacaOutput "Found $($backendConfigSyncStatus.syncedSecretNames.Count) secret name(s) in Alpaca backend: $($backendConfigSyncStatus.syncedSecretNames -join ', ')"
+        $secretNames += $backendConfigSyncStatus.syncedSecretNames
+    }
+    
+    # Add synced variable names from backend
+    if ($backendConfigSyncStatus -and $backendConfigSyncStatus.syncedVariableNames.Count -gt 0) {
+        Write-AlpacaOutput "Found $($backendConfigSyncStatus.syncedVariableNames.Count) variable name(s) in Alpaca backend: $($backendConfigSyncStatus.syncedVariableNames -join ', ')"
+        $variableNames += $backendConfigSyncStatus.syncedVariableNames
     }
 
-    Write-AlpacaGroupEnd -Message "Found $($backendSecretSyncStatus.syncedSecretNames.Count) secrets in Alpaca backend"
+    Write-AlpacaGroupEnd -Message "Found $($backendConfigSyncStatus.syncedSecretNames.Count) secrets and $($backendConfigSyncStatus.syncedVariableNames.Count) variables in Alpaca backend"
 } catch {
-    Write-AlpacaWarning "Failed to fetch secrets from Alpaca backend: $($_)"
+    Write-AlpacaWarning "Failed to fetch configs from Alpaca backend: $($_)"
     Write-AlpacaGroupEnd
 }
 
-# Step 3: Add additional secrets from AdditionalSecrets parameter
-if (-not [string]::IsNullOrWhiteSpace($AdditionalSecrets)) {
-    $additionalSecretsList = $AdditionalSecrets -split ',' | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-    if ($additionalSecretsList.Count -gt 0) {
-        Write-AlpacaOutput "Adding $($additionalSecretsList.Count) additional secret name(s): $($additionalSecretsList -join ', ')"
-        $secretNames += $additionalSecretsList
+# Step 3: Add secrets and variables from Include parameters
+if (-not [string]::IsNullOrWhiteSpace($IncludeSecrets)) {
+    $includeSecretsList = $IncludeSecrets -split ',' | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    if ($includeSecretsList.Count -gt 0) {
+        Write-AlpacaOutput "Adding $($includeSecretsList.Count) secret name(s) from IncludeSecrets: $($includeSecretsList -join ', ')"
+        $secretNames += $includeSecretsList
+    }
+}
+
+if (-not [string]::IsNullOrWhiteSpace($IncludeVariables)) {
+    $includeVariablesList = $IncludeVariables -split ',' | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    if ($includeVariablesList.Count -gt 0) {
+        Write-AlpacaOutput "Adding $($includeVariablesList.Count) variable name(s) from IncludeVariables: $($includeVariablesList -join ', ')"
+        $variableNames += $includeVariablesList
     }
 }
 
@@ -168,27 +190,23 @@ if ($secretNames.Count -gt 0) {
     Write-AlpacaOutput "Secret names: $secretNamesList"
 }
 
-# Step 5: Process variables from AllVariables parameter
+# Step 5: Remove duplicates and process variables
+$variableNames = $variableNames | Select-Object -Unique | Sort-Object
+
 $variablesObject = @{}
-if (-not [string]::IsNullOrWhiteSpace($AdditionalVariables)) {
+if ($workflowVariables -and $variableNames.Count -gt 0) {
     Write-AlpacaGroupStart -Message "Processing variables for sync"
     
-    $additionalVariablesList = $AdditionalVariables -split ',' | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-    
-    try {
-        $allVarsJson = $AllVariables | ConvertFrom-Json -ErrorAction Stop
-        
-        foreach ($varName in $additionalVariablesList) {
-            if ($allVarsJson.PSObject.Properties.Name -contains $varName) {
-                $variablesObject[$varName] = $allVarsJson.$varName
-            }
+    foreach ($varName in $variableNames) {
+        if ($workflowVariables.PSObject.Properties[$varName]) {
+            $variablesObject[$varName] = $workflowVariables.$varName
+            Write-AlpacaOutput "Added variable: $varName"
+        } else {
+            Write-AlpacaOutput "Variable not found in workflow variables, skipping: $varName"
         }
-        
-        Write-AlpacaNotice "Total variables: $($variablesObject.Count)"
-    } catch {
-        Write-AlpacaWarning "Failed to parse variables JSON: $($_)"
     }
     
+    Write-AlpacaNotice "Total variables: $($variablesObject.Count)"
     Write-AlpacaGroupEnd -Message "Processed $($variablesObject.Count) variables"
 }
 
@@ -196,9 +214,9 @@ $variablesJson = $variablesObject | ConvertTo-Json -Compress -Depth 10
 
 # Set output for GitHub Actions
 if ($env:GITHUB_OUTPUT) {
-    "secretsForSync=$secretNamesList" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-    Write-AlpacaOutput "Set output variable 'secretsForSync'"
+    "secretNames=$secretNamesList" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+    Write-AlpacaOutput "Set output variable 'secretNames'"
     
-    "Variables=$variablesJson" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-    Write-AlpacaOutput "Set output variable 'Variables'"
+    "variablesJson=$variablesJson" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+    Write-AlpacaOutput "Set output variable 'variablesJson'"
 }

@@ -14,25 +14,25 @@ inputs:
     description: Mode for the action - 'GetAndUpdate' searches AL-Go settings files and backend, 'Update' only queries backend
     required: false
     default: GetAndUpdate
-  additionalSecrets:
-    description: Comma-separated list of additional secret names to always include
+  includeSecrets:
+    description: Comma-separated list of secret names to include
     required: false
     default: ''
-  allVariables:
-    description: All GitHub variables as JSON string (from toJson(vars))
+  workflowVariablesJson:
+    description: Workflow variables as JSON string (from toJson(vars))
     required: false
     default: '{}'
-  additionalVariables:
+  includeVariables:
     description: Comma-separated list of variable names to include
     required: false
     default: ''
 outputs:
-  secretsForSync:
-    description: Comma-separated list of distinct secret names found in AL-Go settings and Alpaca backend
-    value: ${{ steps.GetConfigsForSync.outputs.secretsForSync }}
-  Variables:
-    description: JSON object with unencoded variable values
-    value: ${{ steps.GetConfigsForSync.outputs.Variables }}
+  secretNames:
+    description: Comma-separated list of distinct secret names found in AL-Go settings, Alpaca backend and IncludeSecrets
+    value: ${{ steps.GetConfigsForSync.outputs.secretNames }}
+  variablesJson:
+    description: JSON object with variable values found in workflow variables for variable names defined in Alpaca backend and IncludeVariables
+    value: ${{ steps.GetConfigsForSync.outputs.variablesJson }}
 runs:
   using: composite
   steps:
@@ -42,11 +42,11 @@ runs:
       env:
         _token: ${{ inputs.token }}
         _mode: ${{ inputs.mode }}
-        _additionalSecrets: ${{ inputs.additionalSecrets }}
-        _allVariables: ${{ inputs.allVariables }}
-        _additionalVariables: ${{ inputs.additionalVariables }}
+        _includeSecrets: ${{ inputs.includeSecrets }}
+        _workflowVariablesJson: ${{ inputs.workflowVariablesJson }}
+        _includeVariables: ${{ inputs.includeVariables }}
       run: |
-        ${{ github.action_path }}/GetConfigsForSync.ps1 -Token $env:_token -Mode $env:_mode -AdditionalSecrets $env:_additionalSecrets -AllVariables $env:_allVariables -AdditionalVariables $env:_additionalVariables
+        ${{ github.action_path }}/GetConfigsForSync.ps1 -Token $env:_token -Mode $env:_mode -IncludeSecrets $env:_includeSecrets -WorkflowVariablesJson $env:_workflowVariablesJson -IncludeVariables $env:_includeVariables
 branding:
   icon: list
   color: blue
