@@ -37,7 +37,7 @@ Finds all secret names from AL-Go settings files and Alpaca backend, and gets th
    - `ALGoRepoSettings` (falls back to environment variable if not found)
    - `ALGoEnvSettings` (falls back to environment variable if not found)
 1. Scans all AL-Go settings JSON keys and string values for potential secret names:
-   - Looks for keys ending with `*SecretName` or `*Secret` and extracts their values as potential secret names
+   - Looks for keys matching configured secret key patterns (for example, `AuthTokenSecret` or `${IncludeSecrets}SecretName`) and extracts their values as potential secret names
    - Additionally, searches all string values for GitHub Actions expression patterns like `${{SECRETNAME}}` and extracts `SECRETNAME` as a potential secret name
 1. Calls the Alpaca API to retrieve all config names currently stored in the backend:
    - Retrieves secret names from `syncedSecretNames`
