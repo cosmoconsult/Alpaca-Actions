@@ -53,7 +53,7 @@ if ($outputAppFiles) {
         AppFiles       = $outputAppFiles
         compilerFolder = $compilerFolder
     }
-    if (Test-Path $outputFolder) {
+    if ($outputFolder -and (Test-Path $outputFolder)) {
         $getAppInfoSplat.cacheAppInfoPath = (Join-Path $outputFolder 'cache_AppInfo.json')
     }
     $outputAppInfos += GetAppInfo @getAppInfoSplat
