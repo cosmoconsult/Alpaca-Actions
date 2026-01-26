@@ -1,6 +1,6 @@
 # Determine Configs To Sync
 
-Find all secret names from AL-Go settings files and Alpaca backend, and gets specified variables to prepare for synchronization. This action can run in two modes to either scan AL-Go settings files and query the backend, or only query the backend.
+Finds all secret names from AL-Go settings files and Alpaca backend, and gets the specified variables to prepare for synchronization. This action can run in two modes to either scan AL-Go settings files and query the backend, or only query the backend.
 
 ## INPUT
 
