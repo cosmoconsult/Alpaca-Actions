@@ -1,0 +1,51 @@
+name: Determine Configs To Sync
+description: This action finds all secret names from AL-Go settings and Alpaca backend, and encodes specified variables to prepare for synchronization
+author: COSMO CONSULT
+inputs:
+  shell:
+    description: Shell in which you want to run the action (powershell or pwsh)
+    required: false
+    default: powershell
+  token:
+    description: The GitHub token running the action
+    required: false
+    default: ${{ github.token }}
+  mode:
+    description: Mode for the action - 'GetAndUpdate' searches AL-Go settings files and backend, 'Update' only queries backend
+    required: false
+    default: GetAndUpdate
+  gitHubVariablesJson:
+    description: GitHub variables as JSON string (from toJson(vars))
+    required: true
+  includeSecrets:
+    description: Comma-separated list of secret names to include
+    required: false
+    default: ''
+  includeVariables:
+    description: Comma-separated list of variable names to include
+    required: false
+    default: ''
+outputs:
+  secretNames:
+    description: Comma-separated list of distinct secret names found in AL-Go settings, Alpaca backend and IncludeSecrets
+    value: ${{ steps.DetermineConfigsToSync.outputs.secretNames }}
+  variablesJson:
+    description: JSON object with variable values found in workflow variables for variable names defined in Alpaca backend and IncludeVariables
+    value: ${{ steps.DetermineConfigsToSync.outputs.variablesJson }}
+runs:
+  using: composite
+  steps:
+    - id: DetermineConfigsToSync
+      name: Determine COSMO Alpaca Configs To Sync
+      shell: ${{ inputs.shell }}
+      env:
+        _token: ${{ inputs.token }}
+        _mode: ${{ inputs.mode }}
+        _gitHubVariablesJson: ${{ inputs.gitHubVariablesJson }}
+        _includeSecrets: ${{ inputs.includeSecrets }}
+        _includeVariables: ${{ inputs.includeVariables }}
+      run: |
+        ${{ github.action_path }}/DetermineConfigsToSync.ps1 -Token $env:_token -Mode $env:_mode -GitHubVariablesJson $env:_gitHubVariablesJson -IncludeSecrets $env:_includeSecrets -IncludeVariables $env:_includeVariables
+branding:
+  icon: list
+  color: blue
