@@ -182,7 +182,7 @@ if (-not [string]::IsNullOrWhiteSpace($IncludeVariables)) {
 }
 
 # Step 4: Remove duplicates and create comma-separated list of distinct secret names
-$secretNames = $secretNames | Select-Object -Unique | Sort-Object
+$secretNames = $secretNames | Sort-Object -Unique
 $secretNamesList = $secretNames -join ","
 
 Write-AlpacaNotice "Total unique secret names: $($secretNames.Count)"
@@ -191,7 +191,7 @@ if ($secretNames.Count -gt 0) {
 }
 
 # Step 5: Remove duplicates and process variables
-$variableNames = $variableNames | Select-Object -Unique | Sort-Object
+$variableNames = $variableNames | Sort-Object -Unique
 
 $variablesObject = @{}
 if ($gitHubVariables -and $variableNames.Count -gt 0) {
