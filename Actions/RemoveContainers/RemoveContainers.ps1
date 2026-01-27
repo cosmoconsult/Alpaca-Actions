@@ -28,7 +28,7 @@ try {
     }
 } 
 catch {
-    throw "Failed to determine containers: $($_.Exception.Message)"
+    throw "Failed to determine containers:`n$_"
 }
 finally {
     Write-AlpacaGroupEnd
@@ -41,7 +41,7 @@ foreach ($container in $containers) {
     try {
         Remove-AlpacaContainer -Container $container -Token $Token
     } catch {
-        Write-AlpacaError "Failed to delete container '$($container.Id)':`n$($_.Exception.Message)"
+        Write-AlpacaError "Failed to delete container '$($container.Id)':`n$_"
         $failures += 1
     }
 }

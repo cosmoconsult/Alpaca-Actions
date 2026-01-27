@@ -22,6 +22,7 @@ runs:
   steps:
     - id: CreateContainers
       name: Create COSMO Alpaca Containers
+      if: (success() || cancelled()) # Continue on cancelled to not terminate directly after an API call without processing its response
       shell: ${{ inputs.shell }}
       env:
         _token: ${{ inputs.token }}
@@ -30,7 +31,7 @@ runs:
         ${{ github.action_path }}/CreateContainers.ps1 -Token $env:_token -BuildOrderJson $env:_buildOrderJson
 
     - name: Remove COSMO Alpaca Containers on failure
-      if: failure()
+      if: (failure() || cancelled()) && env.ALPACA_CONTAINERS_JSON != ''
       shell: ${{ inputs.shell }}
       env:
         _token: ${{ inputs.token }}
