@@ -26,7 +26,7 @@ runs:
         GH_TOKEN: ${{ github.token }}
       run: |
         if gh api repos/${{ github.repository }}/contents/.alpaca/alpaca.json?ref=${{ github.sha }} --silent 2>/dev/null; then
-          echo "::warning::The configuration file '.alpaca/alpaca.json' is deprecated.%0AThis will become an error in the future.%0A%0APlease migrate to AL-Go settings files.%0ASee: https://docs.cosmoconsult.com/en-us/cloud-service/devops-docker-selfservice/containers/setup-cosmo-json.html"
+          echo "::warning::The configuration file '.alpaca/alpaca.json' is deprecated.%0AThis will become an error in the future.%0A%0APlease migrate to AL-Go settings.%0ASee: https://docs.cosmoconsult.com/en-us/cloud-service/devops-docker-selfservice/containers/setup-cosmo-json.html"
         fi
     
     - id: Initialization
