@@ -30,6 +30,7 @@ runs:
           Write-Host "::warning::The configuration file '.alpaca/alpaca.json' is deprecated.%0AThis will become an error in the future.%0A%0APlease migrate to AL-Go settings.%0ASee: https://docs.cosmoconsult.com/en-us/cloud-service/devops-docker-selfservice/containers/setup-cosmo-json.html"
         }
         exit 0
+
     - id: Initialization
       name: COSMO Alpaca Initialization
       shell: ${{ inputs.shell }}
