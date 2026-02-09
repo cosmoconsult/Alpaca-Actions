@@ -37,7 +37,7 @@ function New-TranslationFiles() {
 
     if (-not $GlobalXlfFiles) {
         Write-AlpacaError "No .g.xlf files found in $Folder!"
-        Write-AlpacaOutput ("Files in directory: {0}" -f ((Get-ChildItem -Path $Folder -Recurse | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue | ForEach-Object { $_.Replace($Folder, '').TrimStart('\') } )) -join ', ')
+        Write-AlpacaOutput ("Files in directory: {0}" -f ((Get-ChildItem -Path $Folder -Recurse | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue | ForEach-Object { $_.Replace($Folder, '').TrimStart('\') } ) -join ', '))
         throw
     }
 
@@ -61,7 +61,7 @@ function New-TranslationFiles() {
         }
     }
 }
-Export-ModuleMember -Function New-TranslationFiles
+Export-ModuleMember -Function New-TranslationFiles -Alias New-TranslationFile
 
 function Test-TranslationFiles() {
     # Test translation files
@@ -85,7 +85,7 @@ function Test-TranslationFiles() {
 
     if ($TranslatedXlfFiles.Count -eq 0) {
         Write-AlpacaWarning "No translated .xlf files found in $Folder!"
-        Write-AlpacaOutput ("Files in directory: {0}" -f ((Get-ChildItem -Path $Folder -Recurse | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue | ForEach-Object { $_.Replace($Folder, '').TrimStart('\') } )) -join ', ')
+        Write-AlpacaOutput ("Files in directory: {0}" -f ((Get-ChildItem -Path $Folder -Recurse | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue | ForEach-Object { $_.Replace($Folder, '').TrimStart('\') } ) -join ', '))
         return
     }
 
@@ -113,4 +113,4 @@ function Test-TranslationFiles() {
         throw
     }
 }
-Export-ModuleMember -Function Test-TranslationFiles
+Export-ModuleMember -Function Test-TranslationFiles -Alias Test-TranslationFile
