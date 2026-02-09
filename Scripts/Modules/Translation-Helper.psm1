@@ -10,7 +10,7 @@
     $script:xliffSyncInstalled = $true
 }
 
-function New-TranslationFile() {
+function New-TranslationFiles() {
     # Create translation files (e.g. .de-DE.xlf) based on existing .g.xlf
     param(
         [Parameter(Mandatory = $true)]
@@ -22,13 +22,22 @@ function New-TranslationFile() {
 
     Write-AlpacaOutput "Found $($Languages.Count) target languages"
 
+    if ($Languages.Count -eq 0) {
+        return
+    }
+
+    if (! (Test-Path $Folder)) {
+        Write-AlpacaError "Folder $Folder does not exist!"
+        throw
+    }
+
     $GlobalXlfFiles = @() # Initialize variable to enforce an array due to strict mode
     $GlobalXlfFiles += Get-ChildItem -Path $Folder -Include '*.g.xlf' -Recurse
     Write-AlpacaOutput "Found $($GlobalXlfFiles.Count) files in $Folder"
 
     if (-not $GlobalXlfFiles) {
         Write-AlpacaError "No .g.xlf files found in $Folder!"
-        Write-AlpacaOutput ("Files in directory: {0}" -f ((Get-ChildItem -Path $Folder -Recurse | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue | ForEach-Object { $_.Replace($Folder, '').TrimStart('\') } )) -join ', ')
+        Write-AlpacaOutput ("Files in directory: {0}" -f ((Get-ChildItem -Path $Folder -Recurse | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue | ForEach-Object { $_.Replace($Folder, '').TrimStart('\') } ) -join ', '))
         throw
     }
 
@@ -52,18 +61,23 @@ function New-TranslationFile() {
         }
     }
 }
-Export-ModuleMember -Function New-TranslationFile
+Export-ModuleMember -Function New-TranslationFiles
 
-function Test-TranslationFile() {
+function Test-TranslationFiles() {
     # Test translation files
     param(
         [Parameter(Mandatory = $true)]
-        [string[]]$Folder,
+        [string]$Folder,
 
         [ValidateSet("All", "ConsecutiveSpacesConsistent", "ConsecutiveSpacesExist", "OptionMemberCount", "OptionLeadingSpaces", "Placeholders", "PlaceholdersDevNote")]
         [string[]]$Rules = @()
     )
     Write-AlpacaOutput "Testing Translations (Rules: $($Rules -join ','))"
+
+    if (! (Test-Path $Folder)) {
+        Write-AlpacaWarning "Folder $Folder does not exist!"
+        return
+    }
 
     $TranslatedXlfFiles = @() # Initialize variable to enforce an array due to strict mode
     $TranslatedXlfFiles += Get-ChildItem -Path $Folder -Include '*.??-??.xlf' -Exclude '*.g.xlf' -Recurse
@@ -71,7 +85,7 @@ function Test-TranslationFile() {
 
     if ($TranslatedXlfFiles.Count -eq 0) {
         Write-AlpacaWarning "No translated .xlf files found in $Folder!"
-        Write-AlpacaOutput ("Files in directory: {0}" -f ((Get-ChildItem -Path $Folder -Recurse | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue | ForEach-Object { $_.Replace($Folder, '').TrimStart('\') } )) -join ', ')
+        Write-AlpacaOutput ("Files in directory: {0}" -f ((Get-ChildItem -Path $Folder -Recurse | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue | ForEach-Object { $_.Replace($Folder, '').TrimStart('\') } ) -join ', '))
         return
     }
 
@@ -99,4 +113,4 @@ function Test-TranslationFile() {
         throw
     }
 }
-Export-ModuleMember -Function Test-TranslationFile
+Export-ModuleMember -Function Test-TranslationFiles

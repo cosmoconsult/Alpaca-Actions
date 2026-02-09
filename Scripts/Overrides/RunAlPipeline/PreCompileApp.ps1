@@ -65,13 +65,15 @@ finally {
 
 if ($Translate) {
     Write-AlpacaGroupStart "Translate" #Level 1
+    $TranslationFolder = Join-Path $CompilationParams.Value.appProjectFolder "Translations"
 
     #region ClearTranslations
-    $TranslationFolder = Join-Path $CompilationParams.Value.appProjectFolder "Translations"
-    Write-AlpacaOutput "Clearing existing translation files in $TranslationFolder"
-    Get-ChildItem $TranslationFolder -Recurse -File -Filter *.xlf | Where-Object { $_.BaseName.EndsWith('.g') -or $Settings.alpaca.translationLanguages -contains $_.BaseName.split('.')[-1] } | ForEach-Object {
-        Write-AlpacaDebug "Removing translation file: $($_.FullName)"
-        Remove-Item $_.FullName -Force -Confirm:$false
+    if (Test-Path $TranslationFolder) {
+        Write-AlpacaOutput "Clearing existing translation files in $TranslationFolder"
+        Get-ChildItem $TranslationFolder -Recurse -File -Filter *.xlf | Where-Object { $_.BaseName.EndsWith('.g') -or $Settings.alpaca.translationLanguages -contains $_.BaseName.split('.')[-1] } | ForEach-Object {
+            Write-AlpacaDebug "Removing translation file: $($_.FullName)"
+            Remove-Item $_.FullName -Force -Confirm:$false
+        }
     }
     #endregion ClearTranslations
 
@@ -97,7 +99,7 @@ if ($Translate) {
     #endregion PreCompile
 
     #region Translate
-    New-TranslationFile -Folder $TranslationFolder -Languages $Settings.alpaca.translationLanguages
+    New-TranslationFiles -Folder $TranslationFolder -Languages $Settings.alpaca.translationLanguages
     #endregion Translate
     Write-AlpacaGroupEnd #Level 1
 }
@@ -106,11 +108,8 @@ if ($TestTranslation) {
     #region TestTranslations
     Write-AlpacaGroupStart "Test Translations" #Level 1
     $TranslationFolder = Join-Path $CompilationParams.Value.appProjectFolder "Translations"
-    if (-not (Test-Path $TranslationFolder)) {
-        Write-AlpacaWarning "Translation folder $TranslationFolder does not exist."
-    }
-    
-    Test-TranslationFile -Folder $TranslationFolder -Rules $TestTranslationRules
+
+    Test-TranslationFiles -Folder $TranslationFolder -Rules $TestTranslationRules
     Write-AlpacaGroupEnd #Level 1
     #endregion TestTranslations
 }
