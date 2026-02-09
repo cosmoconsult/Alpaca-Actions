@@ -28,7 +28,7 @@ function New-TranslationFiles() {
 
     if (! (Test-Path $Folder)) {
         Write-AlpacaError "Folder $Folder does not exist!"
-        return
+        throw
     }
 
     $GlobalXlfFiles = @() # Initialize variable to enforce an array due to strict mode
