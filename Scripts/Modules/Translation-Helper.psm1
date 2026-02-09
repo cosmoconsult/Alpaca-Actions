@@ -22,6 +22,15 @@ function New-TranslationFile() {
 
     Write-AlpacaOutput "Found $($Languages.Count) target languages"
 
+    if ($Languages.Count -eq 0) {
+        return
+    }
+
+    if (! (Test-Path $Folder)) {
+        Write-AlpacaError "Folder $Folder does not exist!"
+        return
+    }
+
     $GlobalXlfFiles = @() # Initialize variable to enforce an array due to strict mode
     $GlobalXlfFiles += Get-ChildItem -Path $Folder -Include '*.g.xlf' -Recurse
     Write-AlpacaOutput "Found $($GlobalXlfFiles.Count) files in $Folder"
@@ -64,6 +73,11 @@ function Test-TranslationFile() {
         [string[]]$Rules = @()
     )
     Write-AlpacaOutput "Testing Translations (Rules: $($Rules -join ','))"
+
+    if (! (Test-Path $Folder)) {
+        Write-AlpacaWarning "Folder $Folder does not exist!"
+        return
+    }
 
     $TranslatedXlfFiles = @() # Initialize variable to enforce an array due to strict mode
     $TranslatedXlfFiles += Get-ChildItem -Path $Folder -Include '*.??-??.xlf' -Exclude '*.g.xlf' -Recurse
