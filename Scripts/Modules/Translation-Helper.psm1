@@ -20,19 +20,20 @@ function New-TranslationFile() {
     )
     Write-AlpacaOutput "Create Translations ($($Languages -join ','))"
 
-    Install-XliffSync
-    Write-AlpacaOutput "Successfully installed XliffSync module"
-
     Write-AlpacaOutput "Found $($Languages.Count) target languages"
 
     $GlobalXlfFiles = @() # Initialize variable to enforce an array due to strict mode
     $GlobalXlfFiles += Get-ChildItem -Path $Folder -Include '*.g.xlf' -Recurse
+    Write-AlpacaOutput "Found $($GlobalXlfFiles.Count) files in $Folder"
+
     if (-not $GlobalXlfFiles) {
         Write-AlpacaError "No .g.xlf files found in $Folder!"
         Write-AlpacaOutput ("Files in directory: {0}" -f ((Get-ChildItem -Path $Folder -Recurse | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue | ForEach-Object { $_.Replace($Folder, '').TrimStart('\') } )) -join ', ')
         throw
     }
-    Write-AlpacaOutput "Found $($GlobalXlfFiles.Count) files in $Folder"
+
+    Install-XliffSync
+    Write-AlpacaOutput "Successfully installed XliffSync module"
 
     foreach ($GlobalXlfFile in $GlobalXlfFiles) {
         $FormatTranslationUnit = { param($TranslationUnit) $TranslationUnit.note | Where-Object from -EQ 'Xliff Generator' | Select-Object -ExpandProperty '#text' }
@@ -64,12 +65,18 @@ function Test-TranslationFile() {
     )
     Write-AlpacaOutput "Testing Translations (Rules: $($Rules -join ','))"
 
-    Install-XliffSync
-    Write-AlpacaOutput "Successfully installed XliffSync module"
-
     $TranslatedXlfFiles = @() # Initialize variable to enforce an array due to strict mode
     $TranslatedXlfFiles += Get-ChildItem -Path $Folder -Include '*.??-??.xlf' -Exclude '*.g.xlf' -Recurse
     Write-AlpacaOutput "Found $($TranslatedXlfFiles.Count) files in $Folder"
+
+    if ($TranslatedXlfFiles.Count -eq 0) {
+        Write-AlpacaWarning "No translated .xlf files found in $Folder!"
+        Write-AlpacaOutput ("Files in directory: {0}" -f ((Get-ChildItem -Path $Folder -Recurse | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue | ForEach-Object { $_.Replace($Folder, '').TrimStart('\') } )) -join ', ')
+        return
+    }
+
+    Install-XliffSync
+    Write-AlpacaOutput "Successfully installed XliffSync module"
 
     $Issues = @()
     foreach ($TranslatedXlfFile in $TranslatedXlfFiles) {

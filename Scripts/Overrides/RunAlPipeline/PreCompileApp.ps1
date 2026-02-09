@@ -68,9 +68,6 @@ if ($Translate) {
 
     #region ClearTranslations
     $TranslationFolder = Join-Path $CompilationParams.Value.appProjectFolder "Translations"
-    if (-not (Test-Path $TranslationFolder)) {
-        Write-AlpacaWarning "Translation folder $TranslationFolder does not exist."
-    }
     Write-AlpacaOutput "Clearing existing translation files in $TranslationFolder"
     Get-ChildItem $TranslationFolder -Recurse -File -Filter *.xlf | Where-Object { $_.BaseName.EndsWith('.g') -or $Settings.alpaca.translationLanguages -contains $_.BaseName.split('.')[-1] } | ForEach-Object {
         Write-AlpacaDebug "Removing translation file: $($_.FullName)"
