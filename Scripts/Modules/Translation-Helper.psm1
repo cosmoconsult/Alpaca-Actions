@@ -61,7 +61,7 @@ function New-TranslationFiles() {
         }
     }
 }
-Export-ModuleMember -Function New-TranslationFiles -Alias New-TranslationFile
+Export-ModuleMember -Function New-TranslationFiles
 
 function Test-TranslationFiles() {
     # Test translation files
@@ -113,4 +113,4 @@ function Test-TranslationFiles() {
         throw
     }
 }
-Export-ModuleMember -Function Test-TranslationFiles -Alias Test-TranslationFile
+Export-ModuleMember -Function Test-TranslationFiles
