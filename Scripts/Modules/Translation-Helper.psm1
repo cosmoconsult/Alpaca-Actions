@@ -10,7 +10,7 @@
     $script:xliffSyncInstalled = $true
 }
 
-function New-TranslationFile() {
+function New-TranslationFiles() {
     # Create translation files (e.g. .de-DE.xlf) based on existing .g.xlf
     param(
         [Parameter(Mandatory = $true)]
@@ -61,13 +61,13 @@ function New-TranslationFile() {
         }
     }
 }
-Export-ModuleMember -Function New-TranslationFile
+Export-ModuleMember -Function New-TranslationFiles
 
-function Test-TranslationFile() {
+function Test-TranslationFiles() {
     # Test translation files
     param(
         [Parameter(Mandatory = $true)]
-        [string[]]$Folder,
+        [string]$Folder,
 
         [ValidateSet("All", "ConsecutiveSpacesConsistent", "ConsecutiveSpacesExist", "OptionMemberCount", "OptionLeadingSpaces", "Placeholders", "PlaceholdersDevNote")]
         [string[]]$Rules = @()
@@ -113,4 +113,4 @@ function Test-TranslationFile() {
         throw
     }
 }
-Export-ModuleMember -Function Test-TranslationFile
+Export-ModuleMember -Function Test-TranslationFiles

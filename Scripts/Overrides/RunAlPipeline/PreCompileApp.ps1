@@ -97,7 +97,7 @@ if ($Translate) {
     #endregion PreCompile
 
     #region Translate
-    New-TranslationFile -Folder $TranslationFolder -Languages $Settings.alpaca.translationLanguages
+    New-TranslationFiles -Folder $TranslationFolder -Languages $Settings.alpaca.translationLanguages
     #endregion Translate
     Write-AlpacaGroupEnd #Level 1
 }
@@ -110,7 +110,7 @@ if ($TestTranslation) {
         Write-AlpacaWarning "Translation folder $TranslationFolder does not exist."
     }
     
-    Test-TranslationFile -Folder $TranslationFolder -Rules $TestTranslationRules
+    Test-TranslationFiles -Folder $TranslationFolder -Rules $TestTranslationRules
     Write-AlpacaGroupEnd #Level 1
     #endregion TestTranslations
 }
