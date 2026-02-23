@@ -31,10 +31,6 @@ $expectedWorkflowSettings = @{
 
 if ($expectedWorkflowSettings) {
     $settingsFile = ".github/$($currentWorkflow).settings.json"
-    # $encodedWorkflowName = $currentWorkflow -replace ' ', '%20'
-    # $encodedSettingsFile = ".github/$($encodedWorkflowName).Settings.json"
-
-    # $output = gh api "repos/$($env:GITHUB_REPOSITORY)/contents/$($encodedSettingsFile)?ref=$($env:GITHUB_SHA)" --silent 2>&1
     $output = gh api "repos/$($env:GITHUB_REPOSITORY)/contents/$($settingsFile)?ref=$($env:GITHUB_SHA)" 2>&1
     if ($LASTEXITCODE -ne 0) {
         if ($output -match '404|Not Found') {
@@ -43,24 +39,17 @@ if ($expectedWorkflowSettings) {
             Write-AlpacaWarning -Message "Could not check '$($settingsFile)': $output"
         }
     } else {
-        Write-AlpacaOutput -Message "Settings file '$($settingsFile)' output:`n$($output)"
         $rawContent = ($output | ConvertFrom-Json).content -replace '\s', ''
         $settings = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($rawContent)) | ConvertFrom-Json
-        Write-AlpacaOutput -Message "Settings file '$($settingsFile)' content:`n$($settings | ConvertTo-Json -Depth 10)"
 
-        $issues = [System.Collections.Generic.List[string]]::new()
         foreach ($property in $expectedWorkflowSettings.GetEnumerator()) {
             if ($settings | Get-Member -Name $property.Key -MemberType NoteProperty) {
                 if ($settings.$($property.Key) -ne $property.Value) {
-                    $issues.Add("Property '$($property.Key)' has unexpected value '$($settings.$($property.Key))'. Expected value: '$($property.Value)'.")
+                    Write-AlpacaWarning -Message "Settings file '$($settingsFile)': Property '$($property.Key)' has unexpected value '$($settings.$($property.Key))'. Expected value: '$($property.Value)'."
                 }
             } else {
-                $issues.Add("Property '$($property.Key)' is missing. Expected value: '$($property.Value)'.")
+                Write-AlpacaWarning -Message "Settings file '$($settingsFile)': Property '$($property.Key)' is missing. Expected value: '$($property.Value)'."
             }
-        }
-
-        if ($issues.Count -gt 0) {
-            Write-AlpacaWarning -Message "Settings file '$($settingsFile)' has issues:`n$($issues -join "`n")"
         }
     }
 }
