@@ -35,7 +35,7 @@ if ($expectedWorkflowSettings) {
     # $encodedSettingsFile = ".github/$($encodedWorkflowName).Settings.json"
 
     # $output = gh api "repos/$($env:GITHUB_REPOSITORY)/contents/$($encodedSettingsFile)?ref=$($env:GITHUB_SHA)" --silent 2>&1
-    $output = gh api "repos/$($env:GITHUB_REPOSITORY)/contents/$($settingsFile)?ref=$($env:GITHUB_SHA)" --silent 2>&1
+    $output = gh api "repos/$($env:GITHUB_REPOSITORY)/contents/$($settingsFile)?ref=$($env:GITHUB_SHA)" 2>&1
     if ($LASTEXITCODE -ne 0) {
         if ($output -match '404|Not Found') {
             Write-AlpacaWarning -Message "Settings file '$($settingsFile)' is missing."
@@ -43,9 +43,10 @@ if ($expectedWorkflowSettings) {
             Write-AlpacaWarning -Message "Could not check '$($settingsFile)': $output"
         }
     } else {
+        Write-AlpacaOutput -Message "Settings file '$($settingsFile)' output:`n$($output)"
         $rawContent = ($output | ConvertFrom-Json).content -replace '\s', ''
         $settings = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($rawContent)) | ConvertFrom-Json
-        Write-AlpacaOutput -Message "Settings file '$($settingsFile)' output:`n$($output)"
+        Write-AlpacaOutput -Message "Settings file '$($settingsFile)' content:`n$($settings | ConvertTo-Json -Depth 10)"
 
         $issues = [System.Collections.Generic.List[string]]::new()
         foreach ($property in $expectedWorkflowSettings.GetEnumerator()) {
