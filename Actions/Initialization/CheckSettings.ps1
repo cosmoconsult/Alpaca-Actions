@@ -1,8 +1,17 @@
+param (
+    [Parameter(HelpMessage = "GitHub repository")]
+    [string] $Repo = $env:GITHUB_REPOSITORY,
+    [Parameter(HelpMessage = "GitHub ref")]
+    [string] $Ref = $env:GITHUB_SHA,
+    [Parameter(HelpMessage = "GitHub workflow")]
+    [string] $Workflow = $env:GITHUB_WORKFLOW
+)
+
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
 
 # Check 1: Deprecated config file
 $deprecatedConfigFile = '.alpaca/alpaca.json'
-$output = gh api "repos/$($env:GITHUB_REPOSITORY)/contents/$($deprecatedConfigFile)?ref=$($env:GITHUB_SHA)" --silent 2>&1
+$output = gh api "repos/$($Repo)/contents/$($deprecatedConfigFile)?ref=$($Ref)" --silent 2>&1
 if ($LASTEXITCODE -eq 0) {
     Write-AlpacaWarning -Message "The configuration file '$($deprecatedConfigFile)' is deprecated.`nThis will become an error in the future.`n`nPlease migrate to AL-Go settings.`nSee: https://docs.cosmoconsult.com/en-us/cloud-service/devops-docker-selfservice/containers/setup-cosmo-json.html"
 } elseif ($output -notmatch '404|Not Found') {
@@ -10,7 +19,6 @@ if ($LASTEXITCODE -eq 0) {
 }
 
 # Check 2: Expected workflow settings (only for relevant workflows)
-$currentWorkflow = $env:GITHUB_WORKFLOW
 $expectedWorkflowSettings = @{
     'Test Current'   = @{
         artifact = '////latest'
@@ -27,11 +35,11 @@ $expectedWorkflowSettings = @{
         cacheImageName = ''
         versioningStrategy = 15
     }
-}.GetEnumerator() | Where-Object { $_.Key -eq $currentWorkflow } | Select-Object -First 1 -ExpandProperty Value
+}.GetEnumerator() | Where-Object { $_.Key -eq $Workflow } | Select-Object -First 1 -ExpandProperty Value
 
 if ($expectedWorkflowSettings) {
-    $settingsFile = ".github/$($currentWorkflow).settings.json"
-    $output = gh api "repos/$($env:GITHUB_REPOSITORY)/contents/$($settingsFile)?ref=$($env:GITHUB_SHA)" 2>&1
+    $settingsFile = ".github/$($Workflow).settings.json"
+    $output = gh api "repos/$($Repo)/contents/$([System.Uri]::EscapeDataString($settingsFile))?ref=$($Ref)" 2>&1
     if ($LASTEXITCODE -ne 0) {
         if ($output -match '404|Not Found') {
             Write-AlpacaWarning -Message "Settings file '$($settingsFile)' is missing."
