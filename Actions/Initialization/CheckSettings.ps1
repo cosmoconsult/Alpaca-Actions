@@ -9,9 +9,23 @@ param (
 
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
 
+function Get-GitHubApiFileContentUrl {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $Repo,
+        [Parameter(Mandatory = $true)]
+        [string] $FilePath,
+        [Parameter(Mandatory = $true)]
+        [string] $Ref
+    )
+    $segments = "repos/$Repo/contents/$FilePath" -split '/' | ForEach-Object { [Uri]::EscapeDataString($_) }
+    $query = "?ref=$([System.Uri]::EscapeDataString($Ref))"
+    return "$($segments -join '/')$query"
+}
+
 # Check 1: Deprecated config file
 $deprecatedConfigFile = '.alpaca/alpaca.json'
-$output = gh api "repos/$($Repo)/contents/$($deprecatedConfigFile)?ref=$($Ref)" --silent 2>&1
+$output = gh api (Get-GitHubApiFileContentUrl -Repo $Repo -FilePath $deprecatedConfigFile -Ref $Ref) --silent 2>&1
 if ($LASTEXITCODE -eq 0) {
     Write-AlpacaWarning -Message "The configuration file '$($deprecatedConfigFile)' is deprecated.`nThis will become an error in the future.`n`nPlease migrate to AL-Go settings.`nSee: https://docs.cosmoconsult.com/en-us/cloud-service/devops-docker-selfservice/containers/setup-cosmo-json.html"
 } elseif ($output -notmatch '404|Not Found') {
@@ -39,7 +53,7 @@ $expectedWorkflowSettings = @{
 
 if ($expectedWorkflowSettings) {
     $settingsFile = ".github/$($Workflow).settings.json"
-    $output = gh api "repos/$($Repo)/contents/$([System.Uri]::EscapeDataString($settingsFile))?ref=$($Ref)" 2>&1
+    $output = gh api (Get-GitHubApiFileContentUrl -Repo $Repo -FilePath $settingsFile -Ref $Ref) 2>&1
     if ($LASTEXITCODE -ne 0) {
         if ($output -match '404|Not Found') {
             Write-AlpacaWarning -Message "Settings file '$($settingsFile)' is missing."
