@@ -45,7 +45,7 @@ if ($expectedWorkflowSettings) {
     } else {
         $rawContent = ($output | ConvertFrom-Json).content -replace '\s', ''
         $settings = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($rawContent)) | ConvertFrom-Json
-        Write-AlpacaOutput -Message "Settings file '$($settingsFile)' content:`n$([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($rawContent)))"
+        Write-AlpacaOutput -Message "Settings file '$($settingsFile)' output:`n$($output)"
 
         $issues = [System.Collections.Generic.List[string]]::new()
         foreach ($property in $expectedWorkflowSettings.GetEnumerator()) {
