@@ -27,7 +27,7 @@ function Get-GitHubApiFileContentUrl {
 $deprecatedConfigFile = '.alpaca/alpaca.json'
 $output = gh api (Get-GitHubApiFileContentUrl -Repo $Repo -FilePath $deprecatedConfigFile -Ref $Ref) --silent 2>&1
 if ($LASTEXITCODE -eq 0) {
-    Write-AlpacaWarning -Message "The configuration file '$($deprecatedConfigFile)' is deprecated.`nThis will become an error in the future.`n`nPlease migrate to AL-Go settings.`nSee: https://docs.cosmoconsult.com/en-us/cloud-service/devops-docker-selfservice/containers/setup-cosmo-json.html"
+    Write-AlpacaWarning -Message "The configuration file '$($deprecatedConfigFile)' is deprecated.`nThis will become an error in the future.`n`nPlease migrate to AL-Go settings.`nSee: https://docs.cosmoconsult.com/en-us/cloud-service/alpaca/github/setup-al-go-settings.html#migrating-from-alpacajson"
 } elseif ($output -notmatch '404|Not Found') {
     Write-AlpacaWarning -Message "Could not check '$($deprecatedConfigFile)': $output"
 }
