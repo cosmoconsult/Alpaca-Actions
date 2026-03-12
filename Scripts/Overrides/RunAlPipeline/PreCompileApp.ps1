@@ -80,14 +80,17 @@ if ($Translate) {
     #region PreCompile
     Write-AlpacaOutput "Minimized parameters to speed up compilation"
     $CompilationParamsCopy = $CompilationParams.Value.Clone()
-    $CompilationParamsCopy.OutputTo = { param($Line) }
-    $CompilationParamsCopy.CopyAppToSymbolsFolder = $false
-    $CompilationParamsCopy.Remove("generatecrossreferences")
-    $CompilationParamsCopy.Remove("EnablePerTenantExtensionCop")
-    $CompilationParamsCopy.Remove("EnableAppSourceCop")
-    $CompilationParamsCopy.updateDependencies = $false
+    $CompilationParamsCopy.Remove("UpdateDependencies")
+    $CompilationParamsCopy.Remove("CopyAppToSymbolsFolder")
+    $CompilationParamsCopy.Remove("GenerateReportLayout")
     $CompilationParamsCopy.Remove("EnableCodeCop")
+    $CompilationParamsCopy.Remove("EnableAppSourceCop")
+    $CompilationParamsCopy.Remove("EnablePerTenantExtensionCop")
     $CompilationParamsCopy.Remove("EnableUICop")
+    $CompilationParamsCopy.Remove("FailOn")
+    $CompilationParamsCopy.Remove("CustomCodeCops")
+    $CompilationParamsCopy.Remove("generatecrossreferences")
+    $CompilationParamsCopy.Remove("OutputTo")
 
     if ($useCompilerFolder) {
         #useCompilerFolder comes from parent scope
