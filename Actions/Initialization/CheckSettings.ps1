@@ -61,17 +61,21 @@ if ($expectedWorkflowSettings) {
             Write-AlpacaWarning -Message "Could not check '$($settingsFile)': $output"
         }
     } else {
-        $rawContent = ($output | ConvertFrom-Json).content -replace '\s', ''
-        $settings = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($rawContent)) | ConvertFrom-Json
+        try {
+            $rawContent = ($output | ConvertFrom-Json).content -replace '\s', ''
+            $settings = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($rawContent)) | ConvertFrom-Json
 
-        foreach ($property in $expectedWorkflowSettings.GetEnumerator()) {
-            if ($settings | Get-Member -Name $property.Key -MemberType NoteProperty) {
-                if ($settings.$($property.Key) -ne $property.Value) {
-                    Write-AlpacaWarning -Message "Settings file '$($settingsFile)': Property '$($property.Key)' has unexpected value '$($settings.$($property.Key))'. Expected value: '$($property.Value)'."
+            foreach ($property in $expectedWorkflowSettings.GetEnumerator()) {
+                if ($settings | Get-Member -Name $property.Key -MemberType NoteProperty) {
+                    if ($settings.$($property.Key) -ne $property.Value) {
+                        Write-AlpacaWarning -Message "Settings file '$($settingsFile)': Property '$($property.Key)' has unexpected value '$($settings.$($property.Key))'. Expected value: '$($property.Value)'."
+                    }
+                } else {
+                    Write-AlpacaWarning -Message "Settings file '$($settingsFile)': Property '$($property.Key)' is missing. Expected value: '$($property.Value)'."
                 }
-            } else {
-                Write-AlpacaWarning -Message "Settings file '$($settingsFile)': Property '$($property.Key)' is missing. Expected value: '$($property.Value)'."
             }
+        } catch {
+             Write-AlpacaWarning -Message "Settings file '$($settingsFile)': Could not parse settings content. $($_.Exception.Message)"
         }
     }
 }
