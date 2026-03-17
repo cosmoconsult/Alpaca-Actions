@@ -79,5 +79,3 @@ if ($expectedWorkflowSettings) {
         }
     }
 }
-
-exit 0
