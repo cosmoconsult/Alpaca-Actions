@@ -357,4 +357,4 @@ function Invoke-AlpacaOutputHandler {
         }
     }
 }
-Export-ModuleMember -Function Write-AlpacaRecord
+Export-ModuleMember -Function Invoke-AlpacaOutputHandler
