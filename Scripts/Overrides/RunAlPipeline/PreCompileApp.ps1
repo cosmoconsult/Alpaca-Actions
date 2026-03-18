@@ -4,28 +4,33 @@ param(
 )
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
+$Settings = $env:Settings | ConvertFrom-Json
+
 #region DebugInfo
-Write-AlpacaGroupStart "DebugInfo" #Level 1
 if (Get-AlpacaIsDebugMode) {
+    Write-AlpacaGroupStart "DebugInfo" #Level 1
     Write-AlpacaDebug "App Type: $AppType"
 
     Write-AlpacaGroupStart "Compilation Params:" #Level 2
     "$($CompilationParams.Value | ConvertTo-Json -Depth 2)" -split "`n" | ForEach-Object { Write-AlpacaDebug $_ }
     Write-AlpacaGroupEnd #Level 2
-}
-$Settings = $env:Settings | ConvertFrom-Json
-Write-AlpacaDebug "Settings:"
-Write-AlpacaDebug ("Settings.alpaca.createTranslations = {0}" -f $(try { $Settings.alpaca.createTranslations }catch { '' }))
-Write-AlpacaDebug ("Settings.alpaca.translationLanguages = {0}" -f $(try { $Settings.alpaca.translationLanguages -join ', ' }catch { '' }))
-Write-AlpacaDebug ("Settings.alpaca.testTranslations = {0}" -f $(try { $Settings.alpaca.testTranslations }catch { '' }))
-Write-AlpacaDebug ("Settings.alpaca.testTranslationRules = {0}" -f $(try { $Settings.alpaca.testTranslationRules -join ', ' }catch { '' }))
 
-Write-AlpacaGroupEnd #Level 1
+    Write-AlpacaDebug "Settings:"
+    Write-AlpacaDebug ("Settings.alpaca.createTranslations = {0}" -f $(try { $Settings.alpaca.createTranslations }catch { '' }))
+    Write-AlpacaDebug ("Settings.alpaca.translationLanguages = {0}" -f $(try { $Settings.alpaca.translationLanguages -join ', ' }catch { '' }))
+    Write-AlpacaDebug ("Settings.alpaca.testTranslations = {0}" -f $(try { $Settings.alpaca.testTranslations }catch { '' }))
+    Write-AlpacaDebug ("Settings.alpaca.testTranslationRules = {0}" -f $(try { $Settings.alpaca.testTranslationRules -join ', ' }catch { '' }))
+    Write-AlpacaGroupEnd #Level 1
+}
 #endregion DebugInfo
 
 #region CheckPreconditions
 Write-AlpacaGroupStart "Check Preconditions" #Level 1
 try {
+    if (!$Settings) {
+        Write-AlpacaOutput "No settings found, skipping translation and testing translations."
+        return
+    }
     if ($Settings.PSObject.Properties.Name -notcontains 'alpaca') {
         Write-AlpacaOutput "No 'alpaca' settings found, skipping translation and testing translations."
         return
@@ -55,7 +60,6 @@ try {
         Write-AlpacaOutput "Translation feature is not enabled in app.json or enforced by pipeline settings. Skipping translation and testing translations."
         return
     }
-  
 }
 finally {
     Write-AlpacaGroupEnd #Level 1
@@ -65,12 +69,12 @@ finally {
 
 if ($Translate) {
     Write-AlpacaGroupStart "Translate" #Level 1
-    $TranslationFolder = Join-Path $CompilationParams.Value.appProjectFolder "Translations"
+    $TranslationsFolder = Join-Path $CompilationParams.Value.appProjectFolder "Translations"
 
     #region ClearTranslations
-    if (Test-Path $TranslationFolder) {
-        Write-AlpacaOutput "Clearing existing translation files in $TranslationFolder"
-        Get-ChildItem $TranslationFolder -Recurse -File -Filter *.xlf | Where-Object { $_.BaseName.EndsWith('.g') -or $Settings.alpaca.translationLanguages -contains $_.BaseName.split('.')[-1] } | ForEach-Object {
+    if (Test-Path $TranslationsFolder) {
+        Write-AlpacaOutput "Clearing existing translation files in $TranslationsFolder"
+        Get-ChildItem $TranslationsFolder -Recurse -File -Filter *.xlf | Where-Object { $_.BaseName.EndsWith('.g') -or $Settings.alpaca.translationLanguages -contains $_.BaseName.split('.')[-1] } | ForEach-Object {
             Write-AlpacaDebug "Removing translation file: $($_.FullName)"
             Remove-Item $_.FullName -Force -Confirm:$false
         }
@@ -80,17 +84,19 @@ if ($Translate) {
     #region PreCompile
     Write-AlpacaOutput "Minimized parameters to speed up compilation"
     $CompilationParamsCopy = $CompilationParams.Value.Clone()
-    $CompilationParamsCopy.Remove("UpdateDependencies")
-    $CompilationParamsCopy.Remove("CopyAppToSymbolsFolder")
-    $CompilationParamsCopy.Remove("GenerateReportLayout")
-    $CompilationParamsCopy.Remove("EnableCodeCop")
-    $CompilationParamsCopy.Remove("EnableAppSourceCop")
-    $CompilationParamsCopy.Remove("EnablePerTenantExtensionCop")
-    $CompilationParamsCopy.Remove("EnableUICop")
-    $CompilationParamsCopy.Remove("FailOn")
-    $CompilationParamsCopy.Remove("CustomCodeCops")
-    $CompilationParamsCopy.Remove("generatecrossreferences")
-    $CompilationParamsCopy.Remove("OutputTo")
+    # $CompilationParamsCopy.OutputTo = { Param($line) Write-Host $line }
+
+    # Disable all cops
+    $CompilationParamsCopy.EnableCodeCop = $false
+    $CompilationParamsCopy.EnableAppSourceCop = $false
+    $CompilationParamsCopy.EnablePerTenantExtensionCop = $false
+    $CompilationParamsCopy.EnableUICop = $false
+    $CompilationParamsCopy.CustomCodeCops = $false
+
+    # Disable all non-mandatory steps
+    $CompilationParamsCopy.CopyAppToSymbolsFolder = $false
+    $CompilationParamsCopy.GenerateReportLayout = 'No'
+    $CompilationParamsCopy.generatecrossreferences = $false
 
     if ($useCompilerFolder) {
         #useCompilerFolder comes from parent scope
@@ -102,7 +108,7 @@ if ($Translate) {
     #endregion PreCompile
 
     #region Translate
-    New-TranslationFiles -Folder $TranslationFolder -Languages $Settings.alpaca.translationLanguages
+    New-TranslationFiles -Folder $TranslationsFolder -Languages $Settings.alpaca.translationLanguages
     #endregion Translate
     Write-AlpacaGroupEnd #Level 1
 }
@@ -110,9 +116,9 @@ if ($Translate) {
 if ($TestTranslation) {
     #region TestTranslations
     Write-AlpacaGroupStart "Test Translations" #Level 1
-    $TranslationFolder = Join-Path $CompilationParams.Value.appProjectFolder "Translations"
+    $TranslationsFolder = Join-Path $CompilationParams.Value.appProjectFolder "Translations"
 
-    Test-TranslationFiles -Folder $TranslationFolder -Rules $TestTranslationRules
+    Test-TranslationFiles -Folder $TranslationsFolder -Rules $TestTranslationRules
     Write-AlpacaGroupEnd #Level 1
     #endregion TestTranslations
 }
