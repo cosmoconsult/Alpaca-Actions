@@ -42,22 +42,25 @@ function Format-AlpacaMessage {
         [string] $LineSuffix = "",
         [string] $LineBreak = "`n"
     )
-
-    if ([string]::IsNullOrWhiteSpace($Message)) {
-        return $Message
+    begin {
+        if ($Color -ne 'None') {
+            $LinePrefix = "`e[$($script:colorCodes[$Color])m$($LinePrefix)"
+            $LineSuffix = "$($LineSuffix)`e[0m"
+        }
     }
 
-    if ($Color -ne 'None') {
-        $LinePrefix = "`e[$($script:colorCodes[$Color])m$($LinePrefix)"
-        $LineSuffix = "$($LineSuffix)`e[0m"
+    process {
+        if ([string]::IsNullOrWhiteSpace($Message)) {
+            return $Message
+        }
+
+        $messageLines = Split-AlpacaMessage -Message $Message
+        $formattedMessageLines = $messageLines |
+            ForEach-Object { "$($LinePrefix)$($_)$($LineSuffix)" }
+        $formattedMessage = $formattedMessageLines -join $LineBreak
+
+        return $formattedMessage
     }
-
-    $messageLines = Split-AlpacaMessage -Message $Message
-    $formattedMessageLines = $messageLines |
-        ForEach-Object { "$($LinePrefix)$($_)$($LineSuffix)" }
-    $formattedMessage = $formattedMessageLines -join $LineBreak
-
-    return $formattedMessage
 }
 Export-ModuleMember -Function Format-AlpacaMessage
 
@@ -116,22 +119,26 @@ function Write-AlpacaOutput {
         [string] $Color = 'None'
     )
 
-    $linePrefix = $script:groupIndentation * $script:groupLevel;
-    $lineSuffix = ""
+    begin {
+        $linePrefix = $script:groupIndentation * $script:groupLevel;
+        $lineSuffix = ""
 
-    $date = Get-Date
-    if ($date.Month -eq 12 -and $date.Day -in 24,25,26) {
-        $emoji = $null
-        while ($emoji -in $null, $script:xmasEmojiLastUsed) {
-            $emoji = $script:xmasEmojis | Get-Random
+        $date = Get-Date
+        if ($date.Month -eq 12 -and $date.Day -in 24,25,26) {
+            $emoji = $null
+            while ($emoji -in $null, $script:xmasEmojiLastUsed) {
+                $emoji = $script:xmasEmojis | Get-Random
+            }
+            $script:xmasEmojiLastUsed = $emoji
+            $lineSuffix = " $emoji"
         }
-        $script:xmasEmojiLastUsed = $emoji
-        $lineSuffix = " $emoji"
     }
 
-    $formattedMessage = Format-AlpacaMessage -Message $Message -Color $Color -LinePrefix $linePrefix -LineSuffix $lineSuffix
+    process {
+        $formattedMessage = Format-AlpacaMessage -Message $Message -Color $Color -LinePrefix $linePrefix -LineSuffix $lineSuffix
 
-    Write-Host $formattedMessage
+        Write-Host $formattedMessage
+    }
 }
 Export-ModuleMember -Function Write-AlpacaOutput
 
@@ -143,12 +150,15 @@ function Write-AlpacaAnnotation {
         [string] $Annotation = 'Notice',
         [switch] $WithoutGitHubAnnotation
     )
-    if ($WithoutGitHubAnnotation) {
-        $color = $script:annotationColors[$Annotation]
-        $formattedMessage = Format-AlpacaMessage -Message "$($Annotation): $($Message)" -Color $color
-        Write-Host $formattedMessage
-    } else {
-        Write-AlpacaGitHubAnnotation -Message $Message -Annotation $Annotation
+
+    process {
+        if ($WithoutGitHubAnnotation) {
+            $color = $script:annotationColors[$Annotation]
+            $formattedMessage = Format-AlpacaMessage -Message "$($Annotation): $($Message)" -Color $color
+            Write-Host $formattedMessage
+        } else {
+            Write-AlpacaGitHubAnnotation -Message $Message -Annotation $Annotation
+        }
     }
 }
 Export-ModuleMember -Function Write-AlpacaAnnotation
@@ -229,7 +239,9 @@ function Write-AlpacaNotice {
         [switch] $WithoutGitHubAnnotation
     )
 
-    Write-AlpacaAnnotation -Message $Message -Annotation "Notice" -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
+    process {
+        Write-AlpacaAnnotation -Message $Message -Annotation "Notice" -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
+    }
 }
 Export-ModuleMember -Function Write-AlpacaNotice
 
@@ -240,7 +252,9 @@ function Write-AlpacaWarning {
         [switch] $WithoutGitHubAnnotation
     )
 
-    Write-AlpacaAnnotation -Message $Message -Annotation "Warning" -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
+    process {
+        Write-AlpacaAnnotation -Message $Message -Annotation "Warning" -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
+    }
 }
 Export-ModuleMember -Function Write-AlpacaWarning
 
@@ -251,7 +265,9 @@ function Write-AlpacaError {
         [switch] $WithoutGitHubAnnotation
     )
 
-    Write-AlpacaAnnotation -Message $Message -Annotation "Error" -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
+    process {
+        Write-AlpacaAnnotation -Message $Message -Annotation "Error" -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
+    }
 }
 Export-ModuleMember -Function Write-AlpacaError
 
@@ -260,10 +276,14 @@ function Write-AlpacaDebug {
         [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
         [string] $Message
     )
-    if (-not (Get-AlpacaIsDebugMode)) {
-        return
+
+    process {
+        if (-not (Get-AlpacaIsDebugMode)) {
+            return
+        }
+        
+        "Debug: {0}" -f $Message | Write-AlpacaOutput -Color 'Blue'
     }
-    "Debug: {0}" -f $Message | Write-AlpacaOutput -Color 'Blue'
 }
 Export-ModuleMember -Function Write-AlpacaDebug
 
@@ -274,11 +294,13 @@ function Write-AlpacaGroupStart {
         [switch] $UseGitHubCommand
     )
 
-    if ($UseGitHubCommand) {
-        Write-Host "::group::$($Message)"
-    } else {
-        Write-AlpacaOutput -Message "> $Message"
-        $script:groupLevel += 1
+    process {
+        if ($UseGitHubCommand) {
+            Write-Host "::group::$($Message)"
+        } else {
+            Write-AlpacaOutput -Message "> $Message"
+            $script:groupLevel += 1
+        }
     }
 }
 Export-ModuleMember -Function Write-AlpacaGroupStart
@@ -289,14 +311,17 @@ function Write-AlpacaGroupEnd {
         [string] $Message,
         [switch] $UseGitHubCommand
     )
-    if ($UseGitHubCommand) {
-        Write-Host "::endgroup::"
-    }
-    else {
-        $script:groupLevel = [Math]::Max($script:groupLevel - 1, 0)
-    }
-    if ($Message) {
-        Write-AlpacaOutput -Message $Message
+
+    process {
+        if ($UseGitHubCommand) {
+            Write-Host "::endgroup::"
+        }
+        else {
+            $script:groupLevel = [Math]::Max($script:groupLevel - 1, 0)
+        }
+        if ($Message) {
+            Write-AlpacaOutput -Message $Message
+        }
     }
 }
 Export-ModuleMember -Function Write-AlpacaGroupEnd
@@ -309,15 +334,17 @@ Export-ModuleMember -Function Get-AlpacaIsDebugMode
 function Write-AlpacaRecord {
     param(
         [Parameter(ValueFromPipeline = $true)]
-        [object] $Record,
-        [switch] $PassThruNonRecord
+        [object] $Value
     )
-    switch($Record.GetType()) {
-        ( [System.Management.Automation.ErrorRecord] )       { Write-AlpacaError $Record }
-        ( [System.Management.Automation.WarningRecord] )     { Write-AlpacaWarning $Record }
-        ( [System.Management.Automation.VerboseRecord] )     { Write-AlpacaDebug $Record }
-        ( [System.Management.Automation.DebugRecord] )       { Write-AlpacaDebug $Record }
-        ( [System.Management.Automation.InformationRecord] ) { Write-AlpacaOutput $Record }
+
+    process {
+        switch($Value.GetType()) {
+            ( [System.Management.Automation.ErrorRecord] )       { Write-AlpacaError $Value }
+            ( [System.Management.Automation.WarningRecord] )     { Write-AlpacaWarning $Value }
+            ( [System.Management.Automation.VerboseRecord] )     { Write-AlpacaDebug $Value }
+            ( [System.Management.Automation.DebugRecord] )       { Write-AlpacaDebug $Value }
+            ( [System.Management.Automation.InformationRecord] ) { Write-AlpacaOutput $Value }
+        }
     }
 }
 Export-ModuleMember -Function Write-AlpacaRecord
