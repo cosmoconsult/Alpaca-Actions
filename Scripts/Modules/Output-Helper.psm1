@@ -320,3 +320,4 @@ function Write-AlpacaRecord {
         ( [System.Management.Automation.InformationRecord] ) { Write-AlpacaOutput $Record }
     }
 }
+Export-ModuleMember -Function Write-AlpacaRecord
