@@ -281,7 +281,7 @@ function Write-AlpacaDebug {
         if (-not (Get-AlpacaIsDebugMode)) {
             return
         }
-        
+
         "Debug: {0}" -f $Message | Write-AlpacaOutput -Color 'Blue'
     }
 }
@@ -334,7 +334,8 @@ Export-ModuleMember -Function Get-AlpacaIsDebugMode
 function Write-AlpacaRecord {
     param(
         [Parameter(ValueFromPipeline = $true)]
-        [object] $Value
+        [object] $Value,
+        [switch] $PassThruNonRecords
     )
 
     process {
@@ -344,6 +345,11 @@ function Write-AlpacaRecord {
             ( [System.Management.Automation.VerboseRecord] )     { Write-AlpacaDebug $Value }
             ( [System.Management.Automation.DebugRecord] )       { Write-AlpacaDebug $Value }
             ( [System.Management.Automation.InformationRecord] ) { Write-AlpacaOutput $Value }
+            default {
+                if ($PassThruNonRecords) {
+                    return $Value
+                }
+            }
         }
     }
 }

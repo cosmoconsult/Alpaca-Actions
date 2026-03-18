@@ -57,7 +57,8 @@ function New-TranslationFiles() {
                 -detectSourceTextChanges:$false `
                 -AzureDevOps 'warning' `
                 -printProblems `
-                -FormatTranslationUnit $FormatTranslationUnit
+                -FormatTranslationUnit $FormatTranslationUnit `
+                *>&1 | Write-AlpacaRecord
         }
     }
 }
@@ -104,7 +105,8 @@ function Test-TranslationFiles() {
             -translationRulesEnableAll:$( $Rules -contains 'All' ) `
             -AzureDevOps 'warning' `
             -printProblems `
-            -FormatTranslationUnit $FormatTranslationUnit
+            -FormatTranslationUnit $FormatTranslationUnit `
+            *>&1 | Write-AlpacaRecord -PassThruNonRecords
     }
 
     $IssueCount = $Issues.Count
