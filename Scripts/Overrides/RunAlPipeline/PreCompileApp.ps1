@@ -91,7 +91,7 @@ if ($Translate) {
     $CompilationParamsCopy.EnableAppSourceCop = $false
     $CompilationParamsCopy.EnablePerTenantExtensionCop = $false
     $CompilationParamsCopy.EnableUICop = $false
-    $CompilationParamsCopy.CustomCodeCops = $false
+    $CompilationParamsCopy.CustomCodeCops = @()
 
     # Disable all non-mandatory steps
     $CompilationParamsCopy.CopyAppToSymbolsFolder = $false
