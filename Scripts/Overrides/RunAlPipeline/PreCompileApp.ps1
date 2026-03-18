@@ -82,9 +82,10 @@ if ($Translate) {
     #endregion ClearTranslations
 
     #region PreCompile
+    Write-AlpacaGroupStart "Pre-Compile App to generate global translation file" #Level 2
     Write-AlpacaOutput "Minimized parameters to speed up compilation"
     $CompilationParamsCopy = $CompilationParams.Value.Clone()
-    # $CompilationParamsCopy.OutputTo = { Param($line) Write-Host $line }
+    $CompilationParamsCopy.OutputTo = { Param($line) Write-Host $line }
 
     # Disable all cops
     $CompilationParamsCopy.EnableCodeCop = $false
@@ -100,11 +101,12 @@ if ($Translate) {
 
     if ($useCompilerFolder) {
         #useCompilerFolder comes from parent scope
-        $null = Invoke-Command -ScriptBlock $CompileAppWithBcCompilerFolder -ArgumentList $CompilationParamsCopy
+        Invoke-Command -ScriptBlock $CompileAppWithBcCompilerFolder -ArgumentList $CompilationParamsCopy *>&1 | Write-AlpacaRecord
     }
     else {
-        $null = Invoke-Command -ScriptBlock $CompileAppInBcContainer -ArgumentList $CompilationParamsCopy
+        Invoke-Command -ScriptBlock $CompileAppInBcContainer -ArgumentList $CompilationParamsCopy *>&1 | Write-AlpacaRecord
     }
+    Write-AlpacaGroupEnd #Level 2
     #endregion PreCompile
 
     #region Translate

@@ -305,3 +305,18 @@ function Get-AlpacaIsDebugMode {
     return $env:RUNNER_DEBUG -eq '1' -or $env:GITHUB_RUN_ATTEMPT -gt 1
 }
 Export-ModuleMember -Function Get-AlpacaIsDebugMode
+
+function Write-AlpacaRecord {
+    param(
+        [Parameter(ValueFromPipeline = $true)]
+        [object] $Record,
+        [switch] $PassThruNonRecord
+    )
+    switch($Record.GetType()) {
+        ( [System.Management.Automation.ErrorRecord] )       { Write-AlpacaError $Record }
+        ( [System.Management.Automation.WarningRecord] )     { Write-AlpacaWarning $Record }
+        ( [System.Management.Automation.VerboseRecord] )     { Write-AlpacaDebug $Record }
+        ( [System.Management.Automation.DebugRecord] )       { Write-AlpacaDebug $Record }
+        ( [System.Management.Automation.InformationRecord] ) { Write-AlpacaOutput $Record }
+    }
+}
