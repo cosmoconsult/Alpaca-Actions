@@ -48,6 +48,7 @@ function New-TranslationFiles() {
         $FormatTranslationUnit = { param($TranslationUnit) $TranslationUnit.note | Where-Object from -EQ 'Xliff Generator' | Select-Object -ExpandProperty '#text' }
 
         foreach ($Language in $Languages) {
+            Write-AlpacaOutput "==== XliffSync - Begin ===="
             Sync-XliffTranslations `
                 -sourcePath $GlobalXlfFile.FullName `
                 -targetLanguage $Language `
@@ -57,8 +58,8 @@ function New-TranslationFiles() {
                 -detectSourceTextChanges:$false `
                 -AzureDevOps 'warning' `
                 -printProblems `
-                -FormatTranslationUnit $FormatTranslationUnit `
-                *>&1 | Write-AlpacaRecord
+                -FormatTranslationUnit $FormatTranslationUnit
+            Write-AlpacaOutput "==== XliffSync - End ===="
         }
     }
 }
@@ -94,9 +95,10 @@ function Test-TranslationFiles() {
     Write-AlpacaOutput "Successfully installed XliffSync module"
 
     $Issues = @()
+    $FormatTranslationUnit = { param($TranslationUnit) $TranslationUnit.note | Where-Object from -EQ 'Xliff Generator' | Select-Object -ExpandProperty '#text' }
+    
+    Write-AlpacaOutput "==== XliffSync - Begin ===="
     foreach ($TranslatedXlfFile in $TranslatedXlfFiles) {
-        $FormatTranslationUnit = { param($TranslationUnit) $TranslationUnit.note | Where-Object from -EQ 'Xliff Generator' | Select-Object -ExpandProperty '#text' }
-
         $Issues += Test-XliffTranslations `
             -targetPath $TranslatedXlfFile.FullName `
             -checkForMissing `
@@ -105,9 +107,9 @@ function Test-TranslationFiles() {
             -translationRulesEnableAll:$( $Rules -contains 'All' ) `
             -AzureDevOps 'warning' `
             -printProblems `
-            -FormatTranslationUnit $FormatTranslationUnit `
-            *>&1 | Write-AlpacaRecord -PassThruNonRecords
+            -FormatTranslationUnit $FormatTranslationUnit
     }
+    Write-AlpacaOutput "==== XliffSync - End ===="
 
     $IssueCount = $Issues.Count
     if ($IssueCount -gt 0) {
