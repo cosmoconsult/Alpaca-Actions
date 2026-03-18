@@ -17,7 +17,7 @@ try {
     Write-AlpacaOutput "Creating containers for build dimensions: '$((  $BuildOrder.buildDimensions | ForEach-Object{$_.project + " - " + $_.buildMode}) -join "', '")' [$($BuildOrder.buildDimensions.Count)]"
 } 
 catch {
-    throw "Failed to determine AL-Go build dimensions: $($_.Exception.Message)"
+    throw "Failed to determine AL-Go build dimensions:`n$_"
 }
 
 $containers = @()
@@ -29,7 +29,7 @@ try {
     }
 }
 catch {
-    Write-AlpacaError "Failed to create containers:`n$($_.Exception.Message)"
+    Write-AlpacaError "Failed to create containers:`n$_"
     throw "Failed to create containers"
 }
 finally {

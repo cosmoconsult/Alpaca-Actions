@@ -86,8 +86,7 @@ function Publish-AlpacaBcApp {
             $success = $true
         }
         catch {
-            $errorMessage = Get-AlpacaExtendedErrorMessage -errorRecord $_
-            $errorMessage = "Error Publishing App '$appName'`n$errorMessage"
+            $errorMessage = "Error Publishing App '$appName'`n$_"
 
             $tries = $tries + 1
             if ($tries -ge $maxTries) {

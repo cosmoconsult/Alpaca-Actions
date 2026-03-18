@@ -21,10 +21,10 @@ function New-AlpacaContainer {
 
     Write-AlpacaOutput "Creating container for project '$Project' of '$owner/$repository' on ref '$branch'"
 
-    $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
+    $headers = Get-AlpacaAuthenticationHeaders -Token $Token
     $headers.add("Content-Type", "application/json")
 
-    $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "Container" -Endpoint "Container"
+    $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "Container"
 
     $request = @{
         owner                     = "$owner"
@@ -42,7 +42,7 @@ function New-AlpacaContainer {
         }
     } 
     $body = $request | ConvertTo-Json -Depth 10
-    $response = Invoke-RestMethod $apiUrl -Method 'POST' -Headers $headers -Body $body -AllowInsecureRedirect
+    $response = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'POST' -Headers $headers -Body $body
 
     $container = [pscustomobject]@{
         Project   = $Project

@@ -19,7 +19,7 @@ function Get-AlpacaDependencyApps {
 
     Write-AlpacaOutput "Get project configuration for $owner/$repository and ref $branch (project: $project)"
 
-    $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
+    $headers = Get-AlpacaAuthenticationHeaders -Token $Token
     $headers.add("Content-Type", "application/json")
 
     $queryParams = @{
@@ -27,9 +27,9 @@ function Get-AlpacaDependencyApps {
         containerConfig = Get-AlpacaConfigNameForWorkflowName
     }
     $resource = "$($owner)/$($repository)/$($project -replace '^\.$', '_')"
-    $apiUrl = Get-AlpacaEndpointUrlWithParam -api 'alpaca' -Controller "GitHub" -Endpoint "Project" -Ressource $resource -QueryParams $queryParams
+    $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "GitHub" -Endpoint "Project" -Ressource $resource -QueryParams $queryParams
 
-    $containerConfig = Invoke-RestMethod $apiUrl -Method 'GET' -Headers $headers -AllowInsecureRedirect
+    $containerConfig = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'GET' -Headers $headers
     $artifacts = $containerConfig.containerConfigurations[0].artifacts
     $artifacts = $artifacts | Where-Object { $_.target -eq 'App' }
     $artifacts = $artifacts | Where-Object { $_.IgnoreIn -ne 'Build' }

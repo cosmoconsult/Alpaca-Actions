@@ -1,5 +1,5 @@
-name: Sync Secrets
-description: This action syncs secrets to the Alpaca backend for development containers
+name: Sync Configs
+description: This action syncs secrets and variables to the Alpaca backend
 author: COSMO CONSULT
 inputs:
   shell:
@@ -13,17 +13,21 @@ inputs:
   secretsJson:
     description: An object of key-value pairs with base64 values representing the secrets to sync, usually from ReadSettings of AL-Go
     required: true
+  variablesJson:
+    description: An object of key-value pairs with base64 values representing the variables to sync
+    required: true
 runs:
   using: composite
   steps:
-    - id: SyncSecrets
-      name: Sync COSMO Alpaca Secrets
+    - id: SyncConfigs
+      name: Sync COSMO Alpaca Configs
       shell: ${{ inputs.shell }}
       env:
         _token: ${{ inputs.token }}
         _secretsJson: ${{ inputs.secretsJson }}
+        _variablesJson: ${{ inputs.variablesJson }}
       run: |
-        ${{ github.action_path }}/SyncSecrets.ps1 -Token $env:_token -SecretsJson $env:_secretsJson
+        ${{ github.action_path }}/SyncConfigs.ps1 -Token $env:_token -SecretsJson $env:_secretsJson -VariablesJson $env:_variablesJson
 branding:
   icon: terminal
   color: blue

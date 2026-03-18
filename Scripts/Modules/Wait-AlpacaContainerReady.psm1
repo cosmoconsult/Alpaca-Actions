@@ -51,35 +51,37 @@ function Wait-AlpacaContainerReady {
             $repository = $repository.replace("/", "")
 
             
-            $headers = Get-AlpacaAuthenticationHeaders -Token $Token -Owner $owner -Repository $repository
+            $headers = Get-AlpacaAuthenticationHeaders -Token $Token
             $headers.add("accept", "application/text")
 
             $QueryParams = @{
                 tailLines     = 5000
             }
-            $apiUrl = Get-AlpacaEndpointUrlWithParam -Api 'alpaca' -Controller "Container" -Endpoint "Container" -Ressource $ContainerName -RouteSuffix "logs" -QueryParams $QueryParams
+            $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "Container" -Ressource $ContainerName -RouteSuffix "logs" -QueryParams $QueryParams
                 
             while ($waitForContainer) {  
 
-                $result = Invoke-RestMethod $apiUrl -Method 'Get' -Headers $headers -AllowInsecureRedirect -StatusCodeVariable 'StatusCode'
-
-                $content = $result -split "\n"
-
-                if ($StatusCode -ne 200) {
-                        
+                $content = @()
+                try {
+                    $result = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'Get' -Headers $headers
+                    $content = $result -split "\n"
+                }
+                catch {
                     if ($tries -lt $MaxTries) {
+                        Write-AlpacaDebug "Error while getting logs from container: $_"
+                        Start-Sleep -Seconds $SleepSeconds
                         $tries = $tries + 1
+                        continue
                     }
                     else {
-                        Write-AlpacaError "Error while getting logs from container`nContent:`n$($content)"
-                        $waitForContainer = $false
+                        Write-AlpacaError "Error while getting logs from container: $_"
                         $success = $false
                         return
                     }
                 }
                     
                 # Check for Errors, Warnings, Ready-String
-                foreach ($line in ($content | Select-Object -Skip $takenLines -First ($content.Length - 1))) {                    
+                foreach ($line in ($content | Select-Object -Skip $takenLines -First ($content.Length - 1))) {
                     if ($errorRegex -and ($line -match $errorRegex)) {
                         Write-AlpacaError $line
                         $success = $false                                
@@ -116,9 +118,7 @@ function Wait-AlpacaContainerReady {
 
         }
         catch {
-            $errorMessage = Get-AlpacaExtendedErrorMessage -errorRecord $_
-            $errorMessage = "Error while waiting for container '$ContainerName' to be ready`n$errorMessage"
-            Write-AlpacaError $errorMessage
+            Write-AlpacaError "Error while waiting for container '$ContainerName' to be ready`n$_"
             $success = $false
             return
         }
