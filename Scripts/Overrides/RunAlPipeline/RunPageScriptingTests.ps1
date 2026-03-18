@@ -14,7 +14,15 @@ Write-AlpacaOutput "Using COSMO Alpaca override"
 if ($env:RUNNER_DEBUG -eq "1") {
     Write-AlpacaGroupStart "Parameters"
     try {
-        $PSBoundParameters.GetEnumerator() | ForEach-Object { Write-AlpacaDebug "$($_.Key): $($_.Value)" }
+        $PSBoundParameters.GetEnumerator() | ForEach-Object { 
+            $value = if ($_.Value -is [array] -or $_.Value -is [hashtable]) {
+                $_.Value | ConvertTo-Json -Compress
+            }
+            else {
+                $_.Value
+            }
+            Write-AlpacaDebug "$($_.Key): $value"
+        }
     }
     finally {
         Write-AlpacaGroupEnd
