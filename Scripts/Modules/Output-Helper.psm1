@@ -331,25 +331,29 @@ function Get-AlpacaIsDebugMode {
 }
 Export-ModuleMember -Function Get-AlpacaIsDebugMode
 
-function Write-AlpacaRecord {
+function Invoke-AlpacaOutputHandler {
     param(
         [Parameter(ValueFromPipeline = $true)]
-        [object] $Value,
-        [switch] $PassThruNonRecords
+        [object] $Value
     )
 
     process {
         switch($Value.GetType()) {
-            ( [System.Management.Automation.ErrorRecord] )       { Write-AlpacaError $Value }
+            ( [System.Management.Automation.ErrorRecord] )       { Write-AlpacaError $Value; throw $Value }
             ( [System.Management.Automation.WarningRecord] )     { Write-AlpacaWarning $Value }
             ( [System.Management.Automation.VerboseRecord] )     { Write-AlpacaDebug $Value }
             ( [System.Management.Automation.DebugRecord] )       { Write-AlpacaDebug $Value }
-            ( [System.Management.Automation.InformationRecord] ) { Write-AlpacaOutput $Value }
-            default {
-                if ($PassThruNonRecords) {
-                    return $Value
+            ( [System.Management.Automation.InformationRecord] ) { 
+                switch($Value.ToString()) {
+                    { $_ -match '^\s*::group::(.*)' }                      { Write-Host "Overwrite GH Group Start"; Write-AlpacaGroupStart $matches[1] }
+                    { $_ -match '^\s*::endgroup::.*' }                     { Write-Host "Overwrite GH Group End"; Write-AlpacaGroupEnd }
+                    { $_ -match '^\s*::.*?::' }                            { Write-Host "Keep existing GH Command"; Write-Host $Value }
+                    { $_ -match '^##vso[task.logissue type=warning](.*)' } { Write-Host "Overwrite ADO Warning"; Write-AlpacaWarning $matches[1] }
+                    { $_ -match '^##vso[task.logissue type=error](.*)' }   { Write-Host "Overwrite ADO Error"; Write-AlpacaError $matches[1] }
+                    default                                                { Write-AlpacaOutput $Value }
                 }
             }
+            default                                              { return $Value }
         }
     }
 }

@@ -48,7 +48,6 @@ function New-TranslationFiles() {
         $FormatTranslationUnit = { param($TranslationUnit) $TranslationUnit.note | Where-Object from -EQ 'Xliff Generator' | Select-Object -ExpandProperty '#text' }
 
         foreach ($Language in $Languages) {
-            Write-AlpacaOutput "==== XliffSync - Begin ===="
             Sync-XliffTranslations `
                 -sourcePath $GlobalXlfFile.FullName `
                 -targetLanguage $Language `
@@ -58,8 +57,8 @@ function New-TranslationFiles() {
                 -detectSourceTextChanges:$false `
                 -AzureDevOps 'warning' `
                 -printProblems `
-                -FormatTranslationUnit $FormatTranslationUnit
-            Write-AlpacaOutput "==== XliffSync - End ===="
+                -FormatTranslationUnit $FormatTranslationUnit `
+                *>&1 | Invoke-AlpacaOutputHandler
         }
     }
 }
@@ -97,7 +96,6 @@ function Test-TranslationFiles() {
     $Issues = @()
     $FormatTranslationUnit = { param($TranslationUnit) $TranslationUnit.note | Where-Object from -EQ 'Xliff Generator' | Select-Object -ExpandProperty '#text' }
     
-    Write-AlpacaOutput "==== XliffSync - Begin ===="
     foreach ($TranslatedXlfFile in $TranslatedXlfFiles) {
         $Issues += Test-XliffTranslations `
             -targetPath $TranslatedXlfFile.FullName `
@@ -107,9 +105,9 @@ function Test-TranslationFiles() {
             -translationRulesEnableAll:$( $Rules -contains 'All' ) `
             -AzureDevOps 'warning' `
             -printProblems `
-            -FormatTranslationUnit $FormatTranslationUnit
+            -FormatTranslationUnit $FormatTranslationUnit `
+            *>&1 | Invoke-AlpacaOutputHandler
     }
-    Write-AlpacaOutput "==== XliffSync - End ===="
 
     $IssueCount = $Issues.Count
     if ($IssueCount -gt 0) {

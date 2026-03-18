@@ -99,15 +99,13 @@ if ($Translate) {
     $CompilationParamsCopy.GenerateReportLayout = 'No'
     $CompilationParamsCopy.generatecrossreferences = $false
 
-    Write-AlpacaOutput "==== Pre-Compile - Begin ===="
     if ($useCompilerFolder) {
         #useCompilerFolder comes from parent scope
-        $null = Invoke-Command -ScriptBlock $CompileAppWithBcCompilerFolder -ArgumentList $CompilationParamsCopy # *>&1 | Write-AlpacaRecord
+        $null = Invoke-Command -ScriptBlock $CompileAppWithBcCompilerFolder -ArgumentList $CompilationParamsCopy *>&1 | Invoke-AlpacaOutputHandler
     }
     else {
-        $null = Invoke-Command -ScriptBlock $CompileAppInBcContainer -ArgumentList $CompilationParamsCopy # *>&1 | Write-AlpacaRecord
+        $null = Invoke-Command -ScriptBlock $CompileAppInBcContainer -ArgumentList $CompilationParamsCopy *>&1 | Invoke-AlpacaOutputHandler
     }
-    Write-AlpacaOutput "==== Pre-Compile - End ===="
     Write-AlpacaGroupEnd #Level 2
     #endregion PreCompile
 
