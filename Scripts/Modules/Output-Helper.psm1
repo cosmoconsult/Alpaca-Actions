@@ -343,17 +343,40 @@ function Invoke-AlpacaOutputHandler {
             ( [System.Management.Automation.WarningRecord] )     { Write-AlpacaWarning $Value }
             ( [System.Management.Automation.VerboseRecord] )     { Write-AlpacaDebug $Value }
             ( [System.Management.Automation.DebugRecord] )       { Write-AlpacaDebug $Value }
-            ( [System.Management.Automation.InformationRecord] ) { 
-                switch($Value.ToString()) {
-                    { $_ -match '^\s*::group::(.*)' }                                    { Write-Host "Overwrite GH Group Start"; Write-AlpacaGroupStart $matches[1] }
-                    { $_ -match '^\s*::endgroup::.*' }                                   { Write-Host "Overwrite GH Group End"; Write-AlpacaGroupEnd }
-                    { $_ -match '^\s*::.*?::' }                                          { Write-Host "Keep existing GH Command"; Write-Host $Value }
-                    { $_ -match '^\s*##vso\[task\.logissue\s+type\s*=\s*warning\](.*)' } { Write-Host "Overwrite ADO Warning"; Write-AlpacaWarning $matches[1] }
-                    { $_ -match '^\s*##vso\[task\.logissue\s+type\s*=\s*error\](.*)' }   { Write-Host "Overwrite ADO Error"; Write-AlpacaError $matches[1] }
-                    default                                                              { Write-AlpacaOutput $Value }
+            ( [System.Management.Automation.InformationRecord] ) {
+                $message = $Value.ToString()
+
+                if ($message -match '^\s*::group::(.*)') {
+                    # Map GH group command to Alpaca group start
+                    Write-Host "Overwrite GH Group Start"
+                    Write-AlpacaGroupStart $matches[1]
+                }
+                elseif ($message -match '^\s*::endgroup::(.*)') {
+                    # Map GH group end command to Alpaca group end
+                    Write-Host "Overwrite GH Group End"
+                    Write-AlpacaGroupEnd $matches[1]
+                }
+                elseif ($message -match '^\s*::.*?::') {
+                    # Preserve other GH commands (like annotations) without modification
+                    Write-Host "Keep existing GH Command"
+                    Write-Host $message
+                }
+                elseif ($message -match '^\s*##vso\[task\.logissue\s+type\s*=\s*warning\](.*)') {
+                    # Map ADO warning command to Alpaca warning
+                    Write-Host "Overwrite ADO Warning"
+                    Write-AlpacaWarning $matches[1]
+                }
+                elseif ($message -match '^\s*##vso\[task\.logissue\s+type\s*=\s*error\](.*)') {
+                    # Map ADO error command to Alpaca error
+                    Write-Host "Overwrite ADO Error"
+                    Write-AlpacaError $matches[1]
+                }
+                else {
+                    # Map all other information records to standard Alpaca output
+                    Write-AlpacaOutput $message
                 }
             }
-            default                                              { return $Value }
+            default { return $Value }
         }
     }
 }
