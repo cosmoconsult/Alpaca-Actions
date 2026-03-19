@@ -102,10 +102,10 @@ if ($Translate) {
 
     if ($useCompilerFolder) {
         #useCompilerFolder comes from parent scope
-        $null = Invoke-Command -ScriptBlock $CompileAppWithBcCompilerFolder -ArgumentList $CompilationParamsCopy *>&1 | Invoke-AlpacaOutputHandler
+        Invoke-Command -ScriptBlock $CompileAppWithBcCompilerFolder -ArgumentList $CompilationParamsCopy *>&1 | Invoke-AlpacaOutputHandler | Out-Null
     }
     else {
-        $null = Invoke-Command -ScriptBlock $CompileAppInBcContainer -ArgumentList $CompilationParamsCopy *>&1 | Invoke-AlpacaOutputHandler
+        Invoke-Command -ScriptBlock $CompileAppInBcContainer -ArgumentList $CompilationParamsCopy *>&1 | Invoke-AlpacaOutputHandler | Out-Null
     }
     Write-AlpacaGroupEnd #Level 2
     #endregion PreCompile
