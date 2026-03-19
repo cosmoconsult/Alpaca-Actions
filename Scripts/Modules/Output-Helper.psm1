@@ -381,7 +381,7 @@ function Invoke-AlpacaOutputHandler {
                         default                                       { Write-AlpacaOutput $message }
                     }
                 }
-                elseif ($message -match 's*##vso\[task\.logissue\s+.*?;?\s*type\s*=\s*(?<type>error|warning)\s*;?.*?\](?<msg>.*)') {
+                elseif ($message -match '^\s*##vso\[task\.logissue\s+.*?;?\s*type\s*=\s*(?<type>error|warning)\s*;?.*?\](?<msg>.*)') {
                     # Map ADO issue commands to Alpaca annotations
                     $issueType = $matches['type'].Trim()
                     $issueMessage = $matches['msg'].Trim()
