@@ -148,6 +148,7 @@ function Write-AlpacaAnnotation {
         [string] $Message,
         [ValidateSet('Notice', 'Warning', 'Error')]
         [string] $Annotation = 'Notice',
+        [string] $GitHubAnnotationParams = $null,
         [switch] $WithoutGitHubAnnotation
     )
 
@@ -157,7 +158,7 @@ function Write-AlpacaAnnotation {
             $formattedMessage = Format-AlpacaMessage -Message "$($Annotation): $($Message)" -Color $color
             Write-Host $formattedMessage
         } else {
-            Write-AlpacaGitHubAnnotation -Message $Message -Annotation $Annotation
+            Write-AlpacaGitHubAnnotation -Message $Message -Annotation $Annotation -AnnotationParams $GitHubAnnotationParams
         }
     }
 }
@@ -168,13 +169,18 @@ function Write-AlpacaGitHubAnnotation {
         [Parameter(Mandatory = $true)]
         [string] $Message,
         [ValidateSet('Notice', 'Warning', 'Error')]
-        [string] $Annotation = 'Notice'
+        [string] $Annotation = 'Notice',
+        [string] $AnnotationParams = $null
     )
     $color = $script:annotationColors[$Annotation]
 
     $gitHubAnnotationCommand = $script:annotationGitHubCommands[$Annotation]
     $gitHubAnnotationLineBreak = $script:annotationGitHubLineBreak
     $gitHubAnnotationByteLimit = $script:annotationGitHubByteLimit
+
+    if (!([String]::IsNullOrWhiteSpace($AnnotationParams))) {
+        $gitHubAnnotationCommand += $gitHubAnnotationCommand -replace '::$', " $AnnotationParams::"
+    }
 
     # First, check if the entire message fits within the byte limit
     $formattedMessage = Format-AlpacaMessage -Message $Message -Color $color -LineBreak $gitHubAnnotationLineBreak
@@ -236,11 +242,12 @@ function Write-AlpacaNotice {
     param(
         [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
         [string] $Message,
+        [string] $GitHubAnnotationParams = $null,
         [switch] $WithoutGitHubAnnotation
     )
 
     process {
-        Write-AlpacaAnnotation -Message $Message -Annotation "Notice" -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
+        Write-AlpacaAnnotation -Message $Message -Annotation "Notice" -AnnotationParams $GitHubAnnotationParams -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
     }
 }
 Export-ModuleMember -Function Write-AlpacaNotice
@@ -249,11 +256,12 @@ function Write-AlpacaWarning {
     param(
         [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
         [string] $Message,
+        [string] $GitHubAnnotationParams = $null,
         [switch] $WithoutGitHubAnnotation
     )
 
     process {
-        Write-AlpacaAnnotation -Message $Message -Annotation "Warning" -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
+        Write-AlpacaAnnotation -Message $Message -Annotation "Warning" -AnnotationParams $GitHubAnnotationParams -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
     }
 }
 Export-ModuleMember -Function Write-AlpacaWarning
@@ -262,11 +270,12 @@ function Write-AlpacaError {
     param(
         [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
         [string] $Message,
+        [string] $GitHubAnnotationParams = $null,
         [switch] $WithoutGitHubAnnotation
     )
 
     process {
-        Write-AlpacaAnnotation -Message $Message -Annotation "Error" -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
+        Write-AlpacaAnnotation -Message $Message -Annotation "Error" -AnnotationParams $GitHubAnnotationParams -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
     }
 }
 Export-ModuleMember -Function Write-AlpacaError
@@ -345,39 +354,66 @@ function Invoke-AlpacaOutputHandler {
             ( [System.Management.Automation.DebugRecord] )       { Write-AlpacaDebug $Value }
             ( [System.Management.Automation.InformationRecord] ) {
                 $message = $Value.ToString()
-
-                if ($message -match '^\s*(?:::(?<cmd>.*?)::|##\[(?<cmd>.*?)\])(?<msg>.*)') {
-                    # Map GH and ADO commands to Alpaca annotations and groups
+               
+                if ($message -match '^\s*::\s*(?<cmd>.+?)\s*::(?<msg>.*)') {
+                    # Map GH commands to Alpaca annotations and groups
                     $command = $matches['cmd'].Trim()
                     $commandMessage = $matches['msg'].Trim()
                     switch($command) {
-                        { $_ -like 'group*' } { 
-                            Write-Host "Overwrite Group Start"
+                        'group' { 
+                            Write-Host "Overwrite GH Group Start"
                             Write-AlpacaGroupStart $commandMessage
                         }
-                        { $_ -like 'endgroup*' } {
-                            Write-Host "Overwrite Group End"
+                        'endgroup' {
+                            Write-Host "Overwrite GH Group End"
                             Write-AlpacaGroupEnd $commandMessage
                         }
-                        { $_ -like 'error*' } {
-                            Write-Host "Overwrite Error"
-                            Write-AlpacaError $commandMessage
-                        }
-                        { $_ -like 'warning*' } {
-                            Write-Host "Overwrite Warning"
-                            Write-AlpacaWarning $commandMessage
-                        }
-                        { $_ -like 'notice*' } {
-                            Write-Host "Overwrite Notice"
-                            Write-AlpacaNotice $commandMessage
-                        }
-                        { $_ -like 'debug*' } {
-                            Write-Host "Overwrite Debug"
+                        'debug' {
+                            Write-Host "Overwrite GH Debug"
                             Write-AlpacaDebug $commandMessage
                         }
+                        { $_ -like 'error*' } {
+                            Write-Host "Overwrite GH Error"
+                            Write-AlpacaError $commandMessage -GitHubAnnotationParams ($command -replace '^error\s*', '')
+                        }
+                        { $_ -like 'warning*' } {
+                            Write-Host "Overwrite GH Warning"
+                            Write-AlpacaWarning $commandMessage -GitHubAnnotationParams ($command -replace '^warning\s*', '')
+                        }
+                         { $_ -like 'notice*' } {
+                            Write-Host "Overwrite GH Notice"
+                            Write-AlpacaNotice $commandMessage -GitHubAnnotationParams ($command -replace '^notice\s*', '')
+                        }
                         default {
-                            Write-Host "Keep existing Command"
+                            Write-Host "Keep existing GH Command"
                             Write-Host $message
+                        }
+                    }
+                }
+                elseif ($message -match '^\s*##\[\s*(?<cmd>.+?)\s*\](?<msg>.*)') {
+                    # Map ADO commands to Alpaca annotations and groups
+                    $command = $matches['cmd'].Trim()
+                    $commandMessage = $matches['msg'].Trim()
+                    switch($command) {
+                        'group' { 
+                            Write-Host "Overwrite ADO Group Start"
+                            Write-AlpacaGroupStart $commandMessage
+                        }
+                        'endgroup' {
+                            Write-Host "Overwrite ADO Group End"
+                            Write-AlpacaGroupEnd $commandMessage
+                        }
+                        'debug' {
+                            Write-Host "Overwrite ADO Debug"
+                            Write-AlpacaDebug $commandMessage
+                        }
+                        { 'error', 'warning', 'notice' -contains $_ } {
+                            Write-Host "Overwrite ADO Annotation (${command})"
+                            Write-AlpacaAnnotation $commandMessage -Annotation $command -WithoutGitHubAnnotation
+                        }
+                        default {
+                            Write-Host "Overwrite ADO Command"
+                            Write-AlpacaOutput $message
                         }
                     }
                 }
