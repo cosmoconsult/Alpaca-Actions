@@ -62,18 +62,29 @@ function Invoke-AlpacaApiRequest {
         [object] $Body
     )
     
-    Write-AlpacaDebug -Message "Invoking Alpaca-Api: $Url ($Method)"
-    
-    try {
-        Invoke-RestMethod -Uri $Url -Method $Method -Headers $Headers -Body $Body -AllowInsecureRedirect
-    }
-    catch {
-        Resolve-AlpacaApiError -ErrorRecord $_
+    $maxAttempts = 5
+    foreach ($attempt in 1..$maxAttempts) {
+        Write-AlpacaDebug -Message "Invoking Alpaca-Api: $Url ($Method) - Attempt $attempt of $maxAttempts"
+        try {
+            return Invoke-RestMethod -Uri $Url -Method $Method -Headers $Headers -Body $Body -AllowInsecureRedirect
+        }
+        catch {
+            if ($attempt -lt $maxAttempts) {
+                Write-AlpacaDebug -Message (Get-AlpacaApiErrorMessage -ErrorRecord $_)
+
+                $waitSeconds = [Math]::Pow(2, $attempt - 1)
+                Write-AlpacaDebug -Message "Retrying in $waitSeconds second(s)..."
+                Start-Sleep -Seconds $waitSeconds
+            }
+            else {
+                Resolve-AlpacaApiError -ErrorRecord $_
+            }
+        }
     }
 }
 Export-ModuleMember -Function Invoke-AlpacaApiRequest
 
-function Resolve-AlpacaApiError {
+function Get-AlpacaApiErrorMessage {
     Param(
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.ErrorRecord] $ErrorRecord
@@ -105,7 +116,7 @@ function Resolve-AlpacaApiError {
     }
 
     $errorMessage = "Alpaca-API request failed"
-    
+
     $errorContext = @($problemDetails.status, $problemDetails.title, $problemDetails.instance) | Where-Object { $_ }
     if ($errorContext) {
         $errorMessage += " ($($errorContext -join " "))"
@@ -114,6 +125,18 @@ function Resolve-AlpacaApiError {
     if ($problemDetails.detail) {
         $errorMessage += "`n$($problemDetails.detail)"
     }
+
+    return $errorMessage
+}
+Export-ModuleMember -Function Get-AlpacaApiErrorMessage
+
+function Resolve-AlpacaApiError {
+    Param(
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.ErrorRecord] $ErrorRecord
+    )
+
+    $errorMessage = Get-AlpacaApiErrorMessage -ErrorRecord $ErrorRecord
 
     $updatedErrorRecord  = [System.Management.Automation.ErrorRecord]::new($ErrorRecord, $ErrorRecord.Exception)
     $updatedErrorRecord.ErrorDetails = [System.Management.Automation.ErrorDetails]::new($errorMessage)
