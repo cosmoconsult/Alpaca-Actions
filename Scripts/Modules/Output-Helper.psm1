@@ -370,7 +370,7 @@ function Invoke-AlpacaOutputHandler {
                     }
                 }
                 elseif ($message -match '^\s*##\[\s*(?<cmd>.+?)\s*\](?<msg>.*)') {
-                    # Map ADO commands to Alpaca annotations and groups
+                    # Map ADO formatting commands to Alpaca annotations and groups
                     $command = $matches['cmd'].Trim()
                     $commandMessage = $matches['msg'].Trim()
                     switch($command) {
@@ -382,7 +382,7 @@ function Invoke-AlpacaOutputHandler {
                     }
                 }
                 elseif ($message -match 's*##vso\[task\.logissue\s+.*?;?\s*type\s*=\s*(?<type>error|warning)\s*;?.*?\](?<msg>.*)') {
-                    # Map ADO issue command to Alpaca annotations
+                    # Map ADO issue commands to Alpaca annotations
                     $issueType = $matches['type'].Trim()
                     $issueMessage = $matches['msg'].Trim()
                     switch ($issueType) {
