@@ -8,6 +8,8 @@
     }
     Install-Module -Name XliffSync -Scope CurrentUser -Force
     $script:xliffSyncInstalled = $true
+
+    Write-AlpacaOutput "Successfully installed XliffSync module"
 }
 
 function New-TranslationFiles() {
@@ -42,7 +44,6 @@ function New-TranslationFiles() {
     }
 
     Install-XliffSync
-    Write-AlpacaOutput "Successfully installed XliffSync module"
 
     foreach ($GlobalXlfFile in $GlobalXlfFiles) {
         $FormatTranslationUnit = { param($TranslationUnit) $TranslationUnit.note | Where-Object from -EQ 'Xliff Generator' | Select-Object -ExpandProperty '#text' }
@@ -91,7 +92,6 @@ function Test-TranslationFiles() {
     }
 
     Install-XliffSync
-    Write-AlpacaOutput "Successfully installed XliffSync module"
 
     $Issues = @()
     $FormatTranslationUnit = { param($TranslationUnit) $TranslationUnit.note | Where-Object from -EQ 'Xliff Generator' | Select-Object -ExpandProperty '#text' }
