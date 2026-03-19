@@ -112,7 +112,7 @@ function Test-TranslationFiles() {
     $IssueCount = $Issues.Count
     if ($IssueCount -gt 0) {
         Write-AlpacaError "${IssueCount} issues detected in translation files!"
-        throw
+        throw "${IssueCount} issues detected in translation files!"
     }
 }
 Export-ModuleMember -Function Test-TranslationFiles
