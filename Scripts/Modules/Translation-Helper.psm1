@@ -8,6 +8,8 @@
     }
     Install-Module -Name XliffSync -Scope CurrentUser -Force
     $script:xliffSyncInstalled = $true
+
+    Write-AlpacaOutput "Successfully installed XliffSync module"
 }
 
 function New-TranslationFiles() {
@@ -42,7 +44,6 @@ function New-TranslationFiles() {
     }
 
     Install-XliffSync
-    Write-AlpacaOutput "Successfully installed XliffSync module"
 
     foreach ($GlobalXlfFile in $GlobalXlfFiles) {
         $FormatTranslationUnit = { param($TranslationUnit) $TranslationUnit.note | Where-Object from -EQ 'Xliff Generator' | Select-Object -ExpandProperty '#text' }
@@ -57,7 +58,8 @@ function New-TranslationFiles() {
                 -detectSourceTextChanges:$false `
                 -AzureDevOps 'warning' `
                 -printProblems `
-                -FormatTranslationUnit $FormatTranslationUnit
+                -FormatTranslationUnit $FormatTranslationUnit `
+                *>&1 | Invoke-AlpacaOutputHandler
         }
     }
 }
@@ -90,12 +92,11 @@ function Test-TranslationFiles() {
     }
 
     Install-XliffSync
-    Write-AlpacaOutput "Successfully installed XliffSync module"
 
     $Issues = @()
+    $FormatTranslationUnit = { param($TranslationUnit) $TranslationUnit.note | Where-Object from -EQ 'Xliff Generator' | Select-Object -ExpandProperty '#text' }
+    
     foreach ($TranslatedXlfFile in $TranslatedXlfFiles) {
-        $FormatTranslationUnit = { param($TranslationUnit) $TranslationUnit.note | Where-Object from -EQ 'Xliff Generator' | Select-Object -ExpandProperty '#text' }
-
         $Issues += Test-XliffTranslations `
             -targetPath $TranslatedXlfFile.FullName `
             -checkForMissing `
@@ -104,13 +105,14 @@ function Test-TranslationFiles() {
             -translationRulesEnableAll:$( $Rules -contains 'All' ) `
             -AzureDevOps 'warning' `
             -printProblems `
-            -FormatTranslationUnit $FormatTranslationUnit
+            -FormatTranslationUnit $FormatTranslationUnit `
+            *>&1 | Invoke-AlpacaOutputHandler
     }
 
     $IssueCount = $Issues.Count
     if ($IssueCount -gt 0) {
         Write-AlpacaError "${IssueCount} issues detected in translation files!"
-        throw
+        throw "${IssueCount} issues detected in translation files!"
     }
 }
 Export-ModuleMember -Function Test-TranslationFiles
