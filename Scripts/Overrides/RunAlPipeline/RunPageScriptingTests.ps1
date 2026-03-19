@@ -22,7 +22,7 @@ if ($env:RUNNER_DEBUG -eq "1") {
 }
 
 Write-AlpacaOutput "Overriding start address to Environment value: $($environment)" # $environment comes from parent script
-Set-Variable -Name 'startAddress' -Value $environment -Scope 1 # directly modify the variable in the parent scope
+$params.startAddress = $environment # modify the hashtable parameter
 
 Write-AlpacaOutput ("Overriding credential to BcAuthContext credential (User: {0})" -f $(try { $bcAuthContext.username }catch { "" })) # bcAuthContext comes from parent script
 $params.credential = New-Object System.Management.Automation.PSCredential ($bcAuthContext.username, $bcAuthContext.Password) # modify the hashtable parameter
