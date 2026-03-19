@@ -179,7 +179,7 @@ function Write-AlpacaGitHubAnnotation {
     $gitHubAnnotationByteLimit = $script:annotationGitHubByteLimit
 
     if (!([String]::IsNullOrWhiteSpace($AnnotationParams))) {
-        $gitHubAnnotationCommand += $gitHubAnnotationCommand -replace '::$', " $AnnotationParams::"
+        $gitHubAnnotationCommand = $gitHubAnnotationCommand -replace '::$', " $AnnotationParams::"
     }
 
     # First, check if the entire message fits within the byte limit
@@ -360,34 +360,13 @@ function Invoke-AlpacaOutputHandler {
                     $command = $matches['cmd'].Trim()
                     $commandMessage = $matches['msg'].Trim()
                     switch($command) {
-                        'group' { 
-                            Write-Host "Overwrite GH Group Start"
-                            Write-AlpacaGroupStart $commandMessage
-                        }
-                        'endgroup' {
-                            Write-Host "Overwrite GH Group End"
-                            Write-AlpacaGroupEnd $commandMessage
-                        }
-                        'debug' {
-                            Write-Host "Overwrite GH Debug"
-                            Write-AlpacaDebug $commandMessage
-                        }
-                        { $_ -like 'error*' } {
-                            Write-Host "Overwrite GH Error"
-                            Write-AlpacaError $commandMessage -GitHubAnnotationParams ($command -replace '^error\s*', '')
-                        }
-                        { $_ -like 'warning*' } {
-                            Write-Host "Overwrite GH Warning"
-                            Write-AlpacaWarning $commandMessage -GitHubAnnotationParams ($command -replace '^warning\s*', '')
-                        }
-                         { $_ -like 'notice*' } {
-                            Write-Host "Overwrite GH Notice"
-                            Write-AlpacaNotice $commandMessage -GitHubAnnotationParams ($command -replace '^notice\s*', '')
-                        }
-                        default {
-                            Write-Host "Keep existing GH Command"
-                            Write-Host $message
-                        }
+                        'group'                 { Write-AlpacaGroupStart $commandMessage }
+                        'endgroup'              { Write-AlpacaGroupEnd $commandMessage }
+                        'debug'                 { Write-AlpacaDebug $commandMessage }
+                        { $_ -like 'error*' }   { Write-AlpacaError $commandMessage -GitHubAnnotationParams ($command -replace '^error\s*', '') }
+                        { $_ -like 'warning*' } { Write-AlpacaWarning $commandMessage -GitHubAnnotationParams ($command -replace '^warning\s*', '') }
+                        { $_ -like 'notice*' }  { Write-AlpacaNotice $commandMessage -GitHubAnnotationParams ($command -replace '^notice\s*', '') }
+                        default                 { Write-Host $message }
                     }
                 }
                 elseif ($message -match '^\s*##\[\s*(?<cmd>.+?)\s*\](?<msg>.*)') {
@@ -395,26 +374,11 @@ function Invoke-AlpacaOutputHandler {
                     $command = $matches['cmd'].Trim()
                     $commandMessage = $matches['msg'].Trim()
                     switch($command) {
-                        'group' { 
-                            Write-Host "Overwrite ADO Group Start"
-                            Write-AlpacaGroupStart $commandMessage
-                        }
-                        'endgroup' {
-                            Write-Host "Overwrite ADO Group End"
-                            Write-AlpacaGroupEnd $commandMessage
-                        }
-                        'debug' {
-                            Write-Host "Overwrite ADO Debug"
-                            Write-AlpacaDebug $commandMessage
-                        }
-                        { 'error', 'warning', 'notice' -contains $_ } {
-                            Write-Host "Overwrite ADO Annotation (${command})"
-                            Write-AlpacaAnnotation $commandMessage -Annotation $command -WithoutGitHubAnnotation
-                        }
-                        default {
-                            Write-Host "Overwrite ADO Command"
-                            Write-AlpacaOutput $message
-                        }
+                        'group'                                       { Write-AlpacaGroupStart $commandMessage }
+                        'endgroup'                                    { Write-AlpacaGroupEnd $commandMessage }
+                        'debug'                                       { Write-AlpacaDebug $commandMessage }
+                        { 'error', 'warning', 'notice' -contains $_ } { Write-AlpacaAnnotation $commandMessage -Annotation $command -WithoutGitHubAnnotation }
+                        default                                       { Write-AlpacaOutput $message }
                     }
                 }
                 elseif ($message -match 's*##vso\[task\.logissue\s+.*?;?\s*type\s*=\s*(?<type>error|warning)\s*;?.*?\](?<msg>.*)') {
@@ -422,14 +386,8 @@ function Invoke-AlpacaOutputHandler {
                     $issueType = $matches['type'].Trim()
                     $issueMessage = $matches['msg'].Trim()
                     switch ($issueType) {
-                        'error' { 
-                            Write-Host "Overwrite ADO Error"
-                            Write-AlpacaError $issueMessage
-                        }
-                        'warning' {
-                            Write-Host "Overwrite ADO Warning"
-                            Write-AlpacaWarning $issueMessage
-                        }
+                        'error'   { Write-AlpacaError $issueMessage }
+                        'warning' { Write-AlpacaWarning $issueMessage }
                     }
                 }
                 else {
