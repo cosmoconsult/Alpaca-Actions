@@ -3,17 +3,23 @@ param(
 )
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
-if ($env:RUNNER_DEBUG -eq "1") {
+if (Get-AlpacaIsDebugMode) {
     Write-AlpacaGroupStart "Parameters"
     try {
-        $params.GetEnumerator() | ForEach-Object { 
-            $value = if ($_.Value -is [array] -or $_.Value -is [hashtable]) {
-                $_.Value | ConvertTo-Json -Compress
+        $params.GetEnumerator() | ForEach-Object {
+            $key = [string]$_.Key
+            if ($key -match '(?i)(credential|password|token|secret)') {
+                $safeValue = '<redacted>'
             }
             else {
-                $_.Value
+                $safeValue = if ($_.Value -is [array] -or $_.Value -is [hashtable]) {
+                    $_.Value | ConvertTo-Json -Compress
+                }
+                else {
+                    $_.Value
+                }
             }
-            Write-AlpacaDebug "$($_.Key): $value"
+            Write-AlpacaDebug "$key: $safeValue"
         }
     }
     finally {
