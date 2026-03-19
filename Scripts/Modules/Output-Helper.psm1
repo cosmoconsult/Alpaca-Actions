@@ -346,33 +346,58 @@ function Invoke-AlpacaOutputHandler {
             ( [System.Management.Automation.InformationRecord] ) {
                 $message = $Value.ToString()
 
-                if ($message -match '^\s*::group::(.*)') {
-                    # Map GH group command to Alpaca group start
-                    Write-Host "Overwrite GH Group Start"
-                    Write-AlpacaGroupStart $matches[1]
+                if ($message -match '^\s*(?:::(?<cmd>.*?)::|##\[(?<cmd>.*?)\])(?<msg>.*)') {
+                    # Map GH and ADO commands to Alpaca annotations and groups
+                    $command = $matches['cmd'].Trim()
+                    $commandMessage = $matches['msg'].Trim()
+                    switch($command) {
+                        { $_ -like 'group*' } { 
+                            Write-Host "Overwrite Group Start"
+                            Write-AlpacaGroupStart $commandMessage
+                        }
+                        { $_ -like 'endgroup*' } {
+                            Write-Host "Overwrite Group End"
+                            Write-AlpacaGroupEnd $commandMessage
+                        }
+                        { $_ -like 'error*' } {
+                            Write-Host "Overwrite Error"
+                            Write-AlpacaError $commandMessage
+                        }
+                        { $_ -like 'warning*' } {
+                            Write-Host "Overwrite Warning"
+                            Write-AlpacaWarning $commandMessage
+                        }
+                        { $_ -like 'notice*' } {
+                            Write-Host "Overwrite Notice"
+                            Write-AlpacaNotice $commandMessage
+                        }
+                        { $_ -like 'debug*' } {
+                            Write-Host "Overwrite Debug"
+                            Write-AlpacaDebug $commandMessage
+                        }
+                        default {
+                            Write-Host "Keep existing Command"
+                            Write-Host $message
+                        }
+                    }
                 }
-                elseif ($message -match '^\s*::endgroup::(.*)') {
-                    # Map GH group end command to Alpaca group end
-                    Write-Host "Overwrite GH Group End"
-                    Write-AlpacaGroupEnd $matches[1]
-                }
-                elseif ($message -match '^\s*::.*?::') {
-                    # Preserve other GH commands (like annotations) without modification
-                    Write-Host "Keep existing GH Command"
-                    Write-Host $message
-                }
-                elseif ($message -match '^\s*##vso\[task\.logissue\s+type\s*=\s*warning\](.*)') {
-                    # Map ADO warning command to Alpaca warning
-                    Write-Host "Overwrite ADO Warning"
-                    Write-AlpacaWarning $matches[1]
-                }
-                elseif ($message -match '^\s*##vso\[task\.logissue\s+type\s*=\s*error\](.*)') {
-                    # Map ADO error command to Alpaca error
-                    Write-Host "Overwrite ADO Error"
-                    Write-AlpacaError $matches[1]
+                elseif ($message -match 's*##vso\[task\.logissue\s+.*?;?\s*type\s*=\s*(?<type>error|warning)\s*;?.*?\](?<msg>.*)') {
+                    # Map ADO issue command to Alpaca annotations
+                    $issueType = $matches['type'].Trim()
+                    $issueMessage = $matches['msg'].Trim()
+                    switch ($issueType) {
+                        'error' { 
+                            Write-Host "Overwrite ADO Error"
+                            Write-AlpacaError $issueMessage
+                        }
+                        'warning' {
+                            Write-Host "Overwrite ADO Warning"
+                            Write-AlpacaWarning $issueMessage
+                        }
+                    }
                 }
                 else {
-                    # Map all other information records to standard Alpaca output
+                    # Map all other information records to Alpaca output
                     Write-AlpacaOutput $message
                 }
             }
