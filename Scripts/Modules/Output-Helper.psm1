@@ -247,7 +247,7 @@ function Write-AlpacaNotice {
     )
 
     process {
-        Write-AlpacaAnnotation -Message $Message -Annotation "Notice" -AnnotationParams $GitHubAnnotationParams -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
+        Write-AlpacaAnnotation -Message $Message -Annotation "Notice" -GitHubAnnotationParams $GitHubAnnotationParams -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
     }
 }
 Export-ModuleMember -Function Write-AlpacaNotice
@@ -261,7 +261,7 @@ function Write-AlpacaWarning {
     )
 
     process {
-        Write-AlpacaAnnotation -Message $Message -Annotation "Warning" -AnnotationParams $GitHubAnnotationParams -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
+        Write-AlpacaAnnotation -Message $Message -Annotation "Warning" -GitHubAnnotationParams $GitHubAnnotationParams -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
     }
 }
 Export-ModuleMember -Function Write-AlpacaWarning
@@ -275,7 +275,7 @@ function Write-AlpacaError {
     )
 
     process {
-        Write-AlpacaAnnotation -Message $Message -Annotation "Error" -AnnotationParams $GitHubAnnotationParams -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
+        Write-AlpacaAnnotation -Message $Message -Annotation "Error" -GitHubAnnotationParams $GitHubAnnotationParams -WithoutGitHubAnnotation:$WithoutGitHubAnnotation
     }
 }
 Export-ModuleMember -Function Write-AlpacaError
