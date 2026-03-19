@@ -75,7 +75,7 @@ function Split-AlpacaMessage {
         return $Message
     }
 
-    $lines = $Message -split '\r?\n'
+    $lines = $Message -replace '\r?\n\s*$', '' -split '\r?\n'
 
     if ($LineByteLimit -eq 0) {
         # No byte limit specified, return original lines

@@ -95,9 +95,10 @@ if ($Translate) {
     $CompilationParamsCopy.CustomCodeCops = @()
 
     # Disable all non-mandatory steps
+    $CompilationParamsCopy.UpdateDependencies = $false
     $CompilationParamsCopy.CopyAppToSymbolsFolder = $false
     $CompilationParamsCopy.GenerateReportLayout = 'No'
-    $CompilationParamsCopy.generatecrossreferences = $false
+    $CompilationParamsCopy.Generatecrossreferences = $false
 
     if ($useCompilerFolder) {
         #useCompilerFolder comes from parent scope
