@@ -27,6 +27,16 @@ if (Get-AlpacaIsDebugMode) {
     }
 }
 
+Write-Host "Runner OS: $($env:RUNNER_OS)"
+if ($env:RUNNER_OS -ne 'Windows') {
+    Write-Host "Detected non-Windows OS ($($env:RUNNER_OS)). Installing necessary dependencies..."
+    
+    Write-Host "Installing @microsoft/bc-replay"
+    pwsh -command { npm i @microsoft/bc-replay@0.1.119 --save --silent }
+    Write-Host "Installing Playwright with dependencies"
+    pwsh -command { npx playwright install --with-deps chromium }
+}
+
 Write-AlpacaOutput "Overriding start address to Environment value: $($environment)" # $environment comes from parent script
 $params.startAddress = $environment # modify the hashtable parameter
 
