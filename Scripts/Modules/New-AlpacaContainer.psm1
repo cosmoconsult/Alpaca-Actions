@@ -42,7 +42,7 @@ function New-AlpacaContainer {
         }
     } 
     $body = $request | ConvertTo-Json -Depth 10
-    $response = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'POST' -Headers $headers -Body $body
+    $response = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'POST' -Headers $headers -Body $body -Retries 3
 
     $container = [pscustomobject]@{
         Project   = $Project

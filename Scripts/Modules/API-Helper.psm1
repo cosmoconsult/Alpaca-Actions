@@ -59,10 +59,21 @@ function Invoke-AlpacaApiRequest {
         [string] $Url,
         [string] $Method = 'Get',
         [Hashtable] $Headers,
-        [object] $Body
+        [object] $Body,
+        [int] $Retries = 0,
+        [System.Net.HttpStatusCode[]] $NoRetryStatusCodes = @()
     )
     
-    $maxAttempts = 5
+    $NoRetryStatusCodes += 
+        [System.Net.HttpStatusCode]::BadRequest,           # 400
+        [System.Net.HttpStatusCode]::Unauthorized,         # 401
+        [System.Net.HttpStatusCode]::Forbidden,            # 403
+        [System.Net.HttpStatusCode]::MethodNotAllowed,     # 405
+        [System.Net.HttpStatusCode]::Conflict,             # 409
+        [System.Net.HttpStatusCode]::UnprocessableEntity,  # 422
+        [System.Net.HttpStatusCode]::NotImplemented        # 501
+
+    $maxAttempts = $Retries + 1
     foreach ($attempt in 1..$maxAttempts) {
         Write-AlpacaDebug -Message "Invoking Alpaca-Api: $Url ($Method) - Attempt $attempt of $maxAttempts"
         try {
@@ -70,15 +81,19 @@ function Invoke-AlpacaApiRequest {
         }
         catch {
             if ($attempt -lt $maxAttempts) {
-                Write-AlpacaDebug -Message (Get-AlpacaApiErrorMessage -ErrorRecord $_)
+                if ($_.Exception -is [System.Net.Http.HttpRequestException] -and $_.Exception.StatusCode -in $NoRetryStatusCodes) {
+                    Write-AlpacaDebug -Message "Not retying for Http status code $([int]$_.Exception.StatusCode)"
+                }
+                else {
+                    Write-AlpacaDebug -Message (Get-AlpacaApiErrorMessage -ErrorRecord $_)
+                    $waitSeconds = [Math]::Pow(2, $attempt - 1)
+                    Write-AlpacaDebug -Message "Retrying in $waitSeconds second(s)..."
+                    Start-Sleep -Seconds $waitSeconds
+                    continue
+                }
+            }
 
-                $waitSeconds = [Math]::Pow(2, $attempt - 1)
-                Write-AlpacaDebug -Message "Retrying in $waitSeconds second(s)..."
-                Start-Sleep -Seconds $waitSeconds
-            }
-            else {
-                Resolve-AlpacaApiError -ErrorRecord $_
-            }
+            Resolve-AlpacaApiError -ErrorRecord $_
         }
     }
 }
