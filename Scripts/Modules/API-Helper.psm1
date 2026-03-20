@@ -137,6 +137,7 @@ function Resolve-AlpacaApiError {
     )
 
     $errorMessage = Get-AlpacaApiErrorMessage -ErrorRecord $ErrorRecord
+    Write-AlpacaError -Message $errorMessage
 
     $updatedErrorRecord  = [System.Management.Automation.ErrorRecord]::new($ErrorRecord, $ErrorRecord.Exception)
     $updatedErrorRecord.ErrorDetails = [System.Management.Automation.ErrorDetails]::new($errorMessage)
