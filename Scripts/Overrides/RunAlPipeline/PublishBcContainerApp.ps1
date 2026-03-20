@@ -33,7 +33,7 @@ else {
 
 
 $publishedAppInfos = Get-Variable -Name alpacaPublishedAppInfos -ValueOnly -Scope Script -ErrorAction Ignore
-if (! $publishedAppInfos) {
+if ($null -eq $publishedAppInfos) {
     $publishedAppInfos = Get-AlpacaAppInfo -Token $env:_token -ContainerName $env:ALPACA_CONTAINER_ID
     Set-Variable -Name alpacaPublishedAppInfos -Value $publishedAppInfos -Scope Script
 }
