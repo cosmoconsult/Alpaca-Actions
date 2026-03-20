@@ -19,7 +19,7 @@ if (Get-AlpacaIsDebugMode) {
                     $_.Value
                 }
             }
-            Write-AlpacaDebug "$key: $safeValue"
+            Write-AlpacaDebug "${key}: $safeValue"
         }
     }
     finally {
