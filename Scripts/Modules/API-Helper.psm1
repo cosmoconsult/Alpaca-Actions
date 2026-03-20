@@ -82,7 +82,7 @@ function Invoke-AlpacaApiRequest {
         catch {
             if ($attempt -lt $maxAttempts) {
                 if ($_.Exception -is [System.Net.Http.HttpRequestException] -and $_.Exception.StatusCode -in $NoRetryStatusCodes) {
-                    Write-AlpacaDebug -Message "Not retying for Http status code $([int]$_.Exception.StatusCode)"
+                    Write-AlpacaDebug -Message "Not retrying for Http status code $([int]$_.Exception.StatusCode)"
                 }
                 else {
                     Write-AlpacaDebug -Message (Get-AlpacaApiErrorMessage -ErrorRecord $_)
