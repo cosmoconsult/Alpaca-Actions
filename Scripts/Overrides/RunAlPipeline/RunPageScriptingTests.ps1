@@ -33,8 +33,22 @@ if ($env:RUNNER_OS -ne 'Windows') {
     
     Write-AlpacaOutput "Installing @microsoft/bc-replay"
     pwsh -command { npm i @microsoft/bc-replay@0.1.119 --save --silent }
-    Write-AlpacaOutput "Installing Playwright with dependencies"
-    pwsh -command { npx playwright install --with-deps chromium }
+    Write-AlpacaOutput "Installing Playwright browser"
+    try {
+        # Try with sudo first if available
+        if (Get-Command sudo -ErrorAction SilentlyContinue) {
+            pwsh -command { sudo npx playwright install --with-deps chromium }
+        }
+        else {
+            # Fall back to installing browser only (no system deps)
+            pwsh -command { npx playwright install chromium }
+        }
+    }
+    catch {
+        Write-AlpacaWarning "Playwright installation encountered issues: $_"
+        Write-AlpacaOutput "Attempting to install browser only..."
+        pwsh -command { npx playwright install chromium }
+    }
 }
 
 Write-AlpacaOutput "Overriding start address to Environment value: $($environment)" # $environment comes from parent script
