@@ -19,12 +19,17 @@ if (Get-AlpacaIsDebugMode) {
                     $_.Value
                 }
             }
-            Write-AlpacaDebug "$key: $safeValue"
+            Write-AlpacaDebug "${key}: $safeValue"
         }
     }
     finally {
         Write-AlpacaGroupEnd
     }
+}
+
+if ($env:RUNNER_OS -ne 'Windows') {
+    Write-AlpacaError "Running Page Scripting Tests is only supported on Windows runners. Set githubRunner to 'windows-latest'. See https://aka.ms/algosettings#githubRunner"
+    throw
 }
 
 Write-AlpacaOutput "Overriding start address to Environment value: $($environment)" # $environment comes from parent script
