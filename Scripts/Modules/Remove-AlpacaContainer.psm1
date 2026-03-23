@@ -18,7 +18,7 @@ function Remove-AlpacaContainer {
 
         $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "Container" -Ressource $Container.Id
         
-        Invoke-AlpacaApiRequest -Url $apiUrl -Method 'DELETE' -Headers $headers | Out-Null
+        Invoke-AlpacaApiRequest -Url $apiUrl -Method 'DELETE' -Headers $headers -Retries 3 -NoRetryStatusCodes @([System.Net.HttpStatusCode]::NotFound) | Out-Null
 
         Write-AlpacaOutput "Container '$($Container.Id)' deleted"
     } catch {

@@ -9,7 +9,7 @@ function Get-AlpacaConfigSyncStatus {
     $headers = Get-AlpacaAuthenticationHeaders -Token $Token
     $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "GitHub" -Endpoint "ConfigSync"
     try {
-        return Invoke-AlpacaApiRequest -Url $apiUrl -Method Get -Headers $headers
+        return Invoke-AlpacaApiRequest -Url $apiUrl -Method Get -Headers $headers -Retries 3
     }
     catch {
         Write-AlpacaError "Failed to get config sync status from Alpaca backend: $_"

@@ -29,7 +29,7 @@ function Get-AlpacaDependencyApps {
     $resource = "$($owner)/$($repository)/$($project -replace '^\.$', '_')"
     $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "GitHub" -Endpoint "Project" -Ressource $resource -QueryParams $queryParams
 
-    $containerConfig = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'GET' -Headers $headers
+    $containerConfig = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'GET' -Headers $headers -Retries 3
     $artifacts = $containerConfig.containerConfigurations[0].artifacts
     $artifacts = $artifacts | Where-Object { $_.target -eq 'App' }
     $artifacts = $artifacts | Where-Object { $_.IgnoreIn -ne 'Build' }

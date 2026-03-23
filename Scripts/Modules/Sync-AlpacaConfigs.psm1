@@ -15,7 +15,7 @@ function Sync-AlpacaConfigs {
     $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "GitHub" -Endpoint "ConfigSync"
 
     $body = @{ secrets = $Secrets; variables = $Variables } | ConvertTo-Json -Depth 10
-    Invoke-AlpacaApiRequest -Url $apiUrl -Method Post -Headers $headers -Body $body | Out-Null
+    Invoke-AlpacaApiRequest -Url $apiUrl -Method Post -Headers $headers -Body $body -Retries 3 | Out-Null
 
     Write-AlpacaOutput "Synced configs to Alpaca backend"
 }

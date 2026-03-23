@@ -33,7 +33,7 @@ function Wait-AlpacaContainerImageReady {
         $attemps = 1
         do {
             try {
-                $containerResult = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'GET' -Headers $headers
+                $containerResult = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'GET' -Headers $headers -Retries 3
             }
             catch {
                 Write-AlpacaError "Error while getting container status: $_"
