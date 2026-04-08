@@ -25,7 +25,13 @@ Write-AlpacaOutput "Get Alpaca container information from outputs of create cont
 $containers = @("$($Jobs.createContainers.outputs.containersJson)" | ConvertFrom-Json)
 $container = $containers | Where-Object { $_.Project -eq $project -and $_.BuildMode -eq $BuildMode }
 if (! $container) {
-    throw "No Alpaca container information for project '$project' and build mode '$BuildMode' found"
+    Write-AlpacaOutput "No Alpaca container information for project '$project' and build mode '$BuildMode' found"
+    $container = @{
+        Id = "NOCONTAINER"
+        User = "NOCONTAINER"
+        Password = "NOCONTAINER"
+        Url = "NOCONTAINER"
+    }
 }
 
 Write-AlpacaOutput "Get container authentication context from Alpaca container information"
