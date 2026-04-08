@@ -7,6 +7,8 @@ param(
 
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
 
+. (Join-Path -Path $PSScriptRoot -ChildPath "..\AL-Go-Helper.ps1" -Resolve)
+
 try {
     # BuildOrderJson is sonething like this: [{"projects":["ProjectA","ProjectB"],"buildDimensions":[{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Default","projectName":"ProjectA"},{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Clean","projectName":"ProjectA"},{"project":"ProjectB","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Default","projectName":"ProjectB"}],"projectsCount":2}]
     # or with multi level projects like this [{"buildDimensions":[{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","buildMode":"Default","projectName":"ProjectA","githubRunnerShell":"pwsh"},{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","buildMode":"Clean","projectName":"ProjectA","githubRunnerShell":"pwsh"}],"projects":["ProjectA"],"projectsCount":1},{"buildDimensions":[{"project":"ProjectB","gitHubRunner":"\"ubuntu-latest\"","buildMode":"Default","projectName":"ProjectB","githubRunnerShell":"pwsh"}],"projects":["ProjectB"],"projectsCount":1}]
@@ -24,6 +26,10 @@ $containers = @()
 
 try {
     foreach ($buildDimension in $BuildOrder.buildDimensions) {
+        Write-AlpacaOutput "Determine whether a container is necessary for project '$($buildDimension.project)' with build mode '$($buildDimension.buildMode)'"
+        $settings = ReadSettings -project $buildDimension.project -buildMode $buildDimension.buildMode
+        Write-AlpacaOutput "Settings: $($settings | convertto-json -compress)"
+        # TODO: decision making
         Write-AlpacaOutput "Creating container for project '$($buildDimension.project)' with build mode '$($buildDimension.buildMode)'"
         $containers += New-AlpacaContainer -Project $buildDimension.project -Token $Token -BuildMode $buildDimension.buildMode
     }
