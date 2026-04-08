@@ -10,11 +10,6 @@ $ALGoHelperPath = Join-Path -Path $PSScriptRoot -ChildPath "../../../../../micro
 Write-AlpacaDebug "ALGoHelperPath: $ALGoHelperPath"
 . ($ALGoHelperPath)
 
-Write-Host "GH Workspace: $($ENV:GITHUB_WORKSPACE)"
-$set = join-path "$ENV:GITHUB_WORKSPACE" $(Join-Path '.AL-Go' 'settings.json')
-Write-Host "Set: $set; $(Test-Path $set)"
-
-
 try {
     # BuildOrderJson is sonething like this: [{"projects":["ProjectA","ProjectB"],"buildDimensions":[{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Default","projectName":"ProjectA"},{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Clean","projectName":"ProjectA"},{"project":"ProjectB","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Default","projectName":"ProjectB"}],"projectsCount":2}]
     # or with multi level projects like this [{"buildDimensions":[{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","buildMode":"Default","projectName":"ProjectA","githubRunnerShell":"pwsh"},{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","buildMode":"Clean","projectName":"ProjectA","githubRunnerShell":"pwsh"}],"projects":["ProjectA"],"projectsCount":1},{"buildDimensions":[{"project":"ProjectB","gitHubRunner":"\"ubuntu-latest\"","buildMode":"Default","projectName":"ProjectB","githubRunnerShell":"pwsh"}],"projects":["ProjectB"],"projectsCount":1}]
@@ -32,10 +27,13 @@ $containers = @()
 
 try {
     foreach ($buildDimension in $BuildOrder.buildDimensions) {
-        Write-AlpacaOutput "Determine whether a container is necessary for project '$($buildDimension.project)' with build mode '$($buildDimension.buildMode)'"
+        Write-AlpacaDebug "Determine whether a container is necessary for project '$($buildDimension.project)' with build mode '$($buildDimension.buildMode)'"
         $settings = ReadSettings -project $buildDimension.project -buildMode $buildDimension.buildMode
-        Write-AlpacaOutput "Settings: $($settings | convertto-json -compress)"
-        # TODO: decision making
+        Write-AlpacaDebug "Settings: $($settings | convertto-json -compress)"
+        if($settings.useCompilerFolder -and $settings.doNotPublishApps) {
+            Write-AlpacaOutput "No container required for project '$($buildDimension.project)' with build mode '$($buildDimension.buildMode)'"
+            continue
+        }
         Write-AlpacaOutput "Creating container for project '$($buildDimension.project)' with build mode '$($buildDimension.buildMode)'"
         $containers += New-AlpacaContainer -Project $buildDimension.project -Token $Token -BuildMode $buildDimension.buildMode
     }
