@@ -6,8 +6,10 @@ param(
 )
 
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
-
-. (Join-Path -Path $PSScriptRoot -ChildPath "..\AL-Go-Helper.ps1" -Resolve)
+$ActionsDir = Resolve-Path (Join-Path -Path $PSScriptRoot -ChildPath "../../../../../)
+Write-AlpacaOutput "ActionsDir: $ActionsDir"
+gci $ActionsDir -recurse -Directory | %{Write-AlpacaOutput $_.FullName}
+. (Join-Path -Path $PSScriptRoot -ChildPath "../../../../../microsoft/AL-Go-Actions/AL-Go-Helper.ps1" -Resolve)
 
 try {
     # BuildOrderJson is sonething like this: [{"projects":["ProjectA","ProjectB"],"buildDimensions":[{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Default","projectName":"ProjectA"},{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Clean","projectName":"ProjectA"},{"project":"ProjectB","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Default","projectName":"ProjectB"}],"projectsCount":2}]
