@@ -6,7 +6,7 @@ param(
 )
 
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
-$ActionsDir = Resolve-Path (Join-Path -Path $PSScriptRoot -ChildPath "../../../../../)
+$ActionsDir = Resolve-Path (Join-Path -Path $PSScriptRoot -ChildPath "../../../../../")
 Write-AlpacaOutput "ActionsDir: $ActionsDir"
 gci $ActionsDir -recurse -Directory | %{Write-AlpacaOutput $_.FullName}
 . (Join-Path -Path $PSScriptRoot -ChildPath "../../../../../microsoft/AL-Go-Actions/AL-Go-Helper.ps1" -Resolve)
