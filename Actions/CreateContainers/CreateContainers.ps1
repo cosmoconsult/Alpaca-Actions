@@ -43,11 +43,9 @@ catch {
     throw "Failed to create containers"
 }
 finally {
-    Write-AlpacaOutput "Created $($containers.Count) of $($BuildOrder.buildDimensions.Count) containers"
+    Write-AlpacaOutput "Created $($containers.Count) containers for $($BuildOrder.buildDimensions.Count) build dimensions."
 
     $containersJson = $containers | ConvertTo-Json -Depth 99 -Compress -AsArray
     Add-Content -Encoding UTF8 -Path $env:GITHUB_ENV -Value "ALPACA_CONTAINERS_JSON=$($containersJson)"
     Add-Content -Encoding UTF8 -Path $env:GITHUB_OUTPUT -Value "containersJson=$($containersJson)"
 }
-
-throw
