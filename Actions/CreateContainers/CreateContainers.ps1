@@ -9,7 +9,9 @@ Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\A
 $ActionsDir = Resolve-Path (Join-Path -Path $PSScriptRoot -ChildPath "../../../../../")
 Write-AlpacaOutput "ActionsDir: $ActionsDir"
 gci $ActionsDir -recurse -Directory | %{Write-AlpacaOutput $_.FullName}
-. (Join-Path -Path $PSScriptRoot -ChildPath "../../../../../microsoft/AL-Go-Actions/AL-Go-Helper.ps1" -Resolve)
+$ALGoHelperPath = Join-Path -Path $PSScriptRoot -ChildPath "../../../../../microsoft/AL-Go-Actions/*/AL-Go-Helper.ps1" -Resolve
+Write-Host "ALGoHelperPath: $ALGoHelperPath"
+. ($ALGoHelperPath)
 
 try {
     # BuildOrderJson is sonething like this: [{"projects":["ProjectA","ProjectB"],"buildDimensions":[{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Default","projectName":"ProjectA"},{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Clean","projectName":"ProjectA"},{"project":"ProjectB","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Default","projectName":"ProjectB"}],"projectsCount":2}]
