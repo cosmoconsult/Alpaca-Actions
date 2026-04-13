@@ -75,7 +75,12 @@ Get-AlpacaDependencyApps -packagesFolder $packagesFolder -token $env:_token
 
 Write-AlpacaGroupEnd
 
-
+# Check Settings
+if ($additionalCountries -is [String]) { $additionalCountries = @($additionalCountries.Split(',').Trim() | Where-Object { $_ }) }
+if ($additionalCountries.Length -gt 0) {
+    Write-AlpacaDebug "Additional countries specified: $($additionalCountries -join ', ')"
+    Write-AlpacaWarning "AdditionalCountries are not supported by COSMO Alpaca. Use BuildModes to validate additional countries. https://docs.cosmoconsult.com/en-en/cloud-service/alpaca/github/" #TODO update link when site is published.
+}
 
 # Load overrides
 
