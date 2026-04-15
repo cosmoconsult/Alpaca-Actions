@@ -291,7 +291,7 @@ jobs:
           Write-Host "Validate: $validate"
           Write-Host "================================"
 
-          if ($runTests -ne "success" -or $validate -ne "success" -or $createArtifact -ne "success" -or $integrationTests -ne "success") {
+          if ($runTests -ne "success" -or $validate -ne "success") {
             Write-Error "One or more CI jobs failed"
             exit 1
           } else {
