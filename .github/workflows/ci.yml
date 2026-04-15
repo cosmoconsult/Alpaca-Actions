@@ -1,0 +1,267 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  run-tests:
+    name: Run Pester Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      checks: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check Pester Installation
+        shell: pwsh
+        run: |
+          $module = Get-Module -ListAvailable -Name Pester | Where-Object { 
+            $pesterVersion = [System.Version]::Parse($_.Version)
+            $pesterVersion.Major -ge 5
+          }
+
+          if ($null -eq $module) {
+            Write-Host "Installing Pester module..."
+            Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser
+            $installedModule = Get-Module -ListAvailable -Name Pester | Where-Object { 
+              $pesterVersion = [System.Version]::Parse($_.Version)
+              $pesterVersion.Major -ge 5
+            }
+            Write-Host "[info] Installed Pester version: $($installedModule.Version)"
+          } else {
+            Write-Host "[info] Found Pester version: $($module.Version)"
+          }
+
+      - name: Run Pester Tests
+        id: pester
+        shell: pwsh
+        run: |
+          $RepoPath = "${{ github.workspace }}"
+          $TestsPath = Join-Path -Path $RepoPath -ChildPath "Tests/"
+          $CoveragePath = '.'
+          $PathToSources = $RepoPath
+          $TestResultFile = Join-Path -Path $RepoPath -ChildPath "TestResults"
+          $TestResultXml = Join-Path -Path $TestResultFile -ChildPath "TestResult.xml"
+          $CoverageResultFile = Join-Path -Path $TestResultFile -ChildPath "coverage.xml"
+
+          New-Item -ItemType Directory -Path $TestResultFile -Force | Out-Null
+
+          Write-Host "Test Path: $TestsPath"
+          Write-Host "Coverage Path: $CoveragePath"
+          Write-Host "Test Result: $TestResultXml"
+          Write-Host "Coverage Result: $CoverageResultFile"
+          Write-Host ""
+
+          $PSVersionTable
+
+          $config = New-PesterConfiguration
+          $config.Run.Path = $TestsPath
+          $config.Run.ExcludePath = @(
+            # Join-Path -Path $TestsPath -ChildPath "Any.Tests.ps1" 
+          )
+          $config.Run.Exit = $false
+          $config.Run.PassThru = $true
+          $config.TestResult.Enabled = $true
+          $config.TestResult.OutputFormat = "NUnitXml"
+          $config.TestResult.OutputPath = $TestResultXml
+          $config.CodeCoverage.Enabled = $true
+          $config.CodeCoverage.Path = $CoveragePath
+          $config.CodeCoverage.OutputPath = $CoverageResultFile
+          $config.CodeCoverage.OutputFormat = "Cobertura"
+          $config.CodeCoverage.CoveragePercentTarget = 1 # FIXME
+
+          $result = Invoke-Pester -Configuration $config
+
+          Write-Host ""
+          Write-Host "================================"
+          Write-Host "Test Results Summary"
+          Write-Host "================================"
+          Write-Host "Total: $($result.TotalCount)"
+          Write-Host "Passed: $($result.PassedCount)"
+          Write-Host "Failed: $($result.FailedCount)"
+          Write-Host "Skipped: $($result.SkippedCount)"
+          Write-Host "================================"
+
+          # Check if coverage file was created
+          if (Test-Path $CoverageResultFile) {
+            $fileSize = (Get-Item $CoverageResultFile).Length
+            Write-Host "✓ Coverage file created: $CoverageResultFile ($fileSize bytes)"
+            
+            # Debug: Show first few lines of coverage file
+            Write-Host "Coverage file preview (Cobertura XML):"
+            Get-Content $CoverageResultFile -First 10 | ForEach-Object { Write-Host "  $_" }
+            
+            # Normalize path for output (always use forward slashes for consistency)
+            $normalizedPath = $CoverageResultFile.Replace('\', '/')
+            $workspacePath = "${{ github.workspace }}".Replace('\', '/')
+            $relativePath = $normalizedPath.Replace("$workspacePath/", "")
+            
+            Write-Host "Coverage file relative path: $relativePath"
+            echo "coverage-file=$relativePath" >> $env:GITHUB_OUTPUT
+            
+            # Verify file has content
+            if ($fileSize -eq 0) {
+              Write-Host "##[warning]⚠️ Coverage file is empty"
+            }
+          } else {
+            Write-Host "##[warning]⚠️ Coverage file not created"
+          }
+
+          # Exit with error if tests failed (but after setting outputs)
+          if ($result.FailedCount -gt 0) {
+            Write-Host "##[error]Tests failed"
+            exit 1
+          }
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: |
+            TestResults/TestResult.xml
+          check_name: "Pester Test Results"
+          comment_mode: off
+
+      - name: Publish Code Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        if: always() && steps.pester.outputs.coverage-file
+        with:
+          filename: ${{ steps.pester.outputs.coverage-file }}
+          badge: true
+          format: markdown
+          output: both
+          thresholds: "60 80"
+
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v3
+        if: github.event_name == 'pull_request'
+        with:
+          header: code-coverage
+          recreate: true
+          path: code-coverage-results.md
+
+  validate:
+    name: Validate Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Validate PowerShell Scripts
+        shell: pwsh
+        run: |
+          Write-Host "Validating PowerShell scripts..."
+          $hasErrors = $false
+          $errorCount = 0
+
+          # Find all PowerShell files
+          $psFiles = Get-ChildItem -Recurse -Include "*.ps1", "*.psm1" -ErrorAction SilentlyContinue
+
+          Write-Host "Found $($psFiles.Count) PowerShell files to validate"
+          Write-Host ""
+
+          foreach ($file in $psFiles) {
+            Write-Host "Checking $($file.FullName)..."
+            
+            try {
+              $content = Get-Content -Path $file.FullName -Raw -ErrorAction Stop
+              
+              # Parse the script
+              $tokens = $null
+              $parseErrors = $null
+              [System.Management.Automation.Language.Parser]::ParseInput($content, [ref]$tokens, [ref]$parseErrors) | Out-Null
+              
+              if ($parseErrors.Count -gt 0) {
+                # Filter out "Unable to find type" errors (expected when BC assemblies aren't loaded)
+                $realErrors = $parseErrors | Where-Object { 
+                  $_.Message -notlike "Unable to find type*" 
+                }
+                
+                if ($realErrors.Count -gt 0) {
+                  $hasErrors = $true
+                  $errorCount += $realErrors.Count
+                  Write-Host "##[error]❌ Parse errors found in: $($file.FullName)" -ForegroundColor Red
+                  foreach ($err in $realErrors) {
+                    $errorMsg = "  Line $($err.Extent.StartLineNumber): $($err.Message)"
+                    Write-Host "##[error]$errorMsg" -ForegroundColor Red
+                    Write-Host $errorMsg
+                  }
+                  Write-Host ""
+                } elseif ($parseErrors.Count -gt 0) {
+                  Write-Host "  ℹ️ Skipped $($parseErrors.Count) type-loading error(s) (expected)" -ForegroundColor Gray
+                }
+              }
+            } catch {
+              $hasErrors = $true
+              $errorCount++
+              Write-Host "##[error]❌ Failed to read or parse file: $($file.FullName)" -ForegroundColor Red
+              Write-Host "##[error]  Error: $($_.Exception.Message)" -ForegroundColor Red
+              Write-Host ""
+            }
+          }
+
+          Write-Host ""
+          Write-Host "================================"
+          if ($hasErrors) {
+            Write-Host "##[error]PowerShell validation FAILED with $errorCount error(s)" -ForegroundColor Red
+            Write-Host "================================"
+            exit 1
+          } else {
+            Write-Host "✓ All PowerShell scripts are valid" -ForegroundColor Green
+            Write-Host "================================"
+          }
+
+      - name: Validate YAML Files
+        shell: pwsh
+        run: |
+          # TODO: replace with real YAML validation (Yaml powerShell module or yamllint)
+          Write-Host "Validating YAML files..."
+          $hasErrors = $false
+          $errorCount = 0
+
+          # Find all YAML files
+          $yamlFiles = Get-ChildItem -Recurse -Include "*.yaml", "*.yml" -ErrorAction SilentlyContinue
+
+          Write-Host "Found $($yamlFiles.Count) YAML files to validate"
+          Write-Host ""
+
+          # Basic validation (check if files can be read)
+          foreach ($file in $yamlFiles) {
+            Write-Host "Checking $($file.FullName)..."
+            try {
+              $content = Get-Content -Path $file.FullName -Raw -ErrorAction Stop
+              if ([string]::IsNullOrWhiteSpace($content)) {
+                Write-Host "##[warning]⚠️ File is empty: $($file.FullName)" -ForegroundColor Yellow
+              }
+            } catch {
+              $hasErrors = $true
+              $errorCount++
+              Write-Host "##[error]❌ Failed to read file: $($file.FullName)" -ForegroundColor Red
+              Write-Host "##[error]  Error: $($_.Exception.Message)" -ForegroundColor Red
+              Write-Host ""
+            }
+          }
+
+          Write-Host ""
+          Write-Host "================================"
+          if ($hasErrors) {
+            Write-Host "##[error]YAML validation FAILED with $errorCount error(s)" -ForegroundColor Red
+            Write-Host "================================"
+            exit 1
+          } else {
+            Write-Host "✓ All YAML files are readable" -ForegroundColor Green
+            Write-Host "================================"
+          }
