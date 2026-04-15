@@ -265,3 +265,35 @@ jobs:
             Write-Host "✓ All YAML files are readable" -ForegroundColor Green
             Write-Host "================================"
           }
+  summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [run-tests, validate]
+    if: always()
+
+    steps:
+      - name: Check Job Status
+        shell: pwsh
+        run: |
+          $runTests = "${{ needs.run-tests.result }}"
+          $validate = "${{ needs.validate.result }}"
+
+          Write-Host "================================"
+          Write-Host "CI Build Summary"
+          Write-Host "================================"
+          Write-Host "Repository: ${{ github.repository }}"
+          Write-Host "Branch: ${{ github.ref_name }}"
+          Write-Host "Commit: ${{ github.sha }}"
+          Write-Host "Build: ${{ github.run_number }}"
+          Write-Host "Event: ${{ github.event_name }}"
+          Write-Host "--------------------------------"
+          Write-Host "Run Tests: $runTests"
+          Write-Host "Validate: $validate"
+          Write-Host "================================"
+
+          if ($runTests -ne "success" -or $validate -ne "success" -or $createArtifact -ne "success" -or $integrationTests -ne "success") {
+            Write-Error "One or more CI jobs failed"
+            exit 1
+          } else {
+            Write-Host "✓ All CI checks passed"
+          }
