@@ -111,15 +111,15 @@ jobs:
             
             # Verify file has content
             if ($fileSize -eq 0) {
-              Write-Host "##[warning]⚠️ Coverage file is empty"
+              Write-Host "::warning::⚠️ Coverage file is empty"
             }
           } else {
-            Write-Host "##[warning]⚠️ Coverage file not created"
+            Write-Host "::warning::⚠️ Coverage file not created"
           }
 
           # Exit with error if tests failed (but after setting outputs)
           if ($result.FailedCount -gt 0) {
-            Write-Host "##[error]Tests failed"
+            Write-Host "::error::Tests failed"
             exit 1
           }
 
