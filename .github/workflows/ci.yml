@@ -159,112 +159,11 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
-      - name: Validate PowerShell Scripts
-        shell: pwsh
-        run: |
-          Write-Host "Validating PowerShell scripts..."
-          $hasErrors = $false
-          $errorCount = 0
-
-          # Find all PowerShell files
-          $psFiles = Get-ChildItem -Recurse -Include "*.ps1", "*.psm1" -ErrorAction SilentlyContinue
-
-          Write-Host "Found $($psFiles.Count) PowerShell files to validate"
-          Write-Host ""
-
-          foreach ($file in $psFiles) {
-            Write-Host "Checking $($file.FullName)..."
-            
-            try {
-              $content = Get-Content -Path $file.FullName -Raw -ErrorAction Stop
-              
-              # Parse the script
-              $tokens = $null
-              $parseErrors = $null
-              [System.Management.Automation.Language.Parser]::ParseInput($content, [ref]$tokens, [ref]$parseErrors) | Out-Null
-              
-              if ($parseErrors.Count -gt 0) {
-                # Filter out "Unable to find type" errors (expected when BC assemblies aren't loaded)
-                $realErrors = $parseErrors | Where-Object { 
-                  $_.Message -notlike "Unable to find type*" 
-                }
-                
-                if ($realErrors.Count -gt 0) {
-                  $hasErrors = $true
-                  $errorCount += $realErrors.Count
-                  Write-Host "##[error]❌ Parse errors found in: $($file.FullName)" -ForegroundColor Red
-                  foreach ($err in $realErrors) {
-                    $errorMsg = "  Line $($err.Extent.StartLineNumber): $($err.Message)"
-                    Write-Host "##[error]$errorMsg" -ForegroundColor Red
-                    Write-Host $errorMsg
-                  }
-                  Write-Host ""
-                } elseif ($parseErrors.Count -gt 0) {
-                  Write-Host "  ℹ️ Skipped $($parseErrors.Count) type-loading error(s) (expected)" -ForegroundColor Gray
-                }
-              }
-            } catch {
-              $hasErrors = $true
-              $errorCount++
-              Write-Host "##[error]❌ Failed to read or parse file: $($file.FullName)" -ForegroundColor Red
-              Write-Host "##[error]  Error: $($_.Exception.Message)" -ForegroundColor Red
-              Write-Host ""
-            }
-          }
-
-          Write-Host ""
-          Write-Host "================================"
-          if ($hasErrors) {
-            Write-Host "##[error]PowerShell validation FAILED with $errorCount error(s)" -ForegroundColor Red
-            Write-Host "================================"
-            exit 1
-          } else {
-            Write-Host "✓ All PowerShell scripts are valid" -ForegroundColor Green
-            Write-Host "================================"
-          }
-
-      - name: Validate YAML Files
-        shell: pwsh
-        run: |
-          # TODO: replace with real YAML validation (Yaml powerShell module or yamllint)
-          Write-Host "Validating YAML files..."
-          $hasErrors = $false
-          $errorCount = 0
-
-          # Find all YAML files
-          $yamlFiles = Get-ChildItem -Recurse -Include "*.yaml", "*.yml" -ErrorAction SilentlyContinue
-
-          Write-Host "Found $($yamlFiles.Count) YAML files to validate"
-          Write-Host ""
-
-          # Basic validation (check if files can be read)
-          foreach ($file in $yamlFiles) {
-            Write-Host "Checking $($file.FullName)..."
-            try {
-              $content = Get-Content -Path $file.FullName -Raw -ErrorAction Stop
-              if ([string]::IsNullOrWhiteSpace($content)) {
-                Write-Host "##[warning]⚠️ File is empty: $($file.FullName)" -ForegroundColor Yellow
-              }
-            } catch {
-              $hasErrors = $true
-              $errorCount++
-              Write-Host "##[error]❌ Failed to read file: $($file.FullName)" -ForegroundColor Red
-              Write-Host "##[error]  Error: $($_.Exception.Message)" -ForegroundColor Red
-              Write-Host ""
-            }
-          }
-
-          Write-Host ""
-          Write-Host "================================"
-          if ($hasErrors) {
-            Write-Host "##[error]YAML validation FAILED with $errorCount error(s)" -ForegroundColor Red
-            Write-Host "================================"
-            exit 1
-          } else {
-            Write-Host "✓ All YAML files are readable" -ForegroundColor Green
-            Write-Host "================================"
-          }
+      - name: Validate PowerShell Files
+        uses: cosmoconsult/github-actions/actions/ValidatePowerShellFiles@main
+      - name: Validate Yaml Files
+        uses: cosmoconsult/github-actions/actions/ValidateYamlFiles@main
+        
   summary:
     name: CI Summary
     runs-on: ubuntu-latest
