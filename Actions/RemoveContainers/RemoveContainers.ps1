@@ -29,7 +29,7 @@ try {
 
     Write-AlpacaOutput "Determined $($containers.Count) containers:"
     foreach ($container in $containers) {
-        Write-AlpacaOutput "- Id: '$($container.Id)', Project: '$($container.containerOriginIdentifier.projectName)', BuildMode: '$($container.containerOriginIdentifier.alGoBuildMode)'"
+        Write-AlpacaOutput "- Id: '$($container.Id)', Project: '$($container.Project)', BuildMode: '$($container.BuildMode)'"
     }
 }
 catch {

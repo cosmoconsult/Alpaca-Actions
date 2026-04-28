@@ -33,7 +33,7 @@ if ((Get-IsAlpacaContainerRequired -Settings $Settings)) {
     Write-AlpacaOutput "Alpaca container is required based on settings"
     $container = Get-AlpacaContainer -alGoProject $project -Token $env:_token -alGoBuildMode $BuildMode
     if ($container) {
-        Write-AlpacaOutput "Container already exists with ID '$($container.id)'. Skipping creation."
+        Write-AlpacaOutput "Container already exists with ID '$($container.Id)'. Skipping creation."
     }
     else {
         Write-AlpacaOutput "Creating new Alpaca container for project '$project' and build mode '$BuildMode'"
