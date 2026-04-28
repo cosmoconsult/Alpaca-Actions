@@ -11,20 +11,25 @@ Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\A
 
 try {
     Write-AlpacaGroupStart "Determine containers"
-
-    $containers = [pscustomobject[]]("$ContainersJson" | ConvertFrom-Json)
+    $GetAlpacaContainerSplat = @{
+        Token = $Token
+    }
 
     $filter = "$FilterJson" | ConvertFrom-Json
     if ($filter) {
-        foreach ($key in $filter.PSObject.Properties.Name) {
-            $value = $filter.$key
-            Write-AlpacaOutput "Filtering by '$key' = '$value'"
-            $containers = [pscustomobject[]]($containers | Where-Object { $_.$key -eq $value })
+        if ($filter.Project) {
+            $GetAlpacaContainerSplat.alGoProject = $filter.Project
+        }
+        if ($filter.BuildMode) {
+            $GetAlpacaContainerSplat.alGoBuildMode = $filter.BuildMode
         }
     }
+    $filter.PSObject.Properties.Name | Where-Object { $_ -notin "Project", "BuildMode" } | ForEach-Object { Write-AlpacaWarning "Filtering by '$_' = '$($filter.$_)' is currently not supported and will be ignored" }
+    $Containers = Get-AlpacaContainer @GetAlpacaContainerSplat
+
     Write-AlpacaOutput "Determined $($containers.Count) containers:"
     foreach ($container in $containers) {
-        Write-AlpacaOutput "- Id: '$($container.Id)', Project: '$($container.Project)', BuildMode: '$($container.BuildMode)'"
+        Write-AlpacaOutput "- Id: '$($container.Id)', Project: '$($container.containerOriginIdentifier.projectName)', BuildMode: '$($container.containerOriginIdentifier.alGoBuildMode)'"
     }
 }
 catch {

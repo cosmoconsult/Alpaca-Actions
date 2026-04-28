@@ -12,7 +12,7 @@
     $repository = $repository.replace("/", "")
 
     try {
-        Write-AlpacaGroupStart "Deleting Container '$($Container.Id)' (Project: '$($Container.Project)', BuildMode: '$($Container.BuildMode)')"
+        Write-AlpacaGroupStart "Deleting Container '$($Container.Id)'"
 
         $headers = Get-AlpacaAuthenticationHeaders -Token $Token
 

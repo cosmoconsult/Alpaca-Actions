@@ -39,6 +39,7 @@
             branch           = $branch
             workflowName     = "$($env:GITHUB_WORKFLOW)"
             runId            = "$($env:GITHUB_RUN_ID)"
+            alGoBuildMode    = "$BuildMode"
         }
     }
     $body = $request | ConvertTo-Json -Depth 10
