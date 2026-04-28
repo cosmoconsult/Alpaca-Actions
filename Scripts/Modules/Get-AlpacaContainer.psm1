@@ -24,7 +24,6 @@ function Get-AlpacaContainer {
         $filter = @{
             organizationId = "$($env:GITHUB_REPOSITORY_OWNER_ID)"
             repoId         = "$($env:GITHUB_REPOSITORY_ID)"
-            # workflowId     = $env:GITHUB_WORKFLOW # FIXME, filter requires string sanitation, but cant find containers if cleaned up.
             runId          = "$($env:GITHUB_RUN_ID)"
             podType        = "build"
         }
@@ -33,7 +32,7 @@ function Get-AlpacaContainer {
         Write-AlpacaDebug "API response: $($response | ConvertTo-Json -Depth 10 -Compress)"
         Write-AlpacaOutput "Got $($response.Count) containers. Ids: $($response | ForEach-Object { $_.id } | ConvertTo-Json -Compress)"
         $response | Where-Object { $_.containerOriginIdentifier.alGoBuildMode -like $alGoBuildMode -and $_.containerOriginIdentifier.projectName -like $alGoProject }
-        $container = $response | ForEach-Object { [pscustomobject]@{
+        $container = $response | Where-Object { $_ } | ForEach-Object { [pscustomobject]@{
                 Project   = $_.containerOriginIdentifier.projectName
                 Id        = $_.id
                 User      = $_.username

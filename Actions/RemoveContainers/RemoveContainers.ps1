@@ -25,7 +25,7 @@ try {
         }
     }
     $filter.PSObject.Properties.Name | Where-Object { ![String]::IsNullOrEmpty($_) -and $_ -notin "Project", "BuildMode" } | ForEach-Object { Write-AlpacaWarning "Filtering by '$_' = '$($filter.$_)' is currently not supported and will be ignored" }
-    $Containers = Get-AlpacaContainer @GetAlpacaContainerSplat
+    $containers = Get-AlpacaContainer @GetAlpacaContainerSplat
 
     Write-AlpacaOutput "Determined $($containers.Count) containers:"
     foreach ($container in $containers) {
