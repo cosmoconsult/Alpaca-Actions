@@ -125,5 +125,14 @@ function Import-ALGoReadSettings {
 
     # Not cleaning up is intentional since the schema file is needed when reading settings.
 }
-
 Export-ModuleMember -Function Import-ALGoReadSettings
+
+function Get-IsAlpacaContainerRequired {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject] $Settings
+    )
+    return -not ($Settings.useCompilerFolder -and $Settings.doNotPublishApps)
+}
+Export-ModuleMember -Function Get-IsAlpacaContainerRequired
