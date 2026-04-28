@@ -31,7 +31,7 @@ Write-AlpacaGroupStart "Create Alpaca container if missing"
 $Settings = $env:Settings | ConvertFrom-Json
 if ((Get-IsAlpacaContainerRequired -Settings $Settings)) {
     Write-AlpacaOutput "Alpaca container is required based on settings"
-    $container = Get-AlpacaContainer -Project $project -Token $env:_token -BuildMode $BuildMode
+    $container = Get-AlpacaContainer -alGoProject $project -Token $env:_token -alGoBuildMode $BuildMode
     if ($container) {
         Write-AlpacaOutput "Container already exists with ID '$($container.id)'. Skipping creation."
     }
