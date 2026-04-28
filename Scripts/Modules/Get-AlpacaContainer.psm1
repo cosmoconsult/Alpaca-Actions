@@ -40,7 +40,7 @@ function Get-AlpacaContainer {
                 Url       = $_.webUrl
                 BuildMode = $_.containerOriginIdentifier.alGoBuildMode
             } }
-
+        Write-AlpacaDebug "Returning $($container.Count) container(s): $($container | ConvertTo-Json -Depth 10 -Compress)"
         return $container
     }
     finally {
