@@ -32,14 +32,12 @@ $Settings = $env:Settings | ConvertFrom-Json
 if ((Get-IsAlpacaContainerRequired -Settings $Settings)) {
     Write-AlpacaOutput "Alpaca container is required based on settings"
     $container = Get-AlpacaContainer -alGoProject $project -Token $env:_token -alGoBuildMode $BuildMode
-    Write-AlpacaDebug "Got $($container.Count) container(s) from API: $($container | ConvertTo-Json -Depth 10 -Compress)"
     if ($container) {
         Write-AlpacaOutput "Container already exists with ID '$($container.Id)'. Skipping creation."
     }
     else {
         Write-AlpacaOutput "Creating new Alpaca container for project '$project' and build mode '$BuildMode'"
         $container = New-AlpacaContainer -Project $project -Token $env:_token -BuildMode $BuildMode
-        Write-AlpacaDebug "Newly created $($container.Count) container(s) from API: $($container | ConvertTo-Json -Depth 10 -Compress)"
     }
 }
 else {
