@@ -3,9 +3,9 @@ function Get-AlpacaContainer {
         [Parameter(Mandatory = $true)]
         [string] $Token,
         [Parameter(Mandatory = $false)]
-        [string]$alGoProject = "*",
+        [string]$alGoProject = "*", # TODO: rename
         [Parameter(Mandatory = $false)]
-        [string]$alGoBuildMode = "*"
+        [string]$alGoBuildMode = "*" # TODO: rename
     )
 
     $owner = $env:GITHUB_REPOSITORY_OWNER
