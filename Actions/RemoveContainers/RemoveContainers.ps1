@@ -24,7 +24,7 @@ try {
             $GetAlpacaContainerSplat.alGoBuildMode = $filter.BuildMode
         }
     }
-    $filter.PSObject.Properties.Name | Where-Object { $_ -notin "Project", "BuildMode" } | ForEach-Object { Write-AlpacaWarning "Filtering by '$_' = '$($filter.$_)' is currently not supported and will be ignored" }
+    $filter.PSObject.Properties.Name | Where-Object { ![String]::IsNullOrEmpty($_) -and $_ -notin "Project", "BuildMode" } | ForEach-Object { Write-AlpacaWarning "Filtering by '$_' = '$($filter.$_)' is currently not supported and will be ignored" }
     $Containers = Get-AlpacaContainer @GetAlpacaContainerSplat
 
     Write-AlpacaOutput "Determined $($containers.Count) containers:"
