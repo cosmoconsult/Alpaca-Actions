@@ -38,7 +38,6 @@ if ((Get-IsAlpacaContainerRequired -Settings $Settings)) {
     else {
         Write-AlpacaOutput "Creating new Alpaca container for project '$project' and build mode '$BuildMode'"
         $container = New-AlpacaContainer -Project $project -Token $env:_token -BuildMode $BuildMode
-        Write-AlpacaDebug "Created container with ID '$($container.Id)': $($container | ConvertTo-Json -Depth 10 -Compress)"
     }
 }
 else {
@@ -50,10 +49,10 @@ Write-AlpacaOutput "Set Variables based on received container information"
 if (! $container) {
     Write-AlpacaOutput "No Alpaca container information for project '$project' and build mode '$BuildMode' found"
     $container = @{
-        id       = "NOCONTAINER"
-        username = "NOCONTAINER"
-        password = "NOCONTAINER"
-        weburl   = "https://NOCONTAINER"
+        Id       = "NOCONTAINER"
+        User     = "NOCONTAINER"
+        Password = "NOCONTAINER"
+        Url      = "https://NOCONTAINER"
     }
 }
 
@@ -61,8 +60,8 @@ Write-AlpacaDebug "Container information: $($container | ConvertTo-Json -Depth 1
 
 Write-AlpacaOutput "Get container authentication context from Alpaca container information"
 $containerAuthContext = @{
-    username = $container.username
-    Password = ConvertTo-AlpacaSecurePassword -PlainText $container.password
+    username = $container.User
+    Password = ConvertTo-AlpacaSecurePassword -PlainText $container.Password
 }
 
 Write-AlpacaGroupEnd
@@ -76,14 +75,14 @@ Write-AlpacaGroupStart "Update Variables"
 Write-AlpacaOutput "Set environmental variable 'ALPACA_BACKEND_URL' to '$backendUrl'"
 $env:ALPACA_BACKEND_URL = $backendUrl
 
-Write-AlpacaOutput "Set environmental variable 'ALPACA_CONTAINER_ID' to '$($container.id)'"
-$env:ALPACA_CONTAINER_ID = $container.id
+Write-AlpacaOutput "Set environmental variable 'ALPACA_CONTAINER_ID' to '$($container.Id)'"
+$env:ALPACA_CONTAINER_ID = $container.Id
 
 Write-AlpacaOutput "Set parent variable 'bcAuthContext' to '$([pscustomobject]$containerAuthContext)'"
 Set-Variable -Name 'bcAuthContext' -Value $containerAuthContext -Scope 1
 
-Write-AlpacaOutput "Set parent variable 'environment' to '$($container.weburl)'"
-Set-Variable -Name 'environment' -Value $container.weburl -Scope 1
+Write-AlpacaOutput "Set parent variable 'environment' to '$($container.Url)'"
+Set-Variable -Name 'environment' -Value $container.Url -Scope 1
 
 Write-AlpacaGroupEnd
 
