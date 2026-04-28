@@ -3,18 +3,13 @@ function Get-AlpacaContainer {
         [Parameter(Mandatory = $true)]
         [string] $Token,
         [Parameter(Mandatory = $false)]
-        [string]$alGoProject = "*", # TODO: rename
+        [string]$Project = "*",
         [Parameter(Mandatory = $false)]
-        [string]$alGoBuildMode = "*" # TODO: rename
+        [string]$BuildMode = "*"
     )
 
-    $owner = $env:GITHUB_REPOSITORY_OWNER
-    $repository = $env:GITHUB_REPOSITORY
-    $repository = $repository.replace($owner, "")
-    $repository = $repository.replace("/", "")
-
     try {
-        Write-AlpacaGroupStart "Get Alpaca Containers of current build process for project '$alGoProject' and build mode '$alGoBuildMode'"
+        Write-AlpacaGroupStart "Get Alpaca Containers of current build process for project '$Project' and build mode '$BuildMode'"
 
         $headers = Get-AlpacaAuthenticationHeaders -Token $Token
         $headers.add("Content-Type", "application/json")
@@ -30,7 +25,7 @@ function Get-AlpacaContainer {
         $body = $filter | ConvertTo-Json -Compress
         $response = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'POST' -Headers $headers -Body $body -Retries 3 -NoRetryStatusCodes @([System.Net.HttpStatusCode]::NotFound)
         Write-AlpacaOutput "Got $($response.Count) containers. Ids: $($response | ForEach-Object { $_.id } | ConvertTo-Json -Compress)"
-        $responseInFilter = $response | Where-Object { $_.containerOriginIdentifier.alGoBuildMode -like $alGoBuildMode -and $_.containerOriginIdentifier.projectName -like $alGoProject }
+        $responseInFilter = $response | Where-Object { $_.containerOriginIdentifier.alGoBuildMode -like $BuildMode -and $_.containerOriginIdentifier.projectName -like $Project }
         $container = $responseInFilter | ForEach-Object { [pscustomobject]@{
                 Project   = $_.containerOriginIdentifier.projectName
                 Id        = $_.id
