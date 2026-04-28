@@ -56,6 +56,8 @@ if (! $container) {
     }
 }
 
+Write-AlpacaDebug "Container information: $($container | ConvertTo-Json -Depth 10 -Compress)"
+
 Write-AlpacaOutput "Get container authentication context from Alpaca container information"
 $containerAuthContext = @{
     username = $container.username
