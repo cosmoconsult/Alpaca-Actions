@@ -31,8 +31,8 @@ function Get-AlpacaContainer {
         $response = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'POST' -Headers $headers -Body $body -Retries 3 -NoRetryStatusCodes @([System.Net.HttpStatusCode]::NotFound)
         Write-AlpacaDebug "API response: $($response | ConvertTo-Json -Depth 10 -Compress)"
         Write-AlpacaOutput "Got $($response.Count) containers. Ids: $($response | ForEach-Object { $_.id } | ConvertTo-Json -Compress)"
-        $response | Where-Object { $_.containerOriginIdentifier.alGoBuildMode -like $alGoBuildMode -and $_.containerOriginIdentifier.projectName -like $alGoProject }
-        $container = $response | Where-Object { $_ } | ForEach-Object { [pscustomobject]@{
+        $responseInFilter = $response | Where-Object { $_.containerOriginIdentifier.alGoBuildMode -like $alGoBuildMode -and $_.containerOriginIdentifier.projectName -like $alGoProject }
+        $container = $responseInFilter | ForEach-Object { [pscustomobject]@{
                 Project   = $_.containerOriginIdentifier.projectName
                 Id        = $_.id
                 User      = $_.username
