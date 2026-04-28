@@ -38,6 +38,7 @@ if ((Get-IsAlpacaContainerRequired -Settings $Settings)) {
     else {
         Write-AlpacaOutput "Creating new Alpaca container for project '$project' and build mode '$BuildMode'"
         $container = New-AlpacaContainer -Project $project -Token $env:_token -BuildMode $BuildMode
+        Write-AlpacaDebug "Created container with ID '$($container.Id)': $($container | ConvertTo-Json -Depth 10 -Compress)"
     }
 }
 else {
