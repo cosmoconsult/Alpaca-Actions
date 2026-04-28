@@ -22,7 +22,7 @@ else {
 }
 
 Write-Host "Download and Import AL-Go Helpers"
-$helperFiles = @{  
+$helperFiles = @{
     "AL-Go-Helper.ps1"                    = "https://raw.githubusercontent.com/microsoft/AL-Go/ab2f5319ed073c542e03914f8ae6c0fda029ee1e/Actions/AL-Go-Helper.ps1"
     "Github-Helper.psm1"                  = "https://raw.githubusercontent.com/microsoft/AL-Go/ab2f5319ed073c542e03914f8ae6c0fda029ee1e/Actions/Github-Helper.psm1"
     "CheckForUpdates.HelperFunctions.ps1" = "https://raw.githubusercontent.com/microsoft/AL-Go/ab2f5319ed073c542e03914f8ae6c0fda029ee1e/Actions/CheckForUpdates/CheckForUpdates.HelperFunctions.ps1"

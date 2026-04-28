@@ -1,4 +1,4 @@
-param (
+﻿param (
     [Parameter(HelpMessage = "The repository of the action", Mandatory = $true)]
     [string] $ActionRepo,
     [Parameter(HelpMessage = "The git ref of the action", Mandatory = $true)]

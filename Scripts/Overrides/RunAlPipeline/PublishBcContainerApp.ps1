@@ -1,11 +1,11 @@
-Param(
+﻿param(
     [Hashtable] $parameters
 )
 
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
 #Create and Prepare TempDir
-$TempDir = join-path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
+$TempDir = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
 New-Item -Path $TempDir -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
 
 
@@ -101,12 +101,10 @@ $appInfos = $appInfos | ForEach-Object {
 Write-AlpacaGroupEnd
 
 if ($appInfos) {
-    $password = ConvertFrom-SecureString -SecureString $parameters.bcAuthContext.Password -AsPlainText
-
     foreach ($appInfo in $appInfos) {
         Publish-AlpacaBcApp -ContainerUrl $parameters.Environment `
             -ContainerUser $parameters.bcAuthContext.username `
-            -ContainerPassword $password `
+            -ContainerPassword $parameters.bcAuthContext.Password `
             -Path $appInfo.Path
     }
 
@@ -122,3 +120,4 @@ if ($AlGoPublishBcContainerApp) {
 if (Test-Path "$TempDir") {
     Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
 }
+

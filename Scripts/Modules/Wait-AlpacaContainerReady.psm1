@@ -1,4 +1,4 @@
-function Wait-AlpacaContainerReady {
+﻿function Wait-AlpacaContainerReady {
     param (
         [Parameter(Mandatory = $true)]
         [string] $ContainerName,
@@ -14,8 +14,6 @@ function Wait-AlpacaContainerReady {
         [System.Collections.ArrayList] $GroupStartString = @("::group::", "##[group]"),
         [Parameter(Mandatory = $false)]
         [System.Collections.ArrayList] $GroupEndString = @("::endgroup::", "##[endgroup]"),
-        [Parameter(Mandatory = $false)]
-        [bool] $PrintLog = $true,
         [Parameter(Mandatory = $false)]
         [int] $MaxTries = 30,
         [Parameter(Mandatory = $false)]
@@ -50,7 +48,7 @@ function Wait-AlpacaContainerReady {
             $repository = $repository.replace($owner, "")
             $repository = $repository.replace("/", "")
 
-            
+
             $headers = Get-AlpacaAuthenticationHeaders -Token $Token
             $headers.add("accept", "application/text")
 
@@ -58,8 +56,8 @@ function Wait-AlpacaContainerReady {
                 tailLines     = 5000
             }
             $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "Container" -Ressource $ContainerName -RouteSuffix "logs" -QueryParams $QueryParams
-                
-            while ($waitForContainer) {  
+
+            while ($waitForContainer) {
 
                 $content = @()
                 try {
@@ -79,12 +77,12 @@ function Wait-AlpacaContainerReady {
                         return
                     }
                 }
-                    
+
                 # Check for Errors, Warnings, Ready-String
                 foreach ($line in ($content | Select-Object -Skip $takenLines -First ($content.Length - 1))) {
                     if ($errorRegex -and ($line -match $errorRegex)) {
                         Write-AlpacaError $line
-                        $success = $false                                
+                        $success = $false
                         $waitForContainer = $false
                     }
                     elseif ($warnRegex -and ($line -match $warnRegex)) {
@@ -123,7 +121,7 @@ function Wait-AlpacaContainerReady {
             return
         }
     }
-    
+
     end {
         if (! $success) {
             throw "Errors found during container start"

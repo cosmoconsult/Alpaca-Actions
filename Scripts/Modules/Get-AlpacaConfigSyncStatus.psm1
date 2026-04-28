@@ -1,4 +1,4 @@
-function Get-AlpacaConfigSyncStatus {
+﻿function Get-AlpacaConfigSyncStatus {
     param (
         [Parameter(Mandatory = $true)]
         [string] $Token
@@ -17,3 +17,4 @@ function Get-AlpacaConfigSyncStatus {
     }
 }
 Export-ModuleMember -Function Get-AlpacaConfigSyncStatus
+

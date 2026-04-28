@@ -1,4 +1,4 @@
-param (
+﻿param (
     [Parameter(HelpMessage = "The GitHub token running the action", Mandatory = $true)]
     [string] $Token,
     [Parameter(HelpMessage = "An array of Alpaca container informations in compressed JSON format", Mandatory = $true)]
@@ -26,7 +26,7 @@ try {
     foreach ($container in $containers) {
         Write-AlpacaOutput "- Id: '$($container.Id)', Project: '$($container.Project)', BuildMode: '$($container.BuildMode)'"
     }
-} 
+}
 catch {
     throw "Failed to determine containers:`n$_"
 }

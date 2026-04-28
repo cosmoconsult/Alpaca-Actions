@@ -1,4 +1,4 @@
-param (
+﻿param (
     [Parameter(HelpMessage = "GitHub repository")]
     [string] $Repo = $env:GITHUB_REPOSITORY,
     [Parameter(HelpMessage = "GitHub ref")]

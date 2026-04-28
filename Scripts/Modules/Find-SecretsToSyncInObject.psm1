@@ -1,4 +1,4 @@
-function Find-SecretsToSyncInObject {
+﻿function Find-SecretsToSyncInObject {
     <#
     .SYNOPSIS
         Recursively searches for secret names in a JSON object.
@@ -28,19 +28,19 @@ function Find-SecretsToSyncInObject {
     param (
         [Parameter(Mandatory = $true)]
         $Object,
-        
+
         [Parameter(Mandatory = $true)]
         [string[]] $Patterns
     )
-    
+
     $names = @()
-    
+
     if ($Object -is [PSCustomObject]) {
         $properties = $Object | Get-Member -MemberType NoteProperty
         foreach ($prop in $properties) {
             $propName = $prop.Name
             $propValue = $Object.$propName
-            
+
             # Check if property name matches any pattern
             $matchesPattern = $false
             foreach ($pattern in $Patterns) {
@@ -49,14 +49,14 @@ function Find-SecretsToSyncInObject {
                     break
                 }
             }
-            
+
             if ($matchesPattern -and (-not [string]::IsNullOrWhiteSpace($propValue))) {
                 # If the value is a string, add it to the list
                 if ($propValue -is [string]) {
                     $names += $propValue
                 }
             }
-            
+
             # Recursively search nested objects
             $names += Find-SecretsToSyncInObject -Object $propValue -Patterns $Patterns
         }
@@ -75,8 +75,9 @@ function Find-SecretsToSyncInObject {
             }
         }
     }
-    
+
     return $names
 }
 
 Export-ModuleMember -Function Find-SecretsToSyncInObject
+

@@ -1,4 +1,4 @@
-function Wait-AlpacaContainerImageReady {
+﻿function Wait-AlpacaContainerImageReady {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -12,7 +12,7 @@ function Wait-AlpacaContainerImageReady {
         $SleepSeconds = 60
         $SleepSecondsPending = 10
         $TimeoutInMinutes = 50
-        $WaitMessage = "Image is building. Going to sleep for {0} seconds." 
+        $WaitMessage = "Image is building. Going to sleep for {0} seconds."
         $ContainerStatusCode = @("Starting", "Running", "Healthy")
         $success = $true
 
@@ -49,12 +49,12 @@ function Wait-AlpacaContainerImageReady {
             }
             if ($currentStatus -notin $ContainerStatusCode) {
                 switch ($currentStatus) {
-                    "Error" { 
+                    "Error" {
                         $success = $false
                         Write-AlpacaError "An error occurred during building the image."
                         return
                     }
-                    Default {            
+                    Default {
                         $CurrentWaitMessage = $WaitMessage
                         if (!$containerResult.status.imageBuilding) {
                             $CurrentWaitMessage = 'Waiting for container to start. Going to sleep for {0} seconds.'

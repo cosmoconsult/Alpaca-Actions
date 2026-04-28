@@ -1,6 +1,6 @@
-Param(
+﻿Param(
     [Hashtable] $parameters
-) 
+)
 
 Write-AlpacaOutput "Using Alpaca override"
 
@@ -10,3 +10,4 @@ if ($AlGoImportTestToolkitToBcContainer) {
     Write-AlpacaOutput "Invoking AL-Go override"
     Invoke-Command -ScriptBlock $AlGoImportTestToolkitToBcContainer -ArgumentList $parameters
 }
+

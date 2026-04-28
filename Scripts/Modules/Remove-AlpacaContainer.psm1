@@ -1,4 +1,4 @@
-function Remove-AlpacaContainer {
+﻿function Remove-AlpacaContainer {
     param (
         [Parameter(Mandatory = $true)]
         [pscustomobject] $Container,
@@ -13,11 +13,11 @@ function Remove-AlpacaContainer {
 
     try {
         Write-AlpacaGroupStart "Deleting Container '$($Container.Id)' (Project: '$($Container.Project)', BuildMode: '$($Container.BuildMode)')"
-        
+
         $headers = Get-AlpacaAuthenticationHeaders -Token $Token
 
         $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "Container" -Ressource $Container.Id
-        
+
         Invoke-AlpacaApiRequest -Url $apiUrl -Method 'DELETE' -Headers $headers -Retries 3 -NoRetryStatusCodes @([System.Net.HttpStatusCode]::NotFound) | Out-Null
 
         Write-AlpacaOutput "Container '$($Container.Id)' deleted"

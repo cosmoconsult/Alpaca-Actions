@@ -1,4 +1,4 @@
-
+﻿
 # Colors
 $script:colorCodes = @{
     None = '0'
@@ -354,7 +354,7 @@ function Invoke-AlpacaOutputHandler {
             ( [System.Management.Automation.DebugRecord] )       { Write-AlpacaDebug $Value }
             ( [System.Management.Automation.InformationRecord] ) {
                 $message = $Value.ToString()
-               
+
                 if ($message -match '^\s*::\s*(?<cmd>.+?)\s*::(?<msg>.*)') {
                     # Map GH commands to Alpaca annotations and groups
                     $command = $matches['cmd'].Trim()

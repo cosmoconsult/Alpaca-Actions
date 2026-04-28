@@ -1,10 +1,10 @@
- $script:xliffSyncInstalled = $false
+﻿ $script:xliffSyncInstalled = $false
  function Install-XliffSync {
     # Install XliffSync module if not already installed
     # save state in global variable to avoid multiple installations and avoid slow Get-InstalledModule calls
-    if ($script:xliffSyncInstalled) { 
+    if ($script:xliffSyncInstalled) {
         Write-AlpacaOutput "XliffSync module already installed in this session"
-        return 
+        return
     }
     Install-Module -Name XliffSync -Scope CurrentUser -Force
     $script:xliffSyncInstalled = $true
@@ -95,7 +95,7 @@ function Test-TranslationFiles() {
 
     $Issues = @()
     $FormatTranslationUnit = { param($TranslationUnit) $TranslationUnit.note | Where-Object from -EQ 'Xliff Generator' | Select-Object -ExpandProperty '#text' }
-    
+
     foreach ($TranslatedXlfFile in $TranslatedXlfFiles) {
         $Issues += Test-XliffTranslations `
             -targetPath $TranslatedXlfFile.FullName `

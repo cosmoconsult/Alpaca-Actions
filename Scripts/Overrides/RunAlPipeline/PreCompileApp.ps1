@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string] $AppType,
     [ref] $CompilationParams
 )
@@ -51,7 +51,7 @@ try {
     if ($TestTranslation -and $Settings.alpaca.PSObject.Properties.Name -contains 'testTranslationRules') {
         $TestTranslationRules = $Settings.alpaca.testTranslationRules
     }
-   
+
     $TranslationEnabledInAppJson = $AppJson.PSObject.Properties.Name -contains 'features' -and $AppJson.features -contains 'TranslationFile' #AppJson comes from parent script
     Write-AlpacaOutput "Translation enabled in app.json: $TranslationEnabledInAppJson"
     $TranslationEnforcedByPipelineSetting = $CompilationParams.Value.Keys.Contains('features') -and $CompilationParams.Value.features -contains 'TranslationFile' #Set by buildmodes=Translated
@@ -125,3 +125,4 @@ if ($TestTranslation) {
     Write-AlpacaGroupEnd #Level 1
     #endregion TestTranslations
 }
+

@@ -1,4 +1,4 @@
-function Get-AlpacaAppInfo {
+﻿function Get-AlpacaAppInfo {
     param (
         [Parameter(Mandatory = $true)]
         [string] $ContainerName,

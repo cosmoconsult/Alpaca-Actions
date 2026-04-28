@@ -1,5 +1,5 @@
-function New-AlpacaContainer {
-    [cmdletbinding()]
+﻿function New-AlpacaContainer {
+    [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
         [string] $Project,
@@ -33,14 +33,14 @@ function New-AlpacaContainer {
             origin           = "GitHub"
             organizationId   = "$($env:GITHUB_REPOSITORY_OWNER_ID)"
             organizationName = $owner
-            projectName      = $Project    
+            projectName      = $Project
             repositoryId     = "$($env:GITHUB_REPOSITORY_ID)"
             repositoryName   = $repository
             branch           = $branch
             workflowName     = "$($env:GITHUB_WORKFLOW)"
             runId            = "$($env:GITHUB_RUN_ID)"
         }
-    } 
+    }
     $body = $request | ConvertTo-Json -Depth 10
     $response = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'POST' -Headers $headers -Body $body -Retries 3
 
@@ -52,7 +52,7 @@ function New-AlpacaContainer {
         Url       = $response.webUrl
         BuildMode = "$BuildMode"
     }
-    
+
     Write-AlpacaOutput "Created container '$($container.Id)'"
 
     return $container

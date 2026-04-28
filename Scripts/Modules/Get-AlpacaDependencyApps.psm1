@@ -1,4 +1,4 @@
-function Get-AlpacaDependencyApps {
+﻿function Get-AlpacaDependencyApps {
     Param(
         [Parameter(Mandatory = $true)]
         [string] $PackagesFolder,
@@ -37,7 +37,7 @@ function Get-AlpacaDependencyApps {
     foreach ($artifact in $artifacts) {
         if ($artifact.type -eq 'Url') {
             Write-AlpacaGroupStart "Downloading $($artifact.name) from $($artifact.url)"
-                
+
             # Make a web request to get the content and headers
             $response = Invoke-WebRequest -Uri $artifact.url
 
@@ -90,7 +90,7 @@ function Get-AlpacaDependencyApps {
                         }
                     }
                     $destinationPath = Join-Path $PackagesFolder $filename
-                    
+
                     if (-not (Test-Path $destinationPath)) {
                         Write-AlpacaOutput "  Saving .app file directly to PackagesFolder..."
                         [System.IO.File]::WriteAllBytes($destinationPath, $response.Content)
@@ -108,7 +108,7 @@ function Get-AlpacaDependencyApps {
                     Expand-Archive -Path $tempArchive -DestinationPath $tempFolder -Force
 
                     Write-AlpacaOutput "Extracted files:"
-                    
+
                     Get-ChildItem -Path $tempFolder -Recurse -File | ForEach-Object {
                         Write-AlpacaOutput "- $($_.FullName)"
 

@@ -1,4 +1,4 @@
-param(
+﻿param(
     [Parameter(Mandatory = $true)]
     [hashtable] $Jobs,
     [Parameter(Mandatory = $true)]
@@ -6,6 +6,12 @@ param(
 )
 
 Import-Module (Join-Path $ScriptsPath "Modules/Alpaca.psd1") -Scope Global -DisableNameChecking
+
+function ConvertTo-AlpacaSecurePassword {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingConvertToSecureStringWithPlainText', '', Justification = 'Password value is a runtime secret provided by AL-Go, not a literal plaintext string')]
+    param([string] $PlainText)
+    return ConvertTo-SecureString -String $PlainText -AsPlainText
+}
 
 # Collect informations
 
@@ -25,13 +31,19 @@ Write-AlpacaOutput "Get Alpaca container information from outputs of create cont
 $containers = @("$($Jobs.createContainers.outputs.containersJson)" | ConvertFrom-Json)
 $container = $containers | Where-Object { $_.Project -eq $project -and $_.BuildMode -eq $BuildMode }
 if (! $container) {
-    throw "No Alpaca container information for project '$project' and build mode '$BuildMode' found"
+    Write-AlpacaOutput "No Alpaca container information for project '$project' and build mode '$BuildMode' found"
+    $container = @{
+        Id       = "NOCONTAINER"
+        User     = "NOCONTAINER"
+        Password = "NOCONTAINER"
+        Url      = "https://NOCONTAINER"
+    }
 }
 
 Write-AlpacaOutput "Get container authentication context from Alpaca container information"
 $containerAuthContext = @{
     username = $container.User
-    Password = ConvertTo-SecureString -String $container.Password -AsPlainText
+    Password = ConvertTo-AlpacaSecurePassword -PlainText $container.Password
 }
 
 Write-AlpacaGroupEnd
@@ -58,6 +70,14 @@ Write-AlpacaGroupEnd
 
 
 
+# Check Settings
+
+if ($additionalCountries -is [String]) { $additionalCountries = @($additionalCountries.Split(',').Trim() | Where-Object { $_ }) }
+if ($additionalCountries.Length -gt 0) {
+    Write-AlpacaDebug "Additional countries specified: $($additionalCountries -join ', ')"
+    throw "The AL-Go setting 'additionalCountries' is not supported by COSMO Alpaca. Use 'buildModes' to validate additional countries instead. https://docs.cosmoconsult.com/en-en/cloud-service/alpaca/github/"
+}
+
 # Initialize Packages Folder
 
 Write-AlpacaGroupStart "Initialize Packages Folder"
@@ -75,8 +95,6 @@ Get-AlpacaDependencyApps -packagesFolder $packagesFolder -token $env:_token
 
 Write-AlpacaGroupEnd
 
-
-
 # Load overrides
 
 Write-AlpacaGroupStart "Load Overrides"
@@ -85,8 +103,8 @@ $overridesPath = Join-Path $ScriptsPath "Overrides/RunAlPipeline"
 
 Write-AlpacaOutput "Load Alpaca overrides from $(Resolve-Path $overridesPath -Relative)"
 
-Get-Item -Path $overridesPath | 
-    Get-ChildItem -Filter "*.ps1" -Exclude "PipelineInitialize.*" -File | 
+Get-Item -Path $overridesPath |
+    Get-ChildItem -Filter "*.ps1" -Exclude "PipelineInitialize.*" -File |
     ForEach-Object {
         $scriptPath = $_.FullName
         $scriptName = $_.BaseName

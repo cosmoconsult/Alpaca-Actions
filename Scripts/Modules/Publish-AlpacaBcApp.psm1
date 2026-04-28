@@ -1,4 +1,4 @@
-Add-Type -AssemblyName System.Web
+﻿Add-Type -AssemblyName System.Web
 
 function Publish-AlpacaBcApp {
     Param(
@@ -7,7 +7,7 @@ function Publish-AlpacaBcApp {
         [Parameter(Mandatory = $true)]
         [string] $ContainerUser,
         [Parameter(Mandatory = $true)]
-        [string] $ContainerPassword,
+        [SecureString] $ContainerPassword,
         [Parameter(Mandatory = $true)]
         [string] $Path,
         [Parameter(Mandatory = $false)]
@@ -15,7 +15,7 @@ function Publish-AlpacaBcApp {
         [string] $SyncMode='Development',
         [Parameter(Mandatory = $false)]
         [string] $Tenant
-    ) 
+    )
 
     $tries = 0
     $maxtries = 5
@@ -23,7 +23,11 @@ function Publish-AlpacaBcApp {
     $success = $false
 
     Write-AlpacaGroupStart "Publish app $appName"
-    
+
+    if ($ContainerUrl -notlike "https://*") {
+        throw "Container Url must use HTTPS to prevent credential exposure. Got: $(($ContainerUrl -split '\?')[0])"
+    }
+
     while (!$success -and $tries -lt $maxTries)
     {
         if ($tries -gt 0) {
@@ -32,7 +36,7 @@ function Publish-AlpacaBcApp {
 
         $handler = New-Object System.Net.Http.HttpClientHandler
         $HttpClient = [System.Net.Http.HttpClient]::new($handler)
-        $pair = "$($ContainerUser):$ContainerPassword"
+        $pair = "$($ContainerUser):$([System.Net.NetworkCredential]::new('', $ContainerPassword).Password)"
         $bytes = [System.Text.Encoding]::ASCII.GetBytes($pair)
         $base64 = [System.Convert]::ToBase64String($bytes)
         $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Basic", $base64)
@@ -53,7 +57,7 @@ function Publish-AlpacaBcApp {
             }
         }
         $devServerUrl = $url.TrimEnd('/') + "dev/dev/apps?SchemaUpdateMode=$schemaUpdateMode&tenant=$Tenant"
-    
+
         $multipartContent = [System.Net.Http.MultipartFormDataContent]::new()
         $FileStream = [System.IO.FileStream]::new($Path, [System.IO.FileMode]::Open)
         try {
@@ -80,7 +84,7 @@ function Publish-AlpacaBcApp {
                         $message += "`n$resultMsg"
                     }
                 }
-                catch {}
+                catch { Write-Debug "Response body not readable: $($_.Exception.Message)" }
                 throw $message
             }
             $success = $true

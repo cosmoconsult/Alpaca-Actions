@@ -1,4 +1,4 @@
-function Sync-AlpacaConfigs {
+﻿function Sync-AlpacaConfigs {
     param (
         [Parameter(Mandatory = $true)]
         [pscustomobject] $Secrets,

@@ -1,7 +1,7 @@
-function Get-AlpacaBackendUrl {
+﻿function Get-AlpacaBackendUrl {
     Param(
         [string] $BackendUrl = $env:ALPACA_BACKEND_URL
-    )  
+    )
     if ([string]::IsNullOrWhiteSpace($BackendUrl)) {
         $BackendUrl = "https://cosmo-alpaca-enterprise.westeurope.cloudapp.azure.com/"
     }
@@ -23,15 +23,15 @@ function Get-AlpacaEndpointUrlWithParam {
     )
     $url = (Get-AlpacaBackendUrl) + "api/alpaca/release"
 
-    $Controller, $Endpoint, $Ressource, $RouteSuffix | 
-        Where-Object { $_ } | 
+    $Controller, $Endpoint, $Ressource, $RouteSuffix |
+        Where-Object { $_ } |
         ForEach-Object { $_ -split "/" } |
         ForEach-Object { $url = $url + "/" + [System.Uri]::EscapeDataString($_) }
-    
+
     if ($QueryParams) {
         $url = $url + "?"
         $QueryParams.GetEnumerator() | ForEach-Object {
-            $encodedKey = $_.Key -replace '[&?#=+ ]', { [System.Uri]::EscapeDataString($_.Value) }
+            $encodedKey = [System.Uri]::EscapeDataString($_.Key)
             $encodedValue = [System.Uri]::EscapeDataString($_.Value)
             $url = $url + $encodedKey + "=" + $encodedValue + "&"
         }
@@ -63,8 +63,8 @@ function Invoke-AlpacaApiRequest {
         [int] $Retries = 0,
         [System.Net.HttpStatusCode[]] $NoRetryStatusCodes = @()
     )
-    
-    $NoRetryStatusCodes += 
+
+    $NoRetryStatusCodes +=
         [System.Net.HttpStatusCode]::BadRequest,           # 400
         [System.Net.HttpStatusCode]::Unauthorized,         # 401
         [System.Net.HttpStatusCode]::Forbidden,            # 403
@@ -127,7 +127,7 @@ function Get-AlpacaApiErrorMessage {
                 }
             }
         }
-        catch {}
+        catch { Write-Debug "ErrorDetails not parseable as JSON: $($_.Exception.Message)" }
     }
 
     $errorMessage = "Alpaca-API request failed"

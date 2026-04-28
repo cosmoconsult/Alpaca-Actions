@@ -1,4 +1,4 @@
-function Find-ALGoSettingsFiles {
+﻿function Find-ALGoSettingsFiles {
     <#
     .SYNOPSIS
         Finds all AL-Go settings JSON files in the workspace.
@@ -40,26 +40,26 @@ function Find-ALGoSettingsFiles {
 
     # Add specific files from .github directory
     foreach ($fileName in $githubFiles) {
-        $filePath = Join-Path $WorkspacePath ".github" $fileName
+        $filePath = Join-Path $WorkspacePath ".github" -AdditionalChildPath $fileName
         if (Test-Path $filePath) {
             $jsonFilePaths += $filePath
         }
     }
-    
+
     # Add all .AL-Go/*.settings.json files from root and subdirectories
     $algoSettingsJsonFiles = Get-ChildItem -Path $WorkspacePath -Filter "*.settings.json" -Recurse -File -Force -ErrorAction SilentlyContinue | Where-Object { $_.Directory.Name -eq ".AL-Go" }
     Write-AlpacaOutput "Found $($algoSettingsJsonFiles.Count) *.settings.json files in .AL-Go directories"
     if ($algoSettingsJsonFiles) {
         $jsonFilePaths += $algoSettingsJsonFiles | Select-Object -ExpandProperty FullName
     }
-    
+
     # Add all .AL-Go/settings.json files from root and subdirectories
     $algoSettingsFiles = Get-ChildItem -Path $WorkspacePath -Filter "settings.json" -Recurse -File -Force -ErrorAction SilentlyContinue | Where-Object { $_.Directory.Name -eq ".AL-Go" }
     Write-AlpacaOutput "Found $($algoSettingsFiles.Count) settings.json files in .AL-Go directories"
     if ($algoSettingsFiles) {
         $jsonFilePaths += $algoSettingsFiles | Select-Object -ExpandProperty FullName
     }
-    
+
     # Add all *.settings.json files from .github directory
     $githubPath = Join-Path $WorkspacePath ".github"
     if (Test-Path $githubPath) {
