@@ -1,27 +1,23 @@
 ﻿param (
     [Parameter(HelpMessage = "The GitHub token running the action", Mandatory = $true)]
     [string] $Token,
-    [Parameter(HelpMessage = "An array of Alpaca container informations in compressed JSON format", Mandatory = $true)]
-    [string] $ContainersJson,
-    [Parameter(HelpMessage = "Optional Alpaca container information to filter containers by in JSON format", Mandatory = $false)]
-    [string] $FilterJson
+    [Parameter(HelpMessage = "Optional filter for project name", Mandatory = $false)]
+    [string] $ProjectFilter = "*",
+    [Parameter(HelpMessage = "Optional filter for build mode", Mandatory = $false)]
+    [string] $BuildModeFilter = "*"
 )
 
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
 
 try {
     Write-AlpacaGroupStart "Determine containers"
-
-    $containers = [pscustomobject[]]("$ContainersJson" | ConvertFrom-Json)
-
-    $filter = "$FilterJson" | ConvertFrom-Json
-    if ($filter) {
-        foreach ($key in $filter.PSObject.Properties.Name) {
-            $value = $filter.$key
-            Write-AlpacaOutput "Filtering by '$key' = '$value'"
-            $containers = [pscustomobject[]]($containers | Where-Object { $_.$key -eq $value })
-        }
+    $GetAlpacaContainerSplat = @{
+        Token     = $Token
+        Project   = $ProjectFilter
+        BuildMode = $BuildModeFilter
     }
+    $containers = Get-AlpacaContainer @GetAlpacaContainerSplat
+
     Write-AlpacaOutput "Determined $($containers.Count) containers:"
     foreach ($container in $containers) {
         Write-AlpacaOutput "- Id: '$($container.Id)', Project: '$($container.Project)', BuildMode: '$($container.BuildMode)'"

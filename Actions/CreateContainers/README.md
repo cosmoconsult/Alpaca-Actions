@@ -22,12 +22,8 @@ Create a COSMO Alpaca container for each project
 
 ### ENV variables
 
-| Name | Description |
-| :-- | :-- |
-| ALPACA_CONTAINERS_JSON | An array of Alpaca container informations in compressed JSON format |
+none
 
 ### OUTPUT variables
 
-| Name | Description |
-| :-- | :-- |
-| containersJson | An array of Alpaca container informations in compressed JSON format |
+none
