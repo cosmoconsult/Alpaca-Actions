@@ -13,10 +13,6 @@ inputs:
   buildOrderJson:
     description: An array of objects that determine that build order, including build dimensions
     required: true
-outputs:
-  containersJson:
-    description: An array of Alpaca container informations in compressed JSON format
-    value: ${{ steps.CreateContainers.outputs.containersJson }}
 runs:
   using: composite
   steps:
@@ -31,13 +27,12 @@ runs:
         ${{ github.action_path }}/CreateContainers.ps1 -Token $env:_token -BuildOrderJson $env:_buildOrderJson
 
     - name: Remove COSMO Alpaca Containers on failure
-      if: (failure() || cancelled()) && env.ALPACA_CONTAINERS_JSON != ''
+      if: (failure() || cancelled())
       shell: ${{ inputs.shell }}
       env:
         _token: ${{ inputs.token }}
-        _containersJson: ${{ env.ALPACA_CONTAINERS_JSON }}
       run: |
-        ${{ github.action_path }}/../RemoveContainers/RemoveContainers.ps1 -Token $env:_token -ContainersJson $env:_containersJson
+        ${{ github.action_path }}/../RemoveContainers/RemoveContainers.ps1 -Token $env:_token
 branding:
   icon: terminal
   color: blue
