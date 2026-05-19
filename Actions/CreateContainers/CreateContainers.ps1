@@ -28,7 +28,7 @@ try {
         Write-AlpacaDebug "Determine whether a container is necessary for project '$($buildDimension.project)' with build mode '$($buildDimension.buildMode)'"
         $settings = ReadSettings -project $buildDimension.project -buildMode $buildDimension.buildMode
         Write-AlpacaDebug "Settings: $($settings | ConvertTo-Json -Depth 99 -Compress)"
-        if ($settings.useCompilerFolder -and $settings.doNotPublishApps) {
+        if (-not (Get-IsAlpacaContainerRequired -Settings $settings)) {
             Write-AlpacaOutput "No container required for project '$($buildDimension.project)' with build mode '$($buildDimension.buildMode)'"
             continue
         }
@@ -42,8 +42,4 @@ catch {
 }
 finally {
     Write-AlpacaOutput "Created $($containers.Count) containers for $($BuildOrder.buildDimensions.Count) build dimensions."
-
-    $containersJson = $containers | ConvertTo-Json -Depth 99 -Compress -AsArray
-    Add-Content -Encoding UTF8 -Path $env:GITHUB_ENV -Value "ALPACA_CONTAINERS_JSON=$($containersJson)"
-    Add-Content -Encoding UTF8 -Path $env:GITHUB_OUTPUT -Value "containersJson=$($containersJson)"
 }

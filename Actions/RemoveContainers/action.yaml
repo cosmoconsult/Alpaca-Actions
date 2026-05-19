@@ -10,12 +10,14 @@ inputs:
     description: The GitHub token running the action
     required: false
     default: ${{ github.token }}
-  containersJson:
-    description: An array of Alpaca container informations in compressed JSON format
-    required: true
-  filterJson:
-    description: Optional Alpaca container information to filter containers by in JSON format
+  projectFilter:
+    description: Optional filter for project name
     required: false
+    default: "*"
+  buildModeFilter:
+    description: Optional filter for build mode
+    required: false
+    default: "*"
 runs:
   using: composite
   steps:
@@ -24,10 +26,10 @@ runs:
       shell: ${{ inputs.shell }}
       env:
         _token: ${{ inputs.token }}
-        _containersJson: ${{ inputs.containersJson }}
-        _filterJson: ${{ inputs.filterJson }}
+        _projectFilter: ${{ inputs.projectFilter }}
+        _buildModeFilter: ${{ inputs.buildModeFilter }}
       run: |
-        ${{ github.action_path }}/RemoveContainers.ps1 -Token $env:_token -ContainersJson $env:_containersJson -FilterJson $env:_filterJson
+        ${{ github.action_path }}/RemoveContainers.ps1 -Token $env:_token -ProjectFilter $env:_projectFilter -BuildModeFilter $env:_buildModeFilter
 branding:
   icon: terminal
   color: blue

@@ -400,3 +400,15 @@ function Invoke-AlpacaOutputHandler {
     }
 }
 Export-ModuleMember -Function Invoke-AlpacaOutputHandler
+
+function ConvertTo-AlpacaOutputString {
+    [CmdletBinding()]
+    param(
+        [object] $Value
+    )
+
+    if ($null -eq $Value)         { return }
+    if ($Value -is [scriptblock]) { return $Value.ToString() }
+    return $Value | ConvertTo-Json -Depth 10 -Compress
+}
+Export-ModuleMember -Function ConvertTo-AlpacaOutputString

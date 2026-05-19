@@ -125,5 +125,44 @@ function Import-ALGoReadSettings {
 
     # Not cleaning up is intentional since the schema file is needed when reading settings.
 }
-
 Export-ModuleMember -Function Import-ALGoReadSettings
+
+function Get-IsAlpacaContainerRequired {
+    [CmdletBinding()]
+    [OutputType([Boolean])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject] $Settings
+    )
+    return -not ($Settings.useCompilerFolder -and $Settings.doNotPublishApps)
+}
+Export-ModuleMember -Function Get-IsAlpacaContainerRequired
+
+function Get-AlpacaALGoSettings {
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject] $Settings
+    )
+
+    $defaultAlpacaSettings = [ordered]@{
+        useNuGetFeedsForUpgrade = $false
+    }
+
+    $alpacaProperty = $Settings.PSObject.Properties['alpaca']
+    if ($alpacaProperty -and $null -ne $alpacaProperty.Value) {
+        $alpacaSettings = $alpacaProperty.Value
+        foreach ($keyValue in $defaultAlpacaSettings.GetEnumerator()) {
+            if (-not $alpacaSettings.PSObject.Properties[$keyValue.Key]) {
+                $alpacaSettings | Add-Member -NotePropertyName $keyValue.Key -NotePropertyValue $keyValue.Value
+            }
+        }
+    }
+    else {
+        $alpacaSettings = [pscustomobject]$defaultAlpacaSettings
+    }
+
+    return $alpacaSettings
+}
+Export-ModuleMember -Function Get-AlpacaALGoSettings

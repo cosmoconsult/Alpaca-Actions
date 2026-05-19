@@ -33,12 +33,14 @@
         'Output-Helper.psm1',
         'Publish-AlpacaBcApp.psm1',
         'Get-AlpacaAppInfo.psm1',
+        'Get-AlpacaContainer.psm1',
         'Remove-AlpacaContainer.psm1',
         'Sync-AlpacaConfigs.psm1',
         'Wait-AlpacaContainerImageReady.psm1',
         'Translation-Helper.psm1',
         'AL-Go-Helper.psm1',
-        'Wait-AlpacaContainerReady.psm1')
+        'Wait-AlpacaContainerReady.psm1',
+        'Read-AppManifest.psm1')
 
     # Functions to export from this module
     FunctionsToExport = '*'
