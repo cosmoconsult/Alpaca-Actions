@@ -35,7 +35,7 @@
     $artifacts = $artifacts | Where-Object { $_.IgnoreIn -ne 'Build' }
 
     foreach ($artifact in $artifacts) {
-        if ($artifact.type -eq 'Url') {
+        if ($artifact.type -eq 'Url' -and $artifact.url -match '^https?://') {
             Write-AlpacaGroupStart "Downloading $($artifact.name) from $($artifact.url)"
 
             # Make a web request to get the content and headers
@@ -138,8 +138,14 @@
 
             Write-AlpacaGroupEnd
         }
+        elseif ($artifact.type -eq 'Url') {
+            Write-AlpacaOutput "Url artifact $($artifact.name) can not be downloaded from $($artifact.url). Ignoring artifact."
+        }
+        elseif ($artifact.type -eq 'NuGet') {
+            Write-AlpacaOutput "NuGet artifact $($artifact.name) handled by AL-Go"
+        }
         else {
-            Write-AlpacaOutput "NuGet handled by AL-Go $($artifact.name)"
+            Write-AlpacaOutput "Unknown artifact type $($artifact.type) for artifact $($artifact.name). Ignoring artifact."
         }
     }
 
