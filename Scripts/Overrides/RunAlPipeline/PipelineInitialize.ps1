@@ -177,12 +177,13 @@ try {
         }
         Write-AlpacaDebug "AL-Go app version mask: $($appVersionMask.Major).$($appVersionMask.Minor).$($appVersionMask.Build).$($appVersionMask.Revision)"
 
-        $allAppFolders = @(($appFolders + $testFolders + $bcptTestFolders)
-            | ForEach-Object { CheckRelativePath -baseFolder $baseFolder -sharedFolder $sharedFolder -path $_ -name "App folder" }
-            | Where-Object { Test-Path $_ })
-        Write-AlpacaDebug "AL-Go app folders, test folders and BCPT test folders: $($allAppFolders -join ', ')"
+        if ($appFolders -is [String]) { $appFolders = @($appFolders.Split(',').Trim() | Where-Object { $_ }) }
+        $appFolders  = @($appFolders |
+            ForEach-Object { CheckRelativePath -baseFolder $baseFolder -sharedFolder $sharedFolder -path $_ -name "appFolders" } |
+            Where-Object { Test-Path $_ })
+        Write-AlpacaDebug "AL-Go app folders: $($appFolders -join ', ')"
 
-        foreach($appFolder in $allAppFolders) {
+        foreach($appFolder in $appFolders) {
             # Download previous version for app folder
             Write-AlpacaGroupStart "Download previous version for app folder '$appFolder'"
 
