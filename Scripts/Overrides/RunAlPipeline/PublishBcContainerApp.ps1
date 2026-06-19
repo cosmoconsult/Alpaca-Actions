@@ -101,11 +101,17 @@ $appInfos = $appInfos | ForEach-Object {
 Write-AlpacaGroupEnd
 
 if ($appInfos) {
-    foreach ($appInfo in $appInfos) {
+    $appFiles = @($appInfos.Path)
+    if ($appFiles.Count -gt 1) {
+        Write-AlpacaOutput "Sorting apps by dependencies"
+        $appFiles = Sort-AppFilesByDependencies -appFiles $appFiles
+    }
+
+    foreach ($appFile in $appFiles) {
         Publish-AlpacaBcApp -ContainerUrl $parameters.Environment `
             -ContainerUser $parameters.bcAuthContext.username `
             -ContainerPassword $parameters.bcAuthContext.Password `
-            -Path $appInfo.Path
+            -Path $appFile
     }
 
     $publishedAppInfos += $appInfos
