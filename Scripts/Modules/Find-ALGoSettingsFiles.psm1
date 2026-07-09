@@ -46,11 +46,13 @@
         }
     }
 
-    # Add all .AL-Go/*.settings.json files from root and subdirectories
-    $algoSettingsJsonFiles = Get-ChildItem -Path $WorkspacePath -Filter "*.settings.json" -Recurse -File -Force -ErrorAction SilentlyContinue | Where-Object { $_.Directory.Name -eq ".AL-Go" }
-    Write-AlpacaOutput "Found $($algoSettingsJsonFiles.Count) *.settings.json files in .AL-Go directories"
-    if ($algoSettingsJsonFiles) {
-        $jsonFilePaths += $algoSettingsJsonFiles | Select-Object -ExpandProperty FullName
+    # Add all *.settings.json files from .github directory
+    $githubPath = Join-Path $WorkspacePath ".github"
+    if (Test-Path $githubPath) {
+        $githubSettingsFiles = Get-ChildItem -Path $githubPath -Filter "*.settings.json" -File -Force -ErrorAction SilentlyContinue
+        if ($githubSettingsFiles) {
+            $jsonFilePaths += $githubSettingsFiles | Select-Object -ExpandProperty FullName
+        }
     }
 
     # Add all .AL-Go/settings.json files from root and subdirectories
@@ -60,13 +62,11 @@
         $jsonFilePaths += $algoSettingsFiles | Select-Object -ExpandProperty FullName
     }
 
-    # Add all *.settings.json files from .github directory
-    $githubPath = Join-Path $WorkspacePath ".github"
-    if (Test-Path $githubPath) {
-        $githubSettingsFiles = Get-ChildItem -Path $githubPath -Filter "*.settings.json" -File -Force -ErrorAction SilentlyContinue
-        if ($githubSettingsFiles) {
-            $jsonFilePaths += $githubSettingsFiles | Select-Object -ExpandProperty FullName
-        }
+    # Add all .AL-Go/*.settings.json files from root and subdirectories
+    $algoSettingsJsonFiles = Get-ChildItem -Path $WorkspacePath -Filter "*.settings.json" -Recurse -File -Force -ErrorAction SilentlyContinue | Where-Object { $_.Directory.Name -eq ".AL-Go" }
+    Write-AlpacaOutput "Found $($algoSettingsJsonFiles.Count) *.settings.json files in .AL-Go directories"
+    if ($algoSettingsJsonFiles) {
+        $jsonFilePaths += $algoSettingsJsonFiles | Select-Object -ExpandProperty FullName
     }
 
     return $jsonFilePaths

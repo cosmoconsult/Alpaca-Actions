@@ -91,7 +91,7 @@ try {
         }
         else {
             Write-AlpacaOutput "Creating new container for project '$project' and build mode '$buildMode'"
-            $container = New-AlpacaContainer -Project $project -Token $token -BuildMode $buildMode
+            $container = New-AlpacaContainer -Project $project -Token $token -BuildMode $buildMode -Settings $settings
         }
     }
     else {
@@ -318,5 +318,34 @@ try {
         Write-AlpacaGroupEnd
     }
 } finally {
+    Write-AlpacaGroupEnd
+}
+
+
+# Prepare ALCops - https://alcops.dev/docs/getting-started/cicd/github/
+try {
+    Write-AlpacaGroupStart "Prepare ALCops"
+    $PSNativeCommandUseErrorActionPreference = $true
+
+    if (-not ($customCodeCops -join ", " -like "*ALCops.*" )) {
+        Write-AlpacaOutput "ALCops analyzers are not included in Run-ALPipeline parameter customCodeCops. Skipping ALCops analyzer install."
+    }
+    else {
+        $outputPath = CheckRelativePath -baseFolder $baseFolder -sharedFolder $sharedFolder -path '.alcops' -name "alCopsFolder"
+
+        Write-AlpacaOutput "Installing ALCops analyzers..."
+        Write-AlpacaOutput "  Output path: $outputPath"
+        Write-AlpacaOutput "  Detect using: $env:artifact"
+
+        $response = npx --yes @alcops/core download `
+            --output $outputPath `
+            --detect-using $env:artifact `
+            --detect-from bc-artifact
+
+        Write-AlpacaDebug "ALCops download response: $response"
+        Write-AlpacaOutput "ALCops analyzers installed successfully."
+    }
+}
+finally {
     Write-AlpacaGroupEnd
 }

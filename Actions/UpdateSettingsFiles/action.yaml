@@ -1,0 +1,49 @@
+name: Update Settings Files
+description: Updates the AL-Go settings files in the repository (e.g. to enforce the organization build modes settings)
+author: COSMO CONSULT
+inputs:
+  shell:
+    description: Shell in which you want to run the action (powershell or pwsh)
+    required: false
+    default: pwsh
+  actor:
+    description: The GitHub actor running the action
+    required: false
+    default: ${{ github.actor }}
+  token:
+    description: Base64 encoded GhTokenWorkflow secret
+    required: false
+    default: ""
+  repo:
+    description: The target repository to update
+    required: false
+    default: ${{ github.repository }}
+  branch:
+    description: The target branch to update
+    required: false
+    default: ${{ github.ref_name }}
+  directCommit:
+    description: Direct Commit?
+    required: false
+    default: "false"
+  dryRun:
+    description: Only check if settings are in sync without making changes
+    required: false
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: run
+      shell: ${{ inputs.shell }}
+      env:
+        _actor: ${{ inputs.actor }}
+        _token: ${{ inputs.token }}
+        _branch: ${{ inputs.branch }}
+        _repo: ${{ inputs.repo }}
+        _directCommit: ${{ inputs.directCommit }}
+        _dryRun: ${{ inputs.dryRun }}
+      run: |
+        ${{ github.action_path }}/UpdateSettingsFiles.ps1 -Actor $env:_actor -Token $env:_token -Repo $env:_repo -Branch $env:_branch -DirectCommit ($env:_directCommit -eq 'true') -DryRun ($env:_dryRun -eq 'true')
+branding:
+  icon: settings
+  color: blue

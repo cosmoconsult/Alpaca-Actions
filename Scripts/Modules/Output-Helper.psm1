@@ -355,7 +355,7 @@ function Invoke-AlpacaOutputHandler {
             ( [System.Management.Automation.InformationRecord] ) {
                 $message = $Value.ToString()
 
-                if ($message -match '^\s*::\s*(?<cmd>.+?)\s*::(?<msg>.*)') {
+                if ($message -match '(?s)^\s*::\s*(?<cmd>.+?)\s*::(?<msg>.*)') {
                     # Map GH commands to Alpaca annotations and groups
                     $command = $matches['cmd'].Trim()
                     $commandMessage = $matches['msg'].Trim()
@@ -369,7 +369,7 @@ function Invoke-AlpacaOutputHandler {
                         default                 { Write-Host $message }
                     }
                 }
-                elseif ($message -match '^\s*##\[\s*(?<cmd>.+?)\s*\](?<msg>.*)') {
+                elseif ($message -match '(?s)^\s*##\[\s*(?<cmd>.+?)\s*\](?<msg>.*)') {
                     # Map ADO formatting commands to Alpaca annotations and groups
                     $command = $matches['cmd'].Trim()
                     $commandMessage = $matches['msg'].Trim()
@@ -381,7 +381,7 @@ function Invoke-AlpacaOutputHandler {
                         default                                       { Write-AlpacaOutput $message }
                     }
                 }
-                elseif ($message -match '^\s*##vso\[task\.logissue\s+.*?;?\s*type\s*=\s*(?<type>error|warning)\s*;?.*?\](?<msg>.*)') {
+                elseif ($message -match '(?s)^\s*##vso\[task\.logissue\s+.*?;?\s*type\s*=\s*(?<type>error|warning)\s*;?.*?\](?<msg>.*)') {
                     # Map ADO issue commands to Alpaca annotations
                     $issueType = $matches['type'].Trim()
                     $issueMessage = $matches['msg'].Trim()

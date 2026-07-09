@@ -94,7 +94,12 @@ function Test-TranslationFiles() {
     Install-XliffSync
 
     $Issues = @()
-    $FormatTranslationUnit = { param($TranslationUnit) $TranslationUnit.note | Where-Object from -EQ 'Xliff Generator' | Select-Object -ExpandProperty '#text' }
+    $FormatTranslationUnit = { param($TranslationUnit)
+        @(
+            $TranslationUnit.note | Where-Object from -eq 'Xliff Generator' | Select-Object -First 1 -ExpandProperty '#text'
+            $TranslationUnit.note | Where-Object from -eq 'Xliff Sync' | Select-Object -ExpandProperty '#text'
+        ) -join "'`n- Note: '"
+    }
 
     foreach ($TranslatedXlfFile in $TranslatedXlfFiles) {
         $Issues += Test-XliffTranslations `

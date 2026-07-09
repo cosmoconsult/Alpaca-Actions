@@ -24,6 +24,34 @@ if (Get-AlpacaIsDebugMode) {
 }
 #endregion DebugInfo
 
+#region CheckIfExternalRulesetsAreSupported
+Write-AlpacaGroupStart "Check if external rulesets are supported" #Level 1
+try {
+    $EnableExternalRulesets = $CompilationParams.Value.Keys.Contains('EnableExternalRulesets') -and [bool]$CompilationParams.Value['EnableExternalRulesets']
+    if ($EnableExternalRulesets -and $CompilationParams.Value.Keys.Contains('compilerFolder')) {
+        Write-AlpacaDebug "EnableExternalRulesets is set to true and compilerFolder is specified. Checking compiler version..."
+        $CompilerPackageJsonPath = Join-Path -Path $CompilationParams.Value['compilerFolder'] -ChildPath 'compiler' -AdditionalChildPath 'extension', 'package.json'
+        if (Test-Path $CompilerPackageJsonPath) {
+            $CompilerVersion = [System.Version]((Get-Content -Raw -Encoding UTF8 $CompilerPackageJsonPath | ConvertFrom-Json).version)
+            Write-AlpacaDebug "Compiler version: $CompilerVersion"
+            if ($CompilerVersion.Major -lt 11) {
+                Write-AlpacaOutput "Compiler version $CompilerVersion does not support EnableExternalRulesets. Removing the setting."
+                $null = $CompilationParams.Value.Remove('EnableExternalRulesets')
+            } else {
+                Write-AlpacaOutput "Compiler version $CompilerVersion supports EnableExternalRulesets. Nothing to do."
+            }
+        } else {
+            Write-AlpacaOutput "Compiler package.json not found at $CompilerPackageJsonPath. Cannot determine compiler version."
+        }
+    } else {
+        Write-AlpacaOutput "EnableExternalRulesets is not set or compilerFolder is not specified. Skipping compiler version check."
+    }
+}
+finally {
+    Write-AlpacaGroupEnd #Level 1
+}
+#endregion CheckIfExternalRulesetsAreSupported
+
 #region CheckPreconditions
 Write-AlpacaGroupStart "Check Preconditions" #Level 1
 try {

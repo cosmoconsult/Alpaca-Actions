@@ -6,7 +6,6 @@
 )
 
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
-Import-ALGoReadSettings
 
 try {
     # BuildOrderJson is sonething like this: [{"projects":["ProjectA","ProjectB"],"buildDimensions":[{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Default","projectName":"ProjectA"},{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Clean","projectName":"ProjectA"},{"project":"ProjectB","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Default","projectName":"ProjectB"}],"projectsCount":2}]
@@ -26,14 +25,14 @@ $containers = @()
 try {
     foreach ($buildDimension in $BuildOrder.buildDimensions) {
         Write-AlpacaDebug "Determine whether a container is necessary for project '$($buildDimension.project)' with build mode '$($buildDimension.buildMode)'"
-        $settings = ReadSettings -project $buildDimension.project -buildMode $buildDimension.buildMode
-        Write-AlpacaDebug "Settings: $($settings | ConvertTo-Json -Depth 99 -Compress)"
+        $settings = Invoke-ALGoCommand -ScriptBlock { ReadSettings -project $buildDimension.project -buildMode $buildDimension.buildMode }
+        Write-AlpacaDebug "Settings: $($settings | ConvertTo-Json -Depth 99)"
         if (-not (Get-IsAlpacaContainerRequired -Settings $settings)) {
             Write-AlpacaOutput "No container required for project '$($buildDimension.project)' with build mode '$($buildDimension.buildMode)'"
             continue
         }
         Write-AlpacaOutput "Creating container for project '$($buildDimension.project)' with build mode '$($buildDimension.buildMode)'"
-        $containers += New-AlpacaContainer -Project $buildDimension.project -Token $Token -BuildMode $buildDimension.buildMode
+        $containers += New-AlpacaContainer -Project $buildDimension.project -Token $Token -BuildMode $buildDimension.buildMode -Settings $settings
     }
 }
 catch {

@@ -6,7 +6,9 @@
         [Parameter(Mandatory = $true)]
         [string] $Token,
         [Parameter(Mandatory = $false)]
-        [string] $BuildMode
+        [string] $BuildMode,
+        [Parameter(Mandatory = $false)]
+        [object] $Settings
     )
 
     $owner = $env:GITHUB_REPOSITORY_OWNER
@@ -41,7 +43,19 @@
             runId            = "$($env:GITHUB_RUN_ID)"
             alGoBuildMode    = "$BuildMode"
         }
+
     }
+
+    $alpacaSettings = Get-AlpacaALGoSettings -Settings $Settings
+    $startupScriptUrl = $alpacaSettings.startupScriptUrl
+    if (-not [String]::IsNullOrEmpty($startupScriptUrl)) {
+        $request += @{
+            additionalFolders = @(
+                "$startupScriptUrl"
+            )
+        }
+    }
+
     $body = $request | ConvertTo-Json -Depth 10
     $response = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'POST' -Headers $headers -Body $body -Retries 3
 
