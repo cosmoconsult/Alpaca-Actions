@@ -68,6 +68,7 @@ $env:GH_TOKEN = $repoWriteToken
 
 $commitMessage = "[COSMO Alpaca] Update AL-Go Settings Files"
 
+$Branch = $Branch.Replace("refs/heads/", "")
 Write-AlpacaOutput "Check if a pull request already exists for branch $Branch with title '$commitMessage'"
 $existingPullRequest = (gh api --paginate "/repos/$Repo/pulls?base=$Branch" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" | ConvertFrom-Json) |
     Where-Object { $_.title -eq $commitMessage } |
