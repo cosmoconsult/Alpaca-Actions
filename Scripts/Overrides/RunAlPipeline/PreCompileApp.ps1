@@ -85,7 +85,7 @@ try {
     $TranslationEnforcedByPipelineSetting = $CompilationParams.Value.Keys.Contains('features') -and $CompilationParams.Value.features -contains 'TranslationFile' #Set by buildmodes=Translated
     Write-AlpacaOutput "Translation enforced by pipeline setting: $TranslationEnforcedByPipelineSetting"
     if (-not ($TranslationEnabledInAppJson -or $TranslationEnforcedByPipelineSetting)) {
-        Write-AlpacaOutput "Translation feature is not enabled in app.json or enforced by pipeline settings. Skipping translation and testing translations."
+        Write-AlpacaWarning "Translation feature is not enabled in app.json or enforced by pipeline settings. Skipping translation and testing translations."
         return
     }
 }
