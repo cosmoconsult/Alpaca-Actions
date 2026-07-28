@@ -67,14 +67,17 @@ try {
     $branchSHA = RunAndCheck git rev-list -n 1 $UpdateBranch '--'
     $commitMessage = "[$($UpdateBranch)@$($branchSHA.SubString(0,7))] Update COSMO Alpaca System Files from $templateInfo - $($templateSha.SubString(0,7)) [skip ci]"
 
-    $env:GH_TOKEN = $Token
+    # Get Token with permissions to modify workflows in this repository
+    $repoWriteToken = GetAccessToken -token $token -permissions @{"actions" = "read"; "contents" = "write"; "pull_requests" = "write"; "workflows" = "write" }
+    $env:GH_TOKEN = $repoWriteToken
+
     $existingPullRequest = (gh api --paginate "/repos/$env:GITHUB_REPOSITORY/pulls?base=$UpdateBranch" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" | ConvertFrom-Json) | Where-Object { $_.title -eq $commitMessage } | Select-Object -First 1
     if ($existingPullRequest) {
         OutputWarning "Pull request already exists for $($commitMessage): $($existingPullRequest.html_url)."
         exit
     }
 
-    $serverUrl, $branch = CloneIntoNewFolder -actor $Actor -token $Token -updateBranch $UpdateBranch -DirectCommit $DirectCommit -newBranchPrefix 'update-cosmo-alpaca-system-files'
+    $serverUrl, $branch = CloneIntoNewFolder -actor $Actor -token $repoWriteToken -updateBranch $UpdateBranch -DirectCommit $DirectCommit -newBranchPrefix 'update-cosmo-alpaca-system-files'
 
     invoke-git status
 
