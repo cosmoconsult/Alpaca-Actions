@@ -12,8 +12,6 @@
     [string] $IncludeVariables = ""
 )
 
-Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
-
 # Parse GitHub variables JSON once
 $gitHubVariables = $null
 try {

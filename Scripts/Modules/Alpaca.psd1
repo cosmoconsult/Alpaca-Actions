@@ -48,6 +48,7 @@
         'Translation-Helper.psm1',
         'AL-Go-Helper.psm1',
         'Wait-AlpacaContainerReady.psm1',
+        'AlpacaTelemetryHelper.psm1'
         'Read-AppManifest.psm1')
 
     # Functions to export from this module

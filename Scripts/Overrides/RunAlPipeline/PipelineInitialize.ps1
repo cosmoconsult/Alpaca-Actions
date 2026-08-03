@@ -73,6 +73,21 @@ try {
     Write-AlpacaGroupEnd
 }
 
+# Emit Telemetry
+try {
+    Write-AlpacaGroupStart "Emit Telemetry"
+    $settingsClone = $settings.PSObject.Copy()
+    $settingsClone.PSObject.Properties.Remove('conditionalSettings')
+    [System.Collections.Generic.Dictionary[[System.String], [System.String]]] $AdditionalData = @{}
+    Add-TelemetryProperty -Hashtable $AdditionalData -Key 'Settings' -Value $($settingsClone | ConvertTo-Json -Depth 10 -Compress) #TODO: limit level and hide warnings
+    Trace-Information -Message "Initializing Pipeline" -AdditionalData $AdditionalData
+}
+catch {
+    Write-AlpacaOutput "Error during telemetry emission: $_"
+}
+finally {
+    Write-AlpacaGroupEnd
+}
 
 
 # Handle COSMO Alpaca container

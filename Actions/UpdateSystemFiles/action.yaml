@@ -42,7 +42,9 @@ runs:
         _updateBranch: ${{ inputs.updateBranch }}
         _directCommit: ${{ inputs.directCommit }}
       run: |
-        ${{ github.action_path }}/UpdateSystemFiles.ps1 -Actor $env:_actor -Token $env:_token -TemplateUrl $env:_templateUrl -DownloadLatest ($env:_downloadLatest -eq 'true') -UpdateBranch $env:_updateBranch -DirectCommit ($env:_directCommit -eq 'true')
+        ${{ github.action_path }}/../../Scripts/Invoke-AlpacaAction.ps1 -ActionName "UpdateSystemFiles" -Action {
+          ${{ github.action_path }}/UpdateSystemFiles.ps1 -Actor $env:_actor -Token $env:_token -TemplateUrl $env:_templateUrl -DownloadLatest ($env:_downloadLatest -eq 'true') -UpdateBranch $env:_updateBranch -DirectCommit ($env:_directCommit -eq 'true')
+        }
 branding:
   icon: terminal
   color: blue

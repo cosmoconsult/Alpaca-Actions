@@ -7,8 +7,6 @@
     [string] $VariablesJson
 )
 
-Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
-
 try {
     $secrets = [pscustomobject]("$SecretsJson" | ConvertFrom-Json)
     $secretNames = $secrets | Get-Member -MemberType Properties | Select-Object -ExpandProperty Name

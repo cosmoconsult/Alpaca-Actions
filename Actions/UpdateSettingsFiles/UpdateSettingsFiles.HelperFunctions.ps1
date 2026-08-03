@@ -1,6 +1,3 @@
-# Import Alpaca module
-Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
-
 $script:commentPropertyName = '$comment'
 
 function Read-ALGoSettingsFile {

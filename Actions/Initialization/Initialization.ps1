@@ -5,8 +5,6 @@
     [string] $ActionRef
 )
 
-Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
-
 $backendUrl = Get-AlpacaBackendUrl
 Write-AlpacaOutput "Using Backend Url '$backendUrl'"
 Add-Content -encoding UTF8 -Path $env:GITHUB_ENV -Value "ALPACA_BACKEND_URL=$($backendUrl)"

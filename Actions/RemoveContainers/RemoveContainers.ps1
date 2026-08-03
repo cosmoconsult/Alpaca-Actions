@@ -7,8 +7,6 @@
     [string] $BuildModeFilter = "*"
 )
 
-Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
-
 try {
     Write-AlpacaGroupStart "Determine containers"
     $GetAlpacaContainerSplat = @{

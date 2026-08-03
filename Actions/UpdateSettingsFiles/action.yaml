@@ -43,7 +43,9 @@ runs:
         _directCommit: ${{ inputs.directCommit }}
         _dryRun: ${{ inputs.dryRun }}
       run: |
-        ${{ github.action_path }}/UpdateSettingsFiles.ps1 -Actor $env:_actor -Token $env:_token -Repo $env:_repo -Branch $env:_branch -DirectCommit ($env:_directCommit -eq 'true') -DryRun ($env:_dryRun -eq 'true')
+        ${{ github.action_path }}/../../Scripts/Invoke-AlpacaAction.ps1 -ActionName "UpdateSettingsFiles" -Action {
+          ${{ github.action_path }}/UpdateSettingsFiles.ps1 -Actor $env:_actor -Token $env:_token -Repo $env:_repo -Branch $env:_branch -DirectCommit ($env:_directCommit -eq 'true') -DryRun ($env:_dryRun -eq 'true')
+        }
 branding:
   icon: settings
   color: blue
