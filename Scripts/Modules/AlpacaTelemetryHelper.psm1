@@ -95,6 +95,7 @@ function AddTelemetryEvent() {
         # Add alpaca specific telemetry
         $AlpacaVersion = $ENV:GITHUB_ACTION_REF # ACTION_REF is only filled from a simple ref. if ref contains a folder like staging/* it will be empty.
         if ($AlpacaVersion -eq '' -and $ENV:GITHUB_ACTION_PATH -like '*Alpaca-Actions*') {
+            Write-AlpacaDebug "GITHUB_ACTION_REF is empty, trying to get version from GITHUB_ACTION_PATH: $($ENV:GITHUB_ACTION_PATH)"
             $AlpacaVersion = ($ENV:GITHUB_ACTION_PATH -split [System.IO.Path]::DirectorySeparatorChar)[-2]
         }
 
