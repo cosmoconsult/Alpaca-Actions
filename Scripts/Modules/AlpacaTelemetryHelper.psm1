@@ -94,11 +94,10 @@ function AddTelemetryEvent() {
 
         # Add alpaca specific telemetry
         $AlpacaVersion = $ENV:GITHUB_ACTION_REF # ACTION_REF is only filled from a simple ref. if ref contains a folder like staging/* it will be empty.
-        if ($AlpacaVersion -eq '') {
-            if ($ENV:GITHUB_ACTION_PATH -like '*Alpaca-Actions*') {
-                $AlpacaVersion = Split-Path -Path $ENV:GITHUB_ACTION_PATH -Leaf
-            }
+        if ($AlpacaVersion -eq '' -and $ENV:GITHUB_ACTION_PATH -like '*Alpaca-Actions*') {
+            $AlpacaVersion = ($ENV:GITHUB_ACTION_PATH -split [System.IO.Path]::DirectorySeparatorChar)[-2]
         }
+
         Add-TelemetryProperty -Hashtable $Data -Key 'AlpacaVersion' -Value $AlpacaVersion
 
         if ($repoSettings.partnerTelemetryConnectionString -ne '') {
