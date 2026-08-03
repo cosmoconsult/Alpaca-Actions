@@ -96,7 +96,9 @@ function AddTelemetryEvent() {
         $AlpacaVersion = $ENV:GITHUB_ACTION_REF # ACTION_REF is only filled from a simple ref. if ref contains a folder like staging/* it will be empty.
         if ($AlpacaVersion -eq '' -and $ENV:GITHUB_ACTION_PATH -like '*Alpaca-Actions*') {
             Write-AlpacaDebug "GITHUB_ACTION_REF is empty, trying to get version from GITHUB_ACTION_PATH: $($ENV:GITHUB_ACTION_PATH)"
-            $AlpacaVersion = ($ENV:GITHUB_ACTION_PATH -split [System.IO.Path]::DirectorySeparatorChar)[-2]
+            # /home/runner/work/_actions/cosmoconsult/Alpaca-Actions/staging/emittelemetry/Actions/UpdateSettingsFiles
+            $Pattern = '.*{0}Alpaca-Actions{0}(.*)[{0}]Actions[{0}].*' -f [Regex]::Escape([System.IO.Path]::DirectorySeparatorChar)
+            $AlpacaVersion = (Select-String -InputObject $ENV:GITHUB_ACTION_PATH -Pattern $Pattern).Matches.Groups[1].Value -replace [System.IO.Path]::DirectorySeparatorChar, '/'
         }
 
         Add-TelemetryProperty -Hashtable $Data -Key 'AlpacaVersion' -Value $AlpacaVersion
