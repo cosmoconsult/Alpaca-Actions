@@ -77,6 +77,11 @@ try {
 try {
     Write-AlpacaGroupStart "Emit Telemetry"
     $settingsClone = $settings.PSObject.Copy()
+    
+    $defaultSettings = (Get-Module -Name ReadSettings).Invoke({ GetDefaultSettings })
+    Write-AlpacaDebug "SettingsClone is of Type '$($settingsClone.GetType().FullName)'"
+    Write-AlpacaDebug "DefaultSettings is of Type '$($defaultSettings.GetType().FullName)'"
+    
     $settingsClone.PSObject.Properties.Remove('conditionalSettings')
     [System.Collections.Generic.Dictionary[[System.String], [System.String]]] $AdditionalData = @{}
     Add-TelemetryProperty -Hashtable $AdditionalData -Key 'Settings' -Value $($settingsClone | ConvertTo-Json -Depth 10 -Compress) #TODO: limit level and hide warnings
