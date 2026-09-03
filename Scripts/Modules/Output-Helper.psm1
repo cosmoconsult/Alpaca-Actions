@@ -1,40 +1,40 @@
 ﻿
 # Colors
-$script:colorCodes = @{
-    None = '0'
-    Red = '31'
-    Green = '32'
-    Yellow = '33'
-    Blue = '34'
+$script:ColorCodes = @{
+    None    = '0'
+    Red     = '31'
+    Green   = '32'
+    Yellow  = '33'
+    Blue    = '34'
     Magenta = '35'
-    Cyan = '36'
-    White = '37'
+    Cyan    = '36'
+    White   = '37'
 }
 
 # Annotations
-$script:annotationColors = @{
-    Notice = 'White'
+$script:AnnotationColors = @{
+    Notice  = 'White'
     Warning = 'Yellow'
     Error   = 'Red'
 }
-$script:annotationGitHubCommands = @{
+$script:AnnotationGitHubCommands = @{
     Notice  = '::notice::'
     Warning = '::warning::'
     Error   = '::error::'
 }
-$script:annotationGitHubLineBreak = '%0A'
-$script:annotationGitHubByteLimit = 4096 # 4KB
+$script:AnnotationGitHubLineBreak = '%0A'
+$script:AnnotationGitHubByteLimit = 4096 # 4KB
 
 # Groups
-$script:groupIndentation = "  "
-$script:groupLevel = 0
+$script:GroupIndentation = "  "
+$script:GroupLevel = 0
 
-$script:xmasEmojis = @("🎄", "❄️", "⛄", "🎅", "🤶", "🦌", "🛷", "🎁", "🍪", "☃️")
-$script:xmasEmojiLastUsed = $null
+$script:XmasEmojis = @("🎄", "❄️", "⛄", "🎅", "🤶", "🦌", "🛷", "🎁", "🍪", "☃️")
+$script:XmasEmojiLastUsed = $null
 
 function Format-AlpacaMessage {
     param(
-        [Parameter(ValueFromPipeline  = $true)]
+        [Parameter(ValueFromPipeline = $true)]
         [string] $Message = "",
         [ValidateSet( 'None', 'Red', 'Green', 'Yellow', 'Blue', 'Magenta', 'Cyan', 'White' )]
         [string] $Color = 'None',
@@ -44,7 +44,7 @@ function Format-AlpacaMessage {
     )
     begin {
         if ($Color -ne 'None') {
-            $LinePrefix = "`e[$($script:colorCodes[$Color])m$($LinePrefix)"
+            $LinePrefix = "`e[$($script:ColorCodes[$Color])m$($LinePrefix)"
             $LineSuffix = "$($LineSuffix)`e[0m"
         }
     }
@@ -56,7 +56,7 @@ function Format-AlpacaMessage {
 
         $messageLines = Split-AlpacaMessage -Message $Message
         $formattedMessageLines = $messageLines |
-            ForEach-Object { "$($LinePrefix)$($_)$($LineSuffix)" }
+        ForEach-Object { "$($LinePrefix)$($_)$($LineSuffix)" }
         $formattedMessage = $formattedMessageLines -join $LineBreak
 
         return $formattedMessage
@@ -65,7 +65,7 @@ function Format-AlpacaMessage {
 Export-ModuleMember -Function Format-AlpacaMessage
 
 function Split-AlpacaMessage {
-    Param(
+    param(
         [string] $Message = "",
         [ValidateRange(0, [int]::MaxValue)]
         [int]    $LineByteLimit = 0
@@ -120,16 +120,16 @@ function Write-AlpacaOutput {
     )
 
     begin {
-        $linePrefix = $script:groupIndentation * $script:groupLevel;
+        $linePrefix = $script:GroupIndentation * $script:GroupLevel;
         $lineSuffix = ""
 
         $date = Get-Date
-        if ($date.Month -eq 12 -and $date.Day -in 24,25,26) {
+        if ($date.Month -eq 12 -and $date.Day -in 24, 25, 26) {
             $emoji = $null
-            while ($emoji -in $null, $script:xmasEmojiLastUsed) {
-                $emoji = $script:xmasEmojis | Get-Random
+            while ($emoji -in $null, $script:XmasEmojiLastUsed) {
+                $emoji = $script:XmasEmojis | Get-Random
             }
-            $script:xmasEmojiLastUsed = $emoji
+            $script:XmasEmojiLastUsed = $emoji
             $lineSuffix = " $emoji"
         }
     }
@@ -154,10 +154,11 @@ function Write-AlpacaAnnotation {
 
     process {
         if ($WithoutGitHubAnnotation) {
-            $color = $script:annotationColors[$Annotation]
+            $color = $script:AnnotationColors[$Annotation]
             $formattedMessage = Format-AlpacaMessage -Message "$($Annotation): $($Message)" -Color $color
             Write-Host $formattedMessage
-        } else {
+        }
+        else {
             Write-AlpacaGitHubAnnotation -Message $Message -Annotation $Annotation -AnnotationParams $GitHubAnnotationParams
         }
     }
@@ -165,18 +166,18 @@ function Write-AlpacaAnnotation {
 Export-ModuleMember -Function Write-AlpacaAnnotation
 
 function Write-AlpacaGitHubAnnotation {
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         [string] $Message,
         [ValidateSet('Notice', 'Warning', 'Error')]
         [string] $Annotation = 'Notice',
         [string] $AnnotationParams = $null
     )
-    $color = $script:annotationColors[$Annotation]
+    $color = $script:AnnotationColors[$Annotation]
 
-    $gitHubAnnotationCommand = $script:annotationGitHubCommands[$Annotation]
-    $gitHubAnnotationLineBreak = $script:annotationGitHubLineBreak
-    $gitHubAnnotationByteLimit = $script:annotationGitHubByteLimit
+    $gitHubAnnotationCommand = $script:AnnotationGitHubCommands[$Annotation]
+    $gitHubAnnotationLineBreak = $script:AnnotationGitHubLineBreak
+    $gitHubAnnotationByteLimit = $script:AnnotationGitHubByteLimit
 
     if (!([String]::IsNullOrWhiteSpace($AnnotationParams))) {
         $gitHubAnnotationCommand = $gitHubAnnotationCommand -replace '::$', " $AnnotationParams::"
@@ -213,7 +214,8 @@ function Write-AlpacaGitHubAnnotation {
         # Line break found, split there
         $annotationMessage = $formattedMessage.Substring(0, $annotationMessageLength)
         $overflowMessage = $formattedMessage.Substring($annotationMessageLength + $gitHubAnnotationLineBreak.Length)
-    } else {
+    }
+    else {
         # No line break found, need to split first line
         # Get first line of original message
         $line = Split-AlpacaMessage -Message $Message | Select-Object -First 1
@@ -306,9 +308,10 @@ function Write-AlpacaGroupStart {
     process {
         if ($UseGitHubCommand) {
             Write-Host "::group::$($Message)"
-        } else {
+        }
+        else {
             Write-AlpacaOutput -Message "> $Message"
-            $script:groupLevel += 1
+            $script:GroupLevel += 1
         }
     }
 }
@@ -326,7 +329,7 @@ function Write-AlpacaGroupEnd {
             Write-Host "::endgroup::"
         }
         else {
-            $script:groupLevel = [Math]::Max($script:groupLevel - 1, 0)
+            $script:GroupLevel = [Math]::Max($script:GroupLevel - 1, 0)
         }
         if ($Message) {
             Write-AlpacaOutput -Message $Message
@@ -347,11 +350,11 @@ function Invoke-AlpacaOutputHandler {
     )
 
     process {
-        switch($Value.GetType()) {
-            ( [System.Management.Automation.ErrorRecord] )       { Write-AlpacaError $Value; throw $Value }
-            ( [System.Management.Automation.WarningRecord] )     { Write-AlpacaWarning $Value }
-            ( [System.Management.Automation.VerboseRecord] )     { Write-AlpacaDebug $Value }
-            ( [System.Management.Automation.DebugRecord] )       { Write-AlpacaDebug $Value }
+        switch ($Value.GetType()) {
+            ( [System.Management.Automation.ErrorRecord] ) { Write-AlpacaError $Value; throw $Value }
+            ( [System.Management.Automation.WarningRecord] ) { Write-AlpacaWarning $Value }
+            ( [System.Management.Automation.VerboseRecord] ) { Write-AlpacaDebug $Value }
+            ( [System.Management.Automation.DebugRecord] ) { Write-AlpacaDebug $Value }
             ( [System.Management.Automation.InformationRecord] ) {
                 $message = $Value.ToString()
 
@@ -359,26 +362,26 @@ function Invoke-AlpacaOutputHandler {
                     # Map GH commands to Alpaca annotations and groups
                     $command = $matches['cmd'].Trim()
                     $commandMessage = $matches['msg'].Trim()
-                    switch($command) {
-                        'group'                 { Write-AlpacaGroupStart $commandMessage }
-                        'endgroup'              { Write-AlpacaGroupEnd $commandMessage }
-                        'debug'                 { Write-AlpacaDebug $commandMessage }
-                        { $_ -like 'error*' }   { Write-AlpacaError $commandMessage -GitHubAnnotationParams ($command -replace '^error\s*', '') }
+                    switch ($command) {
+                        'group' { Write-AlpacaGroupStart $commandMessage }
+                        'endgroup' { Write-AlpacaGroupEnd $commandMessage }
+                        'debug' { Write-AlpacaDebug $commandMessage }
+                        { $_ -like 'error*' } { Write-AlpacaError $commandMessage -GitHubAnnotationParams ($command -replace '^error\s*', '') }
                         { $_ -like 'warning*' } { Write-AlpacaWarning $commandMessage -GitHubAnnotationParams ($command -replace '^warning\s*', '') }
-                        { $_ -like 'notice*' }  { Write-AlpacaNotice $commandMessage -GitHubAnnotationParams ($command -replace '^notice\s*', '') }
-                        default                 { Write-Host $message }
+                        { $_ -like 'notice*' } { Write-AlpacaNotice $commandMessage -GitHubAnnotationParams ($command -replace '^notice\s*', '') }
+                        default { Write-Host $message }
                     }
                 }
                 elseif ($message -match '(?s)^\s*##\[\s*(?<cmd>.+?)\s*\](?<msg>.*)') {
                     # Map ADO formatting commands to Alpaca annotations and groups
                     $command = $matches['cmd'].Trim()
                     $commandMessage = $matches['msg'].Trim()
-                    switch($command) {
-                        'group'                                       { Write-AlpacaGroupStart $commandMessage }
-                        'endgroup'                                    { Write-AlpacaGroupEnd $commandMessage }
-                        'debug'                                       { Write-AlpacaDebug $commandMessage }
+                    switch ($command) {
+                        'group' { Write-AlpacaGroupStart $commandMessage }
+                        'endgroup' { Write-AlpacaGroupEnd $commandMessage }
+                        'debug' { Write-AlpacaDebug $commandMessage }
                         { 'error', 'warning', 'notice' -contains $_ } { Write-AlpacaAnnotation $commandMessage -Annotation $command -WithoutGitHubAnnotation }
-                        default                                       { Write-AlpacaOutput $message }
+                        default { Write-AlpacaOutput $message }
                     }
                 }
                 elseif ($message -match '(?s)^\s*##vso\[task\.logissue\s+.*?;?\s*type\s*=\s*(?<type>error|warning)\s*;?.*?\](?<msg>.*)') {
@@ -386,7 +389,7 @@ function Invoke-AlpacaOutputHandler {
                     $issueType = $matches['type'].Trim()
                     $issueMessage = $matches['msg'].Trim()
                     switch ($issueType) {
-                        'error'   { Write-AlpacaError $issueMessage }
+                        'error' { Write-AlpacaError $issueMessage }
                         'warning' { Write-AlpacaWarning $issueMessage }
                     }
                 }
@@ -401,14 +404,61 @@ function Invoke-AlpacaOutputHandler {
 }
 Export-ModuleMember -Function Invoke-AlpacaOutputHandler
 
+function ConvertTo-AlpacaNormalizedPath {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Path,
+        [Parameter(Mandatory = $false)]
+        [string] $RepositoryRoot = $env:GITHUB_WORKSPACE
+    )
+
+    $normalizedPath = $Path.Trim() -replace '\\', '/'
+    $normalizedRepositoryRoot = [string]::Empty
+    if (-not [string]::IsNullOrWhiteSpace($RepositoryRoot)) {
+        $normalizedRepositoryRoot = $RepositoryRoot.Trim() -replace '\\', '/'
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($normalizedRepositoryRoot)) {
+        $normalizedRepositoryRootPrefix = "$normalizedRepositoryRoot/"
+        if ($normalizedPath.StartsWith($normalizedRepositoryRootPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+            $normalizedPath = $normalizedPath.Substring($normalizedRepositoryRootPrefix.Length)
+        }
+    }
+
+    while ($normalizedPath.StartsWith('./') -or $normalizedPath.StartsWith('/')) {
+        $normalizedPath = $normalizedPath.Substring(1)
+    }
+
+    return $normalizedPath
+}
+Export-ModuleMember -Function ConvertTo-AlpacaNormalizedPath
+
 function ConvertTo-AlpacaOutputString {
     [CmdletBinding()]
     param(
-        [object] $Value
+        [Parameter(ValueFromPipeline = $true)]
+        [object]$Value,
+        [switch]$ReplaceNullAndEmptyString
     )
 
-    if ($null -eq $Value)         { return }
-    if ($Value -is [scriptblock]) { return $Value.ToString() }
-    return $Value | ConvertTo-Json -Depth 10 -Compress
+    if ($null -eq $Value) {
+        if ($ReplaceNullAndEmptyString) {
+            return '[null]'
+        }
+        return
+    }
+    if ($Value -is [String]) {
+        if ([String]::IsNullOrEmpty($Value)) {
+            if ($ReplaceNullAndEmptyString) {
+                return '[empty]'
+            }
+            return
+        }
+    }
+    if ($Value -is [scriptblock]) {
+        return $Value.ToString()
+    }
+    return ConvertTo-Json -InputObject $Value -Depth 10 -Compress
 }
 Export-ModuleMember -Function ConvertTo-AlpacaOutputString

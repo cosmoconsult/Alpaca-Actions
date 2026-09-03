@@ -1,5 +1,5 @@
-﻿Param(
-    [Hashtable] $parameters
+param(
+    [Hashtable] $Parameters
 )
 
 Write-AlpacaOutput "Using Alpaca override"
@@ -8,6 +8,6 @@ Write-AlpacaOutput "Importing Test Toolkit to BC Container not necessary for Alp
 
 if ($AlGoImportTestToolkitToBcContainer) {
     Write-AlpacaOutput "Invoking AL-Go override"
-    Invoke-Command -ScriptBlock $AlGoImportTestToolkitToBcContainer -ArgumentList $parameters
+    Invoke-Command -ScriptBlock $AlGoImportTestToolkitToBcContainer -ArgumentList $Parameters
 }
 

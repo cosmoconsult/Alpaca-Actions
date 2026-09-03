@@ -7,8 +7,6 @@
     [string] $VariablesJson
 )
 
-Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
-
 try {
     $secrets = [pscustomobject]("$SecretsJson" | ConvertFrom-Json)
     $secretNames = $secrets | Get-Member -MemberType Properties | Select-Object -ExpandProperty Name
@@ -35,7 +33,8 @@ catch {
 try {
     Sync-AlpacaConfigs -Secrets $secrets -Variables $variables -Token $Token
     Write-AlpacaOutput "Synced $($secretNames.Count) secrets and $($variableNames.Count) variables"
-} catch {
+}
+catch {
     Write-AlpacaError "Failed to sync configs:`n$($_.Exception.Message)"
     throw "Failed to sync configs"
 }

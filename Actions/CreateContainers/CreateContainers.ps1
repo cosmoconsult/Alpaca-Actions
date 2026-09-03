@@ -1,20 +1,18 @@
-﻿param(
+param(
     [Parameter(HelpMessage = "The GitHub token running the action", Mandatory = $true)]
     [string] $Token,
     [Parameter(HelpMessage = "Determined build order, including build dimensions, compressed JSON format", Mandatory = $true)]
     [string] $BuildOrderJson
 )
 
-Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
-
 try {
-    # BuildOrderJson is sonething like this: [{"projects":["ProjectA","ProjectB"],"buildDimensions":[{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Default","projectName":"ProjectA"},{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Clean","projectName":"ProjectA"},{"project":"ProjectB","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Default","projectName":"ProjectB"}],"projectsCount":2}]
+    # BuildOrderJson is something like this: [{"projects":["ProjectA","ProjectB"],"buildDimensions":[{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Default","projectName":"ProjectA"},{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Clean","projectName":"ProjectA"},{"project":"ProjectB","gitHubRunner":"\"ubuntu-latest\"","githubRunnerShell":"pwsh","buildMode":"Default","projectName":"ProjectB"}],"projectsCount":2}]
     # or with multi level projects like this [{"buildDimensions":[{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","buildMode":"Default","projectName":"ProjectA","githubRunnerShell":"pwsh"},{"project":"ProjectA","gitHubRunner":"\"ubuntu-latest\"","buildMode":"Clean","projectName":"ProjectA","githubRunnerShell":"pwsh"}],"projects":["ProjectA"],"projectsCount":1},{"buildDimensions":[{"project":"ProjectB","gitHubRunner":"\"ubuntu-latest\"","buildMode":"Default","projectName":"ProjectB","githubRunnerShell":"pwsh"}],"projects":["ProjectB"],"projectsCount":1}]
-    $BuildOrder = ("$BuildOrderJson" | ConvertFrom-Json)
-    if ((-not $BuildOrder.buildDimensions) -or $BuildOrder.buildDimensions.Count -eq 0) {
+    $buildOrder = ("$BuildOrderJson" | ConvertFrom-Json)
+    if ((-not $buildOrder.buildDimensions) -or $buildOrder.buildDimensions.Count -eq 0) {
         throw "No AL-Go build dimensions defined."
     }
-    Write-AlpacaOutput "Creating containers for build dimensions: '$((  $BuildOrder.buildDimensions | ForEach-Object{$_.project + " - " + $_.buildMode}) -join "', '")' [$($BuildOrder.buildDimensions.Count)]"
+    Write-AlpacaOutput "Creating containers for build dimensions: '$((  $buildOrder.buildDimensions | ForEach-Object{$_.project + " - " + $_.buildMode}) -join "', '")' [$($buildOrder.buildDimensions.Count)]"
 }
 catch {
     throw "Failed to determine AL-Go build dimensions:`n$_"
@@ -23,7 +21,7 @@ catch {
 $containers = @()
 
 try {
-    foreach ($buildDimension in $BuildOrder.buildDimensions) {
+    foreach ($buildDimension in $buildOrder.buildDimensions) {
         Write-AlpacaDebug "Determine whether a container is necessary for project '$($buildDimension.project)' with build mode '$($buildDimension.buildMode)'"
         $settings = Invoke-ALGoCommand -ScriptBlock { ReadSettings -project $buildDimension.project -buildMode $buildDimension.buildMode }
         Write-AlpacaDebug "Settings: $($settings | ConvertTo-Json -Depth 99)"
@@ -40,5 +38,5 @@ catch {
     throw "Failed to create containers"
 }
 finally {
-    Write-AlpacaOutput "Created $($containers.Count) containers for $($BuildOrder.buildDimensions.Count) build dimensions."
+    Write-AlpacaOutput "Created $($containers.Count) containers for $($buildOrder.buildDimensions.Count) build dimensions."
 }

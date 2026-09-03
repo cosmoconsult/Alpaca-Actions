@@ -1,4 +1,4 @@
-﻿function Wait-AlpacaContainerReady {
+function Wait-AlpacaContainerReady {
     param (
         [Parameter(Mandatory = $true)]
         [string] $ContainerName,
@@ -52,10 +52,10 @@
             $headers = Get-AlpacaAuthenticationHeaders -Token $Token
             $headers.add("accept", "application/text")
 
-            $QueryParams = @{
-                tailLines     = 5000
+            $queryParams = @{
+                tailLines = 5000
             }
-            $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "Container" -Ressource $ContainerName -RouteSuffix "logs" -QueryParams $QueryParams
+            $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "Container" -Ressource $ContainerName -RouteSuffix "logs" -QueryParams $queryParams
 
             while ($waitForContainer) {
 

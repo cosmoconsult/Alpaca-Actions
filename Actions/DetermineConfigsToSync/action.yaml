@@ -20,11 +20,11 @@ inputs:
   includeSecrets:
     description: Comma-separated list of secret names to include
     required: false
-    default: ''
+    default: ""
   includeVariables:
     description: Comma-separated list of variable names to include
     required: false
-    default: ''
+    default: ""
 outputs:
   secretNames:
     description: Comma-separated list of distinct secret names found in AL-Go settings, Alpaca backend and IncludeSecrets
@@ -45,7 +45,9 @@ runs:
         _includeSecrets: ${{ inputs.includeSecrets }}
         _includeVariables: ${{ inputs.includeVariables }}
       run: |
-        ${{ github.action_path }}/DetermineConfigsToSync.ps1 -Token $env:_token -Mode $env:_mode -GitHubVariablesJson $env:_gitHubVariablesJson -IncludeSecrets $env:_includeSecrets -IncludeVariables $env:_includeVariables
+        ${{ github.action_path }}/../../Scripts/Invoke-AlpacaAction.ps1 -ActionName "DetermineConfigsToSync" -Action {
+          ${{ github.action_path }}/DetermineConfigsToSync.ps1 -Token $env:_token -Mode $env:_mode -GitHubVariablesJson $env:_gitHubVariablesJson -IncludeSecrets $env:_includeSecrets -IncludeVariables $env:_includeVariables
+        }
 branding:
   icon: list
   color: blue

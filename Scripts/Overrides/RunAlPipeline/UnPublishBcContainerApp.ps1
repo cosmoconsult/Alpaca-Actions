@@ -1,5 +1,5 @@
-﻿param(
-    [Hashtable] $parameters
+param(
+    [Hashtable] $Parameters
 )
 
 Write-AlpacaOutput "Using COSMO Alpaca override"
@@ -8,5 +8,5 @@ Write-AlpacaOutput "Unpublishing BC Container App is currently not supported for
 
 if ($AlGoUnPublishBcContainerApp) {
     Write-AlpacaOutput "Invoking AL-Go override"
-    Invoke-Command -ScriptBlock $AlGoUnPublishBcContainerApp -ArgumentList $parameters
+    Invoke-Command -ScriptBlock $AlGoUnPublishBcContainerApp -ArgumentList $Parameters
 }

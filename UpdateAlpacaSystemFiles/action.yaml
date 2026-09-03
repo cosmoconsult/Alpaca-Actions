@@ -32,7 +32,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: run
+    - name: UpdateAlpacaSystemFiles
       shell: ${{ inputs.shell }}
       env:
         _actor: ${{ inputs.actor }}

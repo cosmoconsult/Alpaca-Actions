@@ -1,0 +1,116 @@
+name: Report Compiler Diagnostics As Review Comments
+description: Reports AL compiler warnings and errors as pull request review comments
+author: COSMO CONSULT
+inputs:
+  shell:
+    description: Shell in which you want to run the action (powershell or pwsh)
+    required: false
+    default: pwsh
+  repository:
+    description: Repository in owner/name format
+    required: true
+  pullRequestNumber:
+    description: Pull request number
+    required: true
+  baseRef:
+    description: Base branch name
+    required: true
+  headSha:
+    description: Pull request head SHA
+    required: true
+  buildOutputPath:
+    description: Directory containing downloaded BuildOutput artifacts
+    required: true
+  gitHubSecrets:
+    description: GitHub secrets object serialized as JSON
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Checkout pull request branch
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        ref: ${{ format('refs/pull/{0}/head', inputs.pullRequestNumber) }}
+        fetch-depth: 0
+
+    - name: Read settings
+      id: ReadSettings
+      uses: microsoft/AL-Go-Actions/ReadSettings@v9.0
+      with:
+        shell: ${{ inputs.shell }}
+
+    - id: ResolveDiagnosticsSettings
+      name: Resolve diagnostics settings
+      shell: ${{ inputs.shell }}
+      run: |
+        ${{ github.action_path }}/../../Scripts/Invoke-AlpacaAction.ps1 -ActionName "ResolveDiagnosticsSettings" -Action {
+          # TODO: Move to a script file and use readalpacasettings
+          $Settings = $ENV:Settings | ConvertFrom-Json -Depth 20
+          Write-AlpacaDebug "Read settings: $($Settings | ConvertTo-Json -Depth 20)"
+
+          # Init
+          $reportCompilerWarningsAndErrorsAsCodeReviewComments = $true
+          $resolvedReviewContextSecretName = ''
+
+          if ($null -ne $Settings.alpaca) {
+            Write-AlpacaDebug "Found alpaca settings in Settings object."
+            if (-not [string]::IsNullOrWhiteSpace("$($Settings.alpaca.ReportCompilerWarningsAndErrorsAsCodeReviewComments)")) {
+              Write-AlpacaDebug "Found ReportCompilerWarningsAndErrorsAsCodeReviewComments setting in Settings object: $($Settings.alpaca.ReportCompilerWarningsAndErrorsAsCodeReviewComments)"
+              $reportCompilerWarningsAndErrorsAsCodeReviewComments = "$($Settings.alpaca.ReportCompilerWarningsAndErrorsAsCodeReviewComments)" -ieq 'true'
+            }
+            if(-not [string]::IsNullOrWhiteSpace("$($Settings.alpaca.ReviewContextSecretName)")) {
+              Write-AlpacaDebug "Found ReviewContextSecretName setting in Settings object: $($Settings.alpaca.ReviewContextSecretName)"
+              $resolvedReviewContextSecretName = "$($Settings.alpaca.ReviewContextSecretName)"
+            }
+          }
+          $reportCompilerWarningsAndErrorsAsCodeReviewCommentsText = if ($reportCompilerWarningsAndErrorsAsCodeReviewComments) { 'True' } else { 'False' }
+          Write-AlpacaDebug "ReportCompilerWarningsAndErrorsAsCodeReviewComments: $reportCompilerWarningsAndErrorsAsCodeReviewCommentsText"
+          Add-Content -Encoding UTF8 -Path $env:GITHUB_OUTPUT -Value "reportCompilerWarningsAndErrorsAsCodeReviewComments=$reportCompilerWarningsAndErrorsAsCodeReviewCommentsText"
+          Write-AlpacaDebug "ReviewContextSecretName: $resolvedReviewContextSecretName"
+          Add-Content -Encoding UTF8 -Path $env:GITHUB_OUTPUT -Value "reviewContextSecretName=$resolvedReviewContextSecretName"
+        }
+    - name: Read secrets
+      id: ReadSecrets
+      if: steps.ResolveDiagnosticsSettings.outputs.reportCompilerWarningsAndErrorsAsCodeReviewComments == 'True'
+      uses: microsoft/AL-Go-Actions/ReadSecrets@v9.0
+      with:
+        shell: ${{ inputs.shell }}
+        gitHubSecrets: ${{ inputs.gitHubSecrets }}
+        getSecrets: ${{ steps.ResolveDiagnosticsSettings.outputs.reviewContextSecretName != '' && format('ghTokenWorkflow,{0}', steps.ResolveDiagnosticsSettings.outputs.reviewContextSecretName) || 'ghTokenWorkflow' }}
+
+    - name: Download BuildOutput artifacts
+      if: steps.ResolveDiagnosticsSettings.outputs.reportCompilerWarningsAndErrorsAsCodeReviewComments == 'True'
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        pattern: '*-BuildOutput-PR${{ inputs.pullRequestNumber }}-*'
+        path: ${{ inputs.buildOutputPath }}
+        merge-multiple: true
+
+    - id: ReportCompilerDiagnosticsAsReviewComments
+      name: Report Compiler Diagnostics As Review Comments
+      if: steps.ResolveDiagnosticsSettings.outputs.reportCompilerWarningsAndErrorsAsCodeReviewComments == 'True'
+      shell: ${{ inputs.shell }}
+      env:
+        _repository: ${{ inputs.repository }}
+        _pullRequestNumber: ${{ inputs.pullRequestNumber }}
+        _baseRef: ${{ inputs.baseRef }}
+        _headSha: ${{ inputs.headSha }}
+        _buildOutputPath: ${{ inputs.buildOutputPath }}
+        _githubToken: ${{ fromJson(steps.ReadSecrets.outputs.Secrets).ghTokenWorkflow }}
+        _reviewContextSecretName: ${{ steps.ResolveDiagnosticsSettings.outputs.reviewContextSecretName }}
+        _reviewContextSecretValue: ${{ steps.ResolveDiagnosticsSettings.outputs.reviewContextSecretName != '' && fromJson(steps.ReadSecrets.outputs.Secrets)[steps.ResolveDiagnosticsSettings.outputs.reviewContextSecretName] || '' }}
+      run: |
+        ${{ github.action_path }}/../../Scripts/Invoke-AlpacaAction.ps1 -ActionName "ReportCompilerDiagnosticsAsReviewComments" -Action {
+          ${{ github.action_path }}/ReportCompilerDiagnosticsAsReviewComments.ps1 `
+            -Repository $env:_repository `
+            -PullRequestNumber ([int]$env:_pullRequestNumber) `
+            -BaseRef $env:_baseRef `
+            -HeadSha $env:_headSha `
+            -BuildOutputPath $env:_buildOutputPath `
+            -GitHubToken $env:_githubToken `
+            -ReviewContextSecretName $env:_reviewContextSecretName `
+            -ReviewContextSecretValue $env:_reviewContextSecretValue
+        }
+branding:
+  icon: message-square
+  color: yellow

@@ -1,5 +1,5 @@
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', 'Actor', Justification = 'Used inside script block')]
-Param(
+param(
     [Parameter(HelpMessage = "The GitHub actor running the action", Mandatory = $false)]
     [string] $Actor,
     [Parameter(HelpMessage = "Base64 encoded GhTokenWorkflow secret", Mandatory = $false)]
@@ -63,7 +63,7 @@ if ($DryRun) {
 
 Write-AlpacaOutput "Get a write access token for the repository $Repo"
 $Token = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($Token))
-$repoWriteToken = Invoke-ALGoCommand -ScriptBlock { GetAccessToken -token $Token -repository $Repo -permissions @{"contents"="write";"pull_requests"="write"} }
+$repoWriteToken = Invoke-ALGoCommand -ScriptBlock { GetAccessToken -token $Token -repository $Repo -permissions @{"contents" = "write"; "pull_requests" = "write" } }
 $env:GH_TOKEN = $repoWriteToken
 
 $commitMessage = "[COSMO Alpaca] Update AL-Go Settings Files"
@@ -71,8 +71,8 @@ $commitMessage = "[COSMO Alpaca] Update AL-Go Settings Files"
 $Branch = $Branch.Replace("refs/heads/", "")
 Write-AlpacaOutput "Check if a pull request already exists for branch $Branch with title '$commitMessage'"
 $existingPullRequest = (gh api --paginate "/repos/$Repo/pulls?base=$Branch" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" | ConvertFrom-Json) |
-    Where-Object { $_.title -eq $commitMessage } |
-    Select-Object -First 1
+Where-Object { $_.title -eq $commitMessage } |
+Select-Object -First 1
 if ($existingPullRequest) {
     $errorMsg = "A pull request already exists for branch ${Branch}: $($existingPullRequest.html_url)."
     Write-AlpacaError $errorMsg
@@ -98,13 +98,15 @@ try {
     if (-not $committed) {
         Write-AlpacaNotice "No AL-Go Settings files changed."
     }
-} catch {
+}
+catch {
     if ($DirectCommit) {
         throw "Failed to update AL-Go Settings Files. Make sure that the personal access token, defined in the secret called GhTokenWorkflow, is not expired and it has permission to update the repository. Read https://github.com/microsoft/AL-Go/blob/main/Scenarios/GhTokenWorkflow.md for more information. (Error was $($_.Exception.Message))"
     }
     else {
         throw "Failed to create a pull-request to update the AL-Go Settings Files. Make sure that the personal access token, defined in the secret called GhTokenWorkflow, is not expired and it has permission to update the repository. Read https://github.com/microsoft/AL-Go/blob/main/Scenarios/GhTokenWorkflow.md for more information. (Error was $($_.Exception.Message))"
     }
-} finally {
+}
+finally {
     Write-AlpacaGroupEnd
 }
