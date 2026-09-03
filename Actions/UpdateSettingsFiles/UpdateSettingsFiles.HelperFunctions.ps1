@@ -1,7 +1,4 @@
-# Import Alpaca module
-Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
-
-$script:commentPropertyName = '$comment'
+$script:CommentPropertyName = '$comment'
 
 function Read-ALGoSettingsFile {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', 'Path', Justification = 'Used inside script block')]
@@ -62,14 +59,14 @@ function Get-ALGoConditionalSettings {
 
     return @(
         $Settings.conditionalSettings |
-            Where-Object { $null -eq $Repository -or -not $_.PSObject.Properties["repositories"] -or ($_.repositories | Where-Object { $Repository -like $_ }) } |
-            Where-Object { $null -eq $IncludeComment -or ($_.PSObject.Properties[$script:commentPropertyName] -and $_.$($script:commentPropertyName) -like $IncludeComment) } |
-            Where-Object { $null -eq $ExcludeComment -or -not $_.PSObject.Properties[$script:commentPropertyName] -or $_.$($script:commentPropertyName) -notlike $ExcludeComment } |
-            ForEach-Object {
-                $copy = $_.PSObject.Copy()
-                $copy.PSObject.Properties.Remove($script:commentPropertyName)
-                return $copy
-            }
+        Where-Object { $null -eq $Repository -or -not $_.PSObject.Properties["repositories"] -or ($_.repositories | Where-Object { $Repository -like $_ }) } |
+        Where-Object { $null -eq $IncludeComment -or ($_.PSObject.Properties[$script:CommentPropertyName] -and $_.$($script:CommentPropertyName) -like $IncludeComment) } |
+        Where-Object { $null -eq $ExcludeComment -or -not $_.PSObject.Properties[$script:CommentPropertyName] -or $_.$($script:CommentPropertyName) -notlike $ExcludeComment } |
+        ForEach-Object {
+            $copy = $_.PSObject.Copy()
+            $copy.PSObject.Properties.Remove($script:CommentPropertyName)
+            return $copy
+        }
     )
 }
 
@@ -88,13 +85,13 @@ function Get-ALGoConditionalSettingsObjects {
     )
 
     return Get-ALGoConditionalSettings @PSBoundParameters |
-        ForEach-Object {
-            @{
-                Entry = $_
-                Keys = @(Get-ALGoSettingsKeys -Settings $_.settings)
-                Json = $_ | ConvertTo-Json -Depth 99 -Compress
-            }
+    ForEach-Object {
+        @{
+            Entry = $_
+            Keys  = @(Get-ALGoSettingsKeys -Settings $_.settings)
+            Json  = $_ | ConvertTo-Json -Depth 99 -Compress
         }
+    }
 }
 
 function Get-ALGoConditionalSettingsKeys {
@@ -153,15 +150,15 @@ function Get-ALGoSettingsObject {
     )
 
     $alGoSettingsObject = @{
-        Source = $Source
-        Settings = [pscustomobject]@{}
+        Source     = $Source
+        Settings   = [pscustomobject]@{}
 
-        Updated = $false
-        Updates = @()
+        Updated    = $false
+        Updates    = @()
 
-        Keys = @()
+        Keys       = @()
 
-        Immutable = $Immutable
+        Immutable  = $Immutable
         RedirectTo = $RedirectTo
     }
 
@@ -217,7 +214,7 @@ function Get-ALGoSettingsObjects {
                     Write-AlpacaOutput "Read AL-Go Settings File: $alGoSettingsFilePath"
 
                     $alGoFileSettingsObjectParams = @{
-                        Source = (Resolve-Path -Path $alGoSettingsFilePath -Relative -RelativeBasePath $Path).Replace('\', '/') # Make source path relative and use forward slashes for consistency
+                        Source  = (Resolve-Path -Path $alGoSettingsFilePath -Relative -RelativeBasePath $Path).Replace('\', '/') # Make source path relative and use forward slashes for consistency
                         Content = Read-ALGoSettingsFile -Path $alGoSettingsFilePath
                     }
 
@@ -234,13 +231,15 @@ function Get-ALGoSettingsObjects {
 
                     Write-AlpacaDebug "AL-Go File Settings:`n$($alGoFileSettingsObject | ConvertTo-Json -Depth 10)"
                     $alGoFileSettingsObject
-                } catch {
+                }
+                catch {
                     throw "Error reading AL-Go Settings file. Error was $($_.Exception.Message).`n$($_.ScriptStackTrace)"
                 }
             }
         }
         Write-AlpacaGroupEnd
-    } finally {
+    }
+    finally {
         Write-AlpacaGroupEnd
     }
 }
@@ -263,8 +262,8 @@ function Get-ALGoOrgConditionalSettingsObjectsToInherit {
 
         $alGoOrgConditionalSettingsObjects = @(
             Get-ALGoConditionalSettingsObjects -Settings $alGoOrgSettingsObject.Settings -Repository $Repository |
-                # Filter for entries that have settings with at least one property
-                Where-Object { $_.Entry.PSObject.Properties["settings"] -and $_.Entry.settings -and @($_.Entry.settings.PSObject.Properties) }
+            # Filter for entries that have settings with at least one property
+            Where-Object { $_.Entry.PSObject.Properties["settings"] -and $_.Entry.settings -and @($_.Entry.settings.PSObject.Properties) }
         )
 
         if (-not $alGoOrgConditionalSettingsObjects) {
@@ -279,23 +278,28 @@ function Get-ALGoOrgConditionalSettingsObjectsToInherit {
 
             if (-not $EnforceOrgBuildModesSettings) {
                 Write-AlpacaOutput "Organization build modes settings enforcement is disabled. Skipping."
-            } elseif (-not ($AlGoSettingsObjects | Where-Object { "buildModes" -in @($_.Keys) + @(Get-ALGoConditionalSettingsKeys -Settings $_.Settings -Repository $Repository -ExcludeComment "*") })) {
+            }
+            elseif (-not ($AlGoSettingsObjects | Where-Object { "buildModes" -in @($_.Keys) + @(Get-ALGoConditionalSettingsKeys -Settings $_.Settings -Repository $Repository -ExcludeComment "*") })) {
                 Write-AlpacaOutput "No build modes configured in repository ${Repository}. Skipping."
-            } else {
+            }
+            else {
                 $alGoOrgBuildModesConditionalSettings = @($alGoOrgConditionalSettingsObjects | Where-Object { $_.Entry.PSObject.Properties["buildModes"] -and $_.Entry.buildModes })
                 if ($alGoOrgBuildModesConditionalSettings) {
                     Write-AlpacaOutput "Organization-level build modes conditional settings found for repository ${Repository}. Inheriting $($alGoOrgBuildModesConditionalSettings.Count) build mode conditional settings."
                     $alGoOrgConditionalSettingsObjectsToInherit += @($alGoOrgBuildModesConditionalSettings | Where-Object { $alGoOrgConditionalSettingsObjectsToInherit -notcontains $_ })
-                } else {
+                }
+                else {
                     Write-AlpacaOutput "No organization-level build modes conditional settings found for repository ${Repository}. Nothing to Inherit."
                 }
             }
-        } finally {
+        }
+        finally {
             Write-AlpacaGroupEnd
         }
 
         return $alGoOrgConditionalSettingsObjectsToInherit
-    } finally {
+    }
+    finally {
         Write-AlpacaGroupEnd
     }
 }
@@ -331,14 +335,14 @@ function Update-ALGoSettingsObjectsWithOrgConditionalSettings {
         $keys += @(Get-ALGoConditionalSettingsKeys -Settings $alGoSettingsObject.Settings -Repository $Repository -ExcludeComment $comment)
         # Add keys of immutable AL-Go Settings objects that redirect to this mutable AL-Go Settings object
         $immutableAlGoSettingsObjects |
-            Where-Object { $alGoSettingsObject.Source -like $_.RedirectTo } |
-            ForEach-Object {
-                Write-AlpacaOutput "Include redirection from immutable AL-Go Settings '$($_.Source)'"
-                # Add keys from the AL-Go Settings object
-                $keys += $_.Keys
-                # Add keys from conditional Settings entries that are not inherited from the organization-level AL-Go Settings (i.e. do not have the inherited comment)
-                $keys += @(Get-ALGoConditionalSettingsKeys -Settings $_.Settings -Repository $Repository -ExcludeComment $comment)
-            }
+        Where-Object { $alGoSettingsObject.Source -like $_.RedirectTo } |
+        ForEach-Object {
+            Write-AlpacaOutput "Include redirection from immutable AL-Go Settings '$($_.Source)'"
+            # Add keys from the AL-Go Settings object
+            $keys += $_.Keys
+            # Add keys from conditional Settings entries that are not inherited from the organization-level AL-Go Settings (i.e. do not have the inherited comment)
+            $keys += @(Get-ALGoConditionalSettingsKeys -Settings $_.Settings -Repository $Repository -ExcludeComment $comment)
+        }
         $keys = @($keys | Select-Object -Unique)
         Write-AlpacaDebug "Keys: $($keys -join ', ')"
 
@@ -354,12 +358,12 @@ function Update-ALGoSettingsObjectsWithOrgConditionalSettings {
             Write-AlpacaOutput "Updating conditional settings"
             # Recreate the conditional settings property of the AL-Go settings with the conditional settings that are not inherited from the organization-level AL-Go Settings (i.e. do not have the inherited comment)
             $alGoSettingsObject.Settings |
-                Add-Member -MemberType NoteProperty -Name "conditionalSettings" -Value @(Get-ALGoConditionalSettings -Settings $alGoSettingsObject.Settings -ExcludeComment $comment) -Force
+            Add-Member -MemberType NoteProperty -Name "conditionalSettings" -Value @(Get-ALGoConditionalSettings -Settings $alGoSettingsObject.Settings -ExcludeComment $comment) -Force
             # Add new conditional settings that are inherited from the organization-level AL-Go Settings
             foreach ($newAlGoOrgConditionalSettingsObject in $newAlGoOrgConditionalSettingsObjects) {
                 # Create a new object with the inherited comment property and copy all properties from the new conditional settings object to be inherited from the organization-level AL-Go Settings
                 $newAlGoOrgConditionalSettings = [pscustomobject][ordered]@{
-                    $script:commentPropertyName = $comment
+                    $script:CommentPropertyName = $comment
                 }
                 foreach ($prop in $newAlGoOrgConditionalSettingsObject.Entry.PSObject.Properties) {
                     $newAlGoOrgConditionalSettings | Add-Member -MemberType NoteProperty -Name $prop.Name -Value $prop.Value
@@ -368,7 +372,8 @@ function Update-ALGoSettingsObjectsWithOrgConditionalSettings {
             }
             $alGoSettingsObject.Updated = $true
             $alGoSettingsObject.Updates += "Updated inherited conditional settings from organization-level AL-Go Settings"
-        } else {
+        }
+        else {
             Write-AlpacaOutput "No updates of conditional settings needed."
         }
 

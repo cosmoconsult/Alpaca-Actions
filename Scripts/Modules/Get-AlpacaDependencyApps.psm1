@@ -1,5 +1,5 @@
 ﻿function Get-AlpacaDependencyApps {
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         [string] $PackagesFolder,
         [Parameter(Mandatory = $true)]
@@ -69,7 +69,7 @@
                     $fileType = 'zip'
                     break
                 }
-                Default {
+                default {
                     $fileType = 'unknown'
                 }
             }
@@ -131,7 +131,7 @@
                         Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue
                     }
                 }
-                Default {
+                default {
                     Write-AlpacaOutput "Unknown file type"
                 }
             }

@@ -1,0 +1,40 @@
+name: Update README
+description: This action updates the repository README
+author: COSMO CONSULT
+inputs:
+  shell:
+    description: Shell in which you want to run the action (powershell or pwsh)
+    required: false
+    default: pwsh
+  actor:
+    description: The GitHub actor running the action
+    required: false
+    default: ${{ github.actor }}
+  token:
+    description: Repository write token used for clone, commit and pull request operations
+    required: true
+  branch:
+    description: The target branch to update
+    required: false
+    default: ${{ github.ref_name }}
+  directCommit:
+    description: Direct Commit?
+    required: false
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: UpdateReadme
+      shell: ${{ inputs.shell }}
+      env:
+        _actor: ${{ inputs.actor }}
+        _token: ${{ inputs.token }}
+        _branch: ${{ inputs.branch }}
+        _directCommit: ${{ inputs.directCommit }}
+      run: |
+        ${{ github.action_path }}/../../Scripts/Invoke-AlpacaAction.ps1 -ActionName "UpdateReadme" -Action {
+          ${{ github.action_path }}/UpdateReadme.ps1 -Actor $env:_actor -Token $env:_token -Branch $env:_branch -DirectCommit ($env:_directCommit -eq 'true')
+        }
+branding:
+  icon: terminal
+  color: blue

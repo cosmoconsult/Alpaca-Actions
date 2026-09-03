@@ -1,12 +1,12 @@
-﻿param(
-    [hashtable] $params
+param(
+    [hashtable] $Params
 )
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
 if (Get-AlpacaIsDebugMode) {
     Write-AlpacaGroupStart "Parameters"
     try {
-        $params.GetEnumerator() | ForEach-Object {
+        $Params.GetEnumerator() | ForEach-Object {
             $key = [string]$_.Key
             if ($key -match '(?i)(credential|password|token|secret)') {
                 $safeValue = '<redacted>'
@@ -33,10 +33,10 @@ if ($env:RUNNER_OS -ne 'Windows') {
 }
 
 Write-AlpacaOutput "Overriding start address to Environment value: $($environment)" # $environment comes from parent script
-$params.startAddress = $environment # modify the hashtable parameter
+$Params.startAddress = $environment # modify the hashtable parameter
 
 Write-AlpacaOutput ("Overriding credential to BcAuthContext credential (User: {0})" -f $(try { $bcAuthContext.username }catch { "" })) # bcAuthContext comes from parent script
-$params.credential = New-Object System.Management.Automation.PSCredential ($bcAuthContext.username, $bcAuthContext.Password) # modify the hashtable parameter
+$Params.credential = New-Object System.Management.Automation.PSCredential ($bcAuthContext.username, $bcAuthContext.Password) # modify the hashtable parameter
 
 Write-AlpacaOutput "Invoking parent RunPageScriptingTests with modified parameters"
-RunPageScriptingTests @params # invoke parent
+RunPageScriptingTests @Params # invoke parent

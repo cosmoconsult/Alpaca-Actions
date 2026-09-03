@@ -1,4 +1,4 @@
-﻿param (
+param (
     [Parameter(HelpMessage = "The GitHub token running the action", Mandatory = $true)]
     [string] $Token,
     [Parameter(HelpMessage = "Optional filter for project name", Mandatory = $false)]
@@ -7,11 +7,9 @@
     [string] $BuildModeFilter = "*"
 )
 
-Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
-
 try {
     Write-AlpacaGroupStart "Determine containers"
-    $GetAlpacaContainerSplat = @{
+    $getAlpacaContainerSplat = @{
         Token     = $Token
         Project   = $ProjectFilter
         BuildMode = $BuildModeFilter
@@ -36,7 +34,8 @@ $failures = 0
 foreach ($container in $containers) {
     try {
         Remove-AlpacaContainer -Container $container -Token $Token
-    } catch {
+    }
+    catch {
         Write-AlpacaError "Failed to delete container '$($container.Id)':`n$_"
         $failures += 1
     }

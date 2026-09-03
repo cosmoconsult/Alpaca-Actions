@@ -1,4 +1,4 @@
-﻿param (
+param (
     [Parameter(HelpMessage = "The GitHub token running the action", Mandatory = $true)]
     [string] $Token,
     [Parameter(HelpMessage = "Mode for the action: 'GetAndUpdate' searches AL-Go settings files and backend, 'Update' only queries backend", Mandatory = $false)]
@@ -12,8 +12,6 @@
     [string] $IncludeVariables = ""
 )
 
-Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "..\..\Scripts\Modules\Alpaca.psd1" -Resolve) -DisableNameChecking
-
 # Parse GitHub variables JSON once
 $gitHubVariables = $null
 try {
@@ -23,31 +21,31 @@ try {
 }
 
 # Extract AL-Go settings from GitHub variables
-$OrgSettingsVariableValue = ""
-$RepoSettingsVariableValue = ""
-$EnvironmentSettingsVariableValue = ""
+$orgSettingsVariableValue = ""
+$repoSettingsVariableValue = ""
+$environmentSettingsVariableValue = ""
 
 if ($gitHubVariables) {
     if ($gitHubVariables.PSObject.Properties["ALGoOrgSettings"]) {
-        $OrgSettingsVariableValue = $gitHubVariables.ALGoOrgSettings
+        $orgSettingsVariableValue = $gitHubVariables.ALGoOrgSettings
     }
     if ($gitHubVariables.PSObject.Properties["ALGoRepoSettings"]) {
-        $RepoSettingsVariableValue = $gitHubVariables.ALGoRepoSettings
+        $repoSettingsVariableValue = $gitHubVariables.ALGoRepoSettings
     }
     if ($gitHubVariables.PSObject.Properties["ALGoEnvSettings"]) {
-        $EnvironmentSettingsVariableValue = $gitHubVariables.ALGoEnvSettings
+        $environmentSettingsVariableValue = $gitHubVariables.ALGoEnvSettings
     }
 }
 
 # Fall back to environment variables if not found in GitHub variables
-if ([string]::IsNullOrWhiteSpace($OrgSettingsVariableValue)) {
-    $OrgSettingsVariableValue = $ENV:ALGoOrgSettings
+if ([string]::IsNullOrWhiteSpace($orgSettingsVariableValue)) {
+    $orgSettingsVariableValue = $ENV:ALGoOrgSettings
 }
-if ([string]::IsNullOrWhiteSpace($RepoSettingsVariableValue)) {
-    $RepoSettingsVariableValue = $ENV:ALGoRepoSettings
+if ([string]::IsNullOrWhiteSpace($repoSettingsVariableValue)) {
+    $repoSettingsVariableValue = $ENV:ALGoRepoSettings
 }
-if ([string]::IsNullOrWhiteSpace($EnvironmentSettingsVariableValue)) {
-    $EnvironmentSettingsVariableValue = $ENV:ALGoEnvSettings
+if ([string]::IsNullOrWhiteSpace($environmentSettingsVariableValue)) {
+    $environmentSettingsVariableValue = $ENV:ALGoEnvSettings
 }
 
 $secretNames = @()
@@ -109,9 +107,9 @@ if ($Mode -eq "GetAndUpdate") {
     Write-AlpacaOutput "Searching AL-Go settings variables"
 
     $settingsVariables = @(
-        @{ Name = "organization"; Value = $OrgSettingsVariableValue},
-        @{ Name = "repository"; Value = $RepoSettingsVariableValue},
-        @{ Name = "environment"; Value = $EnvironmentSettingsVariableValue}
+        @{ Name = "organization"; Value = $orgSettingsVariableValue},
+        @{ Name = "repository"; Value = $repoSettingsVariableValue},
+        @{ Name = "environment"; Value = $environmentSettingsVariableValue}
     )
 
     foreach ($settingsVar in $settingsVariables) {
