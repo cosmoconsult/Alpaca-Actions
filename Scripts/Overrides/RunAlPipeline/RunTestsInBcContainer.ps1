@@ -1,5 +1,5 @@
 param(
-    [Hashtable] $parameters
+    [Hashtable] $Parameters
 )
 
 Write-AlpacaOutput "Using COSMO Alpaca override"
@@ -7,14 +7,14 @@ Write-AlpacaOutput "Using COSMO Alpaca override"
 
 if ($AlGoRunTestsInBcContainer) {
     Write-AlpacaOutput "Invoking Run-TestsInBcContainer override"
-    $runResult = Invoke-Command -ScriptBlock $AlGoRunTestsInBcContainer -ArgumentList $parameters
+    $runResult = Invoke-Command -ScriptBlock $AlGoRunTestsInBcContainer -ArgumentList $Parameters
 }
 else {
     Write-AlpacaDebug "Invoking Run-TestsInBcContainer"
-    $runResult = Run-TestsInBcContainer @parameters
+    $runResult = Run-TestsInBcContainer @Parameters
 }
 
-if ($parameters.extensionId -eq ($testAppIds.Keys | Select-Object -Last 1)) { # $testAppIds comes from parent scope (Run-AlPipeline)
+if ($Parameters.extensionId -eq ($testAppIds.Keys | Select-Object -Last 1)) { # $testAppIds comes from parent scope (Run-AlPipeline)
     $settings = $env:Settings | ConvertFrom-Json
     $alpacaSettings = Get-AlpacaALGoSettings -Settings $settings
     $actionOnMissingTests = [string]$alpacaSettings.actionOnMissingTests
@@ -27,7 +27,7 @@ if ($parameters.extensionId -eq ($testAppIds.Keys | Select-Object -Last 1)) { # 
         return $runResult
     }
 
-    $testResultsFileName = $parameters.JUnitResultFileName
+    $testResultsFileName = $Parameters.JUnitResultFileName
 
     Write-AlpacaDebug -Message "Checking test results file: $testResultsFileName"
     if (-not (Test-Path -Path $testResultsFileName -PathType Leaf)) {

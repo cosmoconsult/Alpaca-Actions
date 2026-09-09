@@ -1,5 +1,5 @@
 ﻿function Get-AlpacaBackendUrl {
-    Param(
+    param(
         [string] $BackendUrl = $env:ALPACA_BACKEND_URL
     )
     if ([string]::IsNullOrWhiteSpace($BackendUrl)) {
@@ -13,7 +13,7 @@
 Export-ModuleMember -Function Get-AlpacaBackendUrl
 
 function Get-AlpacaEndpointUrlWithParam {
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         [string] $Controller,
         [string] $Endpoint,
@@ -24,9 +24,9 @@ function Get-AlpacaEndpointUrlWithParam {
     $url = (Get-AlpacaBackendUrl) + "api/alpaca/release"
 
     $Controller, $Endpoint, $Ressource, $RouteSuffix |
-        Where-Object { $_ } |
-        ForEach-Object { $_ -split "/" } |
-        ForEach-Object { $url = $url + "/" + [System.Uri]::EscapeDataString($_) }
+    Where-Object { $_ } |
+    ForEach-Object { $_ -split "/" } |
+    ForEach-Object { $url = $url + "/" + [System.Uri]::EscapeDataString($_) }
 
     if ($QueryParams) {
         $url = $url + "?"
@@ -42,7 +42,7 @@ function Get-AlpacaEndpointUrlWithParam {
 Export-ModuleMember -Function Get-AlpacaEndpointUrlWithParam
 
 function Get-AlpacaAuthenticationHeaders {
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         [string] $Token
     )
@@ -54,7 +54,7 @@ function Get-AlpacaAuthenticationHeaders {
 Export-ModuleMember -Function Get-AlpacaAuthenticationHeaders
 
 function Invoke-AlpacaApiRequest {
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         [string] $Url,
         [string] $Method = 'Get',
@@ -65,13 +65,13 @@ function Invoke-AlpacaApiRequest {
     )
 
     $NoRetryStatusCodes +=
-        [System.Net.HttpStatusCode]::BadRequest,           # 400
-        [System.Net.HttpStatusCode]::Unauthorized,         # 401
-        [System.Net.HttpStatusCode]::Forbidden,            # 403
-        [System.Net.HttpStatusCode]::MethodNotAllowed,     # 405
-        [System.Net.HttpStatusCode]::Conflict,             # 409
-        [System.Net.HttpStatusCode]::UnprocessableEntity,  # 422
-        [System.Net.HttpStatusCode]::NotImplemented        # 501
+    [System.Net.HttpStatusCode]::BadRequest,           # 400
+    [System.Net.HttpStatusCode]::Unauthorized,         # 401
+    [System.Net.HttpStatusCode]::Forbidden,            # 403
+    [System.Net.HttpStatusCode]::MethodNotAllowed,     # 405
+    [System.Net.HttpStatusCode]::Conflict,             # 409
+    [System.Net.HttpStatusCode]::UnprocessableEntity,  # 422
+    [System.Net.HttpStatusCode]::NotImplemented        # 501
 
     $maxAttempts = $Retries + 1
     foreach ($attempt in 1..$maxAttempts) {
@@ -100,15 +100,15 @@ function Invoke-AlpacaApiRequest {
 Export-ModuleMember -Function Invoke-AlpacaApiRequest
 
 function Get-AlpacaApiErrorMessage {
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.ErrorRecord] $ErrorRecord
     )
 
     $problemDetails = @{
-        status = $null
-        title = $null
-        detail = $null
+        status   = $null
+        title    = $null
+        detail   = $null
         instance = $null
     }
 
@@ -146,14 +146,14 @@ function Get-AlpacaApiErrorMessage {
 Export-ModuleMember -Function Get-AlpacaApiErrorMessage
 
 function Resolve-AlpacaApiError {
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.ErrorRecord] $ErrorRecord
     )
 
     $errorMessage = Get-AlpacaApiErrorMessage -ErrorRecord $ErrorRecord
 
-    $updatedErrorRecord  = [System.Management.Automation.ErrorRecord]::new($ErrorRecord, $ErrorRecord.Exception)
+    $updatedErrorRecord = [System.Management.Automation.ErrorRecord]::new($ErrorRecord, $ErrorRecord.Exception)
     $updatedErrorRecord.ErrorDetails = [System.Management.Automation.ErrorDetails]::new($errorMessage)
     throw $updatedErrorRecord
 }

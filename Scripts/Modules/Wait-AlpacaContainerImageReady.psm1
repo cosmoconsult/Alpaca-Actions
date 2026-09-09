@@ -1,4 +1,4 @@
-﻿function Wait-AlpacaContainerImageReady {
+function Wait-AlpacaContainerImageReady {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -9,11 +9,11 @@
     process {
         Write-AlpacaOutput ("[info]Checking status of container: {0}" -f $ContainerName)
 
-        $SleepSeconds = 60
-        $SleepSecondsPending = 10
-        $TimeoutInMinutes = 50
-        $WaitMessage = "Image is building. Going to sleep for {0} seconds."
-        $ContainerStatusCode = @("Starting", "Running", "Healthy")
+        $sleepSeconds = 60
+        $sleepSecondsPending = 10
+        $timeoutInMinutes = 50
+        $waitMessage = "Image is building. Going to sleep for {0} seconds."
+        $containerStatusCode = @("Starting", "Running", "Healthy")
         $success = $true
 
         $owner = $env:GITHUB_REPOSITORY_OWNER
@@ -27,7 +27,7 @@
         $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "Container" -Ressource $ContainerName
         Write-AlpacaOutput "Get status of container '$ContainerName' from $apiUrl"
 
-        $time = New-TimeSpan -Seconds ($TimeoutInMinutes * 60)
+        $time = New-TimeSpan -Seconds ($timeoutInMinutes * 60)
         $stoptime = (Get-Date).Add($time)
 
         $attemps = 1
@@ -43,25 +43,25 @@
             Write-AlpacaOutput "[info] Response: $($containerResult.status | ConvertTo-Json -Compress)"
             $currentStatus = $containerResult.status.state
             Write-AlpacaOutput ("[info] Status is: {0}" -f $currentStatus)
-            $CurrentSleepSeconds = $SleepSeconds
+            $currentSleepSeconds = $sleepSeconds
             if ($currentStatus -in @("Unknown", "Pending")) {
-                $CurrentSleepSeconds = $SleepSecondsPending
+                $currentSleepSeconds = $sleepSecondsPending
             }
-            if ($currentStatus -notin $ContainerStatusCode) {
+            if ($currentStatus -notin $containerStatusCode) {
                 switch ($currentStatus) {
                     "Error" {
                         $success = $false
                         Write-AlpacaError "An error occurred during building the image."
                         return
                     }
-                    Default {
-                        $CurrentWaitMessage = $WaitMessage
+                    default {
+                        $currentWaitMessage = $waitMessage
                         if (!$containerResult.status.imageBuilding) {
-                            $CurrentWaitMessage = 'Waiting for container to start. Going to sleep for {0} seconds.'
+                            $currentWaitMessage = 'Waiting for container to start. Going to sleep for {0} seconds.'
                         }
-                        Write-AlpacaOutput ("Attempt {0}: {1}" -f $attemps, $($CurrentWaitMessage -f $CurrentSleepSeconds))
+                        Write-AlpacaOutput ("Attempt {0}: {1}" -f $attemps, $($currentWaitMessage -f $currentSleepSeconds))
                         Write-AlpacaOutput ""
-                        Start-Sleep -Seconds $CurrentSleepSeconds
+                        Start-Sleep -Seconds $currentSleepSeconds
                     }
                 }
             }
@@ -71,7 +71,7 @@
                 Write-AlpacaError "Timeout waiting for image build."
                 return
             }
-        } until ($currentStatus -in $ContainerStatusCode)
+        } until ($currentStatus -in $containerStatusCode)
         Write-AlpacaOutput "##[info] Reached desired status: $currentStatus"
         $success = $true
     }

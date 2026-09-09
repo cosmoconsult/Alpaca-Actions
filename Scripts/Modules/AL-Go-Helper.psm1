@@ -1,32 +1,34 @@
-$script:alGoTempDir = $null
+$script:AlGoTempDir = $null
 
 $script:DebugLogHelperFiles = @(
     '.Modules/DebugLogHelper.psm1'
 ) | Select-Object -Unique
 
-$script:alGoReadSettingsFiles = @(
+$script:AlGoReadSettingsFiles = @(
     '.Modules/ReadSettings.psm1',
     '.Modules/settings.schema.json'
 ) + $script:DebugLogHelperFiles | Select-Object -Unique
 
-$script:alGoGitHubHelperFiles = @(
+$script:AlGoGitHubHelperFiles = @(
     'Github-Helper.psm1'
 ) + $script:DebugLogHelperFiles | Select-Object -Unique
 
-$script:alGoHelperFiles = @(
+$script:AlGoHelperFiles = @(
     'AL-Go-Helper.ps1'
-) + $script:DebugLogHelperFiles + $script:alGoGitHubHelperFiles + $script:alGoReadSettingsFiles | Select-Object -Unique
+) + $script:DebugLogHelperFiles + $script:AlGoGitHubHelperFiles + $script:AlGoReadSettingsFiles | Select-Object -Unique
 
-$script:alGoCommandFileMap = @{
-    'ReadSettings'        = $script:alGoReadSettingsFiles
-    'Get-ContentLF'       = $script:alGoGitHubHelperFiles
-    'Set-JsonContentLF'   = $script:alGoGitHubHelperFiles
-    'invoke-git'          = $script:alGoGitHubHelperFiles
-    'GetAccessToken'      = $script:alGoGitHubHelperFiles
-    'CloneIntoNewFolder'  = $script:alGoHelperFiles
-    'CommitFromNewFolder' = $script:alGoHelperFiles
+$script:AlGoCommandFileMap = @{
+    'ReadSettings'              = $script:AlGoReadSettingsFiles
+    'Get-ContentLF'             = $script:AlGoGitHubHelperFiles
+    'Set-JsonContentLF'         = $script:AlGoGitHubHelperFiles
+    'invoke-git'                = $script:AlGoGitHubHelperFiles
+    'GetAccessToken'            = $script:AlGoGitHubHelperFiles
+    'CloneIntoNewFolder'        = $script:AlGoHelperFiles
+    'CommitFromNewFolder'       = $script:AlGoHelperFiles
+    'ConvertTo-HashTable'       = $script:AlGoHelperFiles
+    'GetProjectsFromRepository' = $script:AlGoHelperFiles
+    'ResolveProjectFolders'     = $script:AlGoHelperFiles
 }
-
 function Save-ALGoFiles {
     <#
     .SYNOPSIS
@@ -53,8 +55,8 @@ function Save-ALGoFiles {
         [string[]] $Files
     )
 
-    $RootSettingsPath = Join-Path $env:GITHUB_WORKSPACE ".github/AL-Go-Settings.json"
-    if (-not (Test-Path $RootSettingsPath -PathType Leaf)) {
+    $rootSettingsPath = Join-Path $env:GITHUB_WORKSPACE ".github/AL-Go-Settings.json"
+    if (-not (Test-Path $rootSettingsPath -PathType Leaf)) {
         Write-AlpacaNotice "Repo Settings file not found. Using 'main' branch for AL-Go modules."
         $specificVersion = 'main'
     }
@@ -62,7 +64,7 @@ function Save-ALGoFiles {
         # Default to 'main' if we cannot determine the version from the $schema URL
         try {
             Write-AlpacaDebug "Read Settings to determine AL-Go version."
-            $settings = Get-Content -Path $RootSettingsPath -Raw | ConvertFrom-Json
+            $settings = Get-Content -Path $rootSettingsPath -Raw | ConvertFrom-Json
             $schemaUrl = $settings.'$schema'
             if ($schemaUrl -match '/microsoft/AL-Go-Actions/([^/]+)/') {
                 $specificVersion = $Matches[1]
@@ -80,20 +82,20 @@ function Save-ALGoFiles {
     }
 
     # Reuse cached temp directory or create a new one
-    if ($script:alGoTempDir -and (Test-Path $script:alGoTempDir)) {
-        $TempDir = $script:alGoTempDir
+    if ($script:AlGoTempDir -and (Test-Path $script:AlGoTempDir)) {
+        $tempDir = $script:AlGoTempDir
     }
     else {
-        $TempDir = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
-        New-Item -ItemType Directory -Path $TempDir | Out-Null
-        $script:alGoTempDir = $TempDir
+        $tempDir = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
+        New-Item -ItemType Directory -Path $tempDir | Out-Null
+        $script:AlGoTempDir = $tempDir
     }
 
     $failedDownloads = @()
     $failedFallbackDownloads = @()
 
     foreach ($file in $Files) {
-        $tempFile = Join-Path $TempDir $file
+        $tempFile = Join-Path $tempDir $file
 
         # Skip files that have already been downloaded
         if (Test-Path $tempFile) {
@@ -167,7 +169,9 @@ function Import-ALGoFiles {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string[]] $Files
+        [string[]] $Files,
+
+        [switch] $Force
     )
 
     Save-ALGoFiles -Files $Files
@@ -177,8 +181,8 @@ function Import-ALGoFiles {
 
     # Import .psm1 modules first (dependencies like Github-Helper before AL-Go-Helper)
     foreach ($file in $psm1Files) {
-        $filePath = Join-Path $script:alGoTempDir $file
-        Import-Module $filePath -Global -Force -DisableNameChecking -ErrorAction Stop
+        $filePath = Join-Path $script:AlGoTempDir $file
+        Import-Module $filePath -Global -Force:$Force -DisableNameChecking -ErrorAction Stop
         Write-AlpacaDebug "Successfully imported module: $file"
     }
 
@@ -189,9 +193,18 @@ function Import-ALGoFiles {
             Write-AlpacaDebug "Skipping $file because matching module $matchingPsm1 is already imported."
             continue
         }
-        $filePath = Join-Path $script:alGoTempDir $file
-        New-Module -ScriptBlock ([scriptblock]::Create(". '$filePath'")) | Import-Module -Global -Force -DisableNameChecking -ErrorAction Stop
-        Write-AlpacaDebug "Successfully imported script as module: $file"
+        $filePath = Join-Path $script:AlGoTempDir $file
+        $dynamicModuleName = "ALGoDynamicModule_$(Split-Path $filePath -Leaf)"
+        if ($Force) {
+            Remove-Module -Name $dynamicModuleName -Force -ErrorAction SilentlyContinue
+        }
+        if (-not (Get-Module -Name $dynamicModuleName -ErrorAction SilentlyContinue)) {
+            New-Module -ScriptBlock ([scriptblock]::Create(". '$filePath'")) -Name $dynamicModuleName | Import-Module -Global -DisableNameChecking -ErrorAction Stop
+            Write-AlpacaDebug "Successfully imported script as module: $file"
+        }
+        else {
+            Write-AlpacaDebug "Module $dynamicModuleName already exists. Skipping import of $file."
+        }
     }
 }
 
@@ -238,12 +251,12 @@ function Import-ALGoCommands {
             }
         }
 
-        $files = $script:alGoCommandFileMap[$command]
+        $files = $script:AlGoCommandFileMap[$command]
         if (-not $files) {
             throw "Unknown AL-Go command '$command'. Add it to the command file map in AL-Go-Helper.psm1."
         }
 
-        Import-ALGoFiles -Files $files
+        Import-ALGoFiles -Files $files -Force:$Force
     }
 }
 Export-ModuleMember -Function Import-ALGoCommands
@@ -302,10 +315,24 @@ function Get-AlpacaALGoSettings {
     )
 
     $defaultAlpacaSettings = [ordered]@{
-        useNuGetFeedsForUpgrade = $false
-        startupScriptUrl        = ''
-        actionOnMissingTests    = 'Warning'
-        enforceOrgBuildModesSettings = $false
+        useNuGetFeedsForUpgrade                = $false
+        startupScriptUrl                       = ''
+        actionOnMissingTests                   = 'Warning'
+        enforceOrgBuildModesSettings           = $false
+        enableCodeCopForTestApps               = $Settings.enableCodeCop
+        enableUICopForTestApps                 = $Settings.enableUICop
+        enablePerTenantExtensionCopForTestApps = $Settings.enablePerTenantExtensionCop
+        enableAppSourceCopForTestApps          = $Settings.enableAppSourceCop
+        customCodeCopsForTestApps              = $Settings.customCodeCops
+        rulesetFileForTestApps                 = $Settings.rulesetFile
+        obsoleteTagVersion                     = ''
+        obsoleteTagPattern                     = ''
+        createTranslations                     = $false
+        translationLanguages                   = @()
+        testTranslations                       = $false
+        testTranslationRules                   = @()
+        ReportCompilerWarningsAndErrorsAsCodeReviewComments = $true
+        ReviewContextSecretName                = ''
     }
 
     $alpacaProperty = ([pscustomobject]$Settings).PSObject.Properties['alpaca']

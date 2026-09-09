@@ -29,7 +29,9 @@ runs:
         _projectFilter: ${{ inputs.projectFilter }}
         _buildModeFilter: ${{ inputs.buildModeFilter }}
       run: |
-        ${{ github.action_path }}/RemoveContainers.ps1 -Token $env:_token -ProjectFilter $env:_projectFilter -BuildModeFilter $env:_buildModeFilter
+        ${{ github.action_path }}/../../Scripts/Invoke-AlpacaAction.ps1 -ActionName "RemoveContainers" -Action {
+          ${{ github.action_path }}/RemoveContainers.ps1 -Token $env:_token -ProjectFilter $env:_projectFilter -BuildModeFilter $env:_buildModeFilter
+        }
 branding:
   icon: terminal
   color: blue

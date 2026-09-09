@@ -24,7 +24,9 @@ runs:
         _token: ${{ inputs.token }}
         _buildOrderJson: ${{ inputs.buildOrderJson }}
       run: |
-        ${{ github.action_path }}/CreateContainers.ps1 -Token $env:_token -BuildOrderJson $env:_buildOrderJson
+        ${{ github.action_path }}/../../Scripts/Invoke-AlpacaAction.ps1 -ActionName "CreateContainers" -Action {
+          ${{ github.action_path }}/CreateContainers.ps1 -Token $env:_token -BuildOrderJson $env:_buildOrderJson
+        }
 
     - name: Remove COSMO Alpaca Containers on failure
       if: (failure() || cancelled())
@@ -32,7 +34,9 @@ runs:
       env:
         _token: ${{ inputs.token }}
       run: |
-        ${{ github.action_path }}/../RemoveContainers/RemoveContainers.ps1 -Token $env:_token
+        ${{ github.action_path }}/../../Scripts/Invoke-AlpacaAction.ps1 -ActionName "RemoveContainers" -Action {
+          ${{ github.action_path }}/../RemoveContainers/RemoveContainers.ps1 -Token $env:_token
+        }
 branding:
   icon: terminal
   color: blue
