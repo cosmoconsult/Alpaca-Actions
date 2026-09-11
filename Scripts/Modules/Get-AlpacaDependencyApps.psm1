@@ -22,21 +22,24 @@
     $headers = Get-AlpacaAuthenticationHeaders -Token $Token
     $headers.add("Content-Type", "application/json")
 
-    $queryParams = @{
-        "reference"     = "$branch"
-        containerConfig = Get-AlpacaConfigNameForWorkflowName
-    }
-    $resource = "$($owner)/$($repository)/$($project -replace '^\.$', '_')"
-    $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "GitHub" -Endpoint "Project" -Ressource $resource -QueryParams $queryParams
+    $body = @{
+        owner         = "$($owner)"
+        repo          = "$($repository)"
+        project       = "$($project)"
+        branchName    = "$($branch)"
+        workflowName  = "$($env:GITHUB_WORKFLOW)"
+        alGoBuildMode = "$($env:_buildMode)"
+    } | ConvertTo-Json -Compress
+    $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "GitHub" -Endpoint "ProjectConfig" -RouteSuffix "get"
 
-    $containerConfig = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'GET' -Headers $headers -Retries 3
-    $artifacts = $containerConfig.containerConfigurations[0].artifacts
-    $artifacts = $artifacts | Where-Object { $_.target -eq 'App' }
+    $projectConfig = Invoke-AlpacaApiRequest -Url $apiUrl -Method 'POST' -Headers $headers -Body $body -Retries 3
+    $artifacts = $projectConfig.artifacts
     $artifacts = $artifacts | Where-Object { $_.IgnoreIn -ne 'Build' }
 
     foreach ($artifact in $artifacts) {
         if ($artifact.type -eq 'Url' -and $artifact.url -match '^https?://') {
-            Write-AlpacaGroupStart "Downloading $($artifact.name) from $($artifact.url)"
+            $artifact.url = ConvertTo-AlpacaFileBrowserDownloadUrl -Uri $artifact.url
+            Write-AlpacaGroupStart "Downloading $($artifact.name) from $(Get-SafeArtifactUri -Uri $artifact.url)"
 
             # Make a web request to get the content and headers
             $response = Invoke-WebRequest -Uri $artifact.url

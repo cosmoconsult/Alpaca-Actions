@@ -159,11 +159,37 @@ function Resolve-AlpacaApiError {
 }
 Export-ModuleMember -Function Resolve-AlpacaApiError
 
-function Get-AlpacaConfigNameForWorkflowName {
-    switch ($env:GITHUB_WORKFLOW) {
-        "NextMajor" { return "NextMajor" }
-        "NextMinor" { return "NextMinor" }
-        default { return "current" }
-    }
+function Get-SafeArtifactUri {
+    param(
+        [string] $Uri
+    )
+
+    $safeUri = $Uri -replace '([?&]pat=)[^&#"]*', '$1***REDACTED***'
+    $safeUri = $safeUri -replace '(/filebrowser/api/public/dl/)[^/?#"]+', '$1***REDACTED***'
+    $safeUri = $safeUri -replace '([?&]sig=)[^&#"]*', '$1***REDACTED***'
+    return $safeUri
 }
-Export-ModuleMember -Function Get-AlpacaConfigNameForWorkflowName
+Export-ModuleMember -Function Get-SafeArtifactUri
+
+function ConvertTo-AlpacaFileBrowserDownloadUrl {
+    param(
+        [string] $Uri
+    )
+
+    $parsedUri = $null
+    $fileBrowserSharePath = "/filebrowser/share/"
+    if (-not [System.Uri]::TryCreate($Uri, [System.UriKind]::Absolute, [ref] $parsedUri) -or
+        -not $parsedUri.AbsolutePath.StartsWith($fileBrowserSharePath, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return $Uri
+    }
+
+    $shareIdAndPath = $parsedUri.AbsolutePath.Substring($fileBrowserSharePath.Length)
+    $shareId = $shareIdAndPath.Split('/')[0]
+    if ([string]::IsNullOrWhiteSpace($shareId)) {
+        return $Uri
+    }
+
+    $authority = $parsedUri.GetLeftPart([System.UriPartial]::Authority)
+    return "$authority/filebrowser/api/public/dl/$shareIdAndPath"
+}
+Export-ModuleMember -Function ConvertTo-AlpacaFileBrowserDownloadUrl
