@@ -1,5 +1,5 @@
 ﻿param(
-    [Hashtable] $parameters
+    [Hashtable] $Parameters
 )
 
 Write-AlpacaOutput "Using COSMO Alpaca override"
@@ -41,8 +41,8 @@ if ($null -eq $publishedAppInfos) {
 $compilerFolder = (GetCompilerFolder)
 
 # Collect output app infos
-$outputAppFiles = $apps + $testApps + $bcptTestApps
 $outputAppInfos = @()
+$outputAppFiles = $apps + $testApps + $bcptTestApps
 if ($outputAppFiles) {
     $getAppInfoSplat = @{
         AppFiles       = $outputAppFiles
@@ -52,6 +52,16 @@ if ($outputAppFiles) {
         $getAppInfoSplat.cacheAppInfoPath = (Join-Path $outputFolder 'cache_AppInfo.json')
     }
     $outputAppInfos += GetAppInfo @getAppInfoSplat
+}
+
+# Collect project dependencies app infos
+$projectDependenciesAppInfos = @()
+$projectDependenciesFolder = Join-Path $env:GITHUB_WORKSPACE '.dependencies'
+if (Test-Path $projectDependenciesFolder) {
+    $projectDependenciesAppFiles = @(Get-ChildItem -Path $projectDependenciesFolder -Recurse -File -Filter *.app | ForEach-Object { $_.FullName } | Select-Object -Unique)
+    if ($projectDependenciesAppFiles) {
+        $projectDependenciesAppInfos += GetAppInfo -AppFiles $projectDependenciesAppFiles -compilerFolder $compilerFolder -cacheAppInfoPath (Join-Path $projectDependenciesFolder 'cache_AppInfo.json')
+    }
 }
 
 # Collect parameter app infos
@@ -74,28 +84,39 @@ $appInfos = $appInfos | ForEach-Object {
     # Skip unhandled apps
     $appComment = "skip"
 
-    $outputAppInfo = $outputAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Sort-Object -Property @{Expression={[Version]$_.Version}; Descending=$true} | Select-Object -First 1
-    if ($outputAppInfo) {
-        if ($outputAppInfo.Version -eq $appInfo.Version) {
+    try {
+        $outputAppInfo = $outputAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Sort-Object -Property @{Expression = { [Version]$_.Version }; Descending = $true } | Select-Object -First 1
+        if ($outputAppInfo) {
             $appComment = "publish output app"
+            if ($outputAppInfo.Version -ne $appInfo.Version) {
+                $appComment = "publish other version of output app"
+            }
+            return $appInfo
         }
-        else {
-            $appComment = "publish other version of output app"
-        }
-        $appInfo
-    }
-    else {
-        $publishedAppInfo = $publishedAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Sort-Object -Property @{Expression={[Version]$_.Version}; Descending=$true} | Select-Object -First 1
-        if (!$publishedAppInfo) {
-            $appComment = "publish app"
-            $appInfo
-        }
-        else {
-            $appComment = "skip - app already installed with version $($publishedAppInfo.Version)"
-        }
-    }
 
-    Write-AlpacaOutput "- $appComment '$appFile' ($appLabel)"
+        $publishedAppInfo = $publishedAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Sort-Object -Property @{Expression = { [Version]$_.Version }; Descending = $true } | Select-Object -First 1
+
+        $projectDependencyAppInfo = $projectDependenciesAppInfos | Where-Object { $_.Id -eq $appInfo.Id } | Sort-Object -Property @{Expression = { [Version]$_.Version }; Descending = $true } | Select-Object -First 1
+        if ($projectDependencyAppInfo) {
+            if ($publishedAppInfo -and [Version]$publishedAppInfo.Version -ge [Version]$appInfo.Version) {
+                $appComment = "skip - project dependency app already installed with same or higher version $($publishedAppInfo.Version)"
+                return
+            }
+            $appComment = "publish project dependency app"
+            return $appInfo
+        }
+
+        if ($publishedAppInfo) {
+            $appComment = "skip - app already installed with version $($publishedAppInfo.Version)"
+            return
+        }
+
+        $appComment = "publish app"
+        return $appInfo
+    }
+    finally {
+        Write-AlpacaOutput "- $appComment '$appFile' ($appLabel)"
+    }
 }
 
 Write-AlpacaGroupEnd
