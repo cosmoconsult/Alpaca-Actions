@@ -27,7 +27,9 @@ runs:
         _secretsJson: ${{ inputs.secretsJson }}
         _variablesJson: ${{ inputs.variablesJson }}
       run: |
-        ${{ github.action_path }}/SyncConfigs.ps1 -Token $env:_token -SecretsJson $env:_secretsJson -VariablesJson $env:_variablesJson
+        ${{ github.action_path }}/../../Scripts/Invoke-AlpacaAction.ps1 -ActionName "SyncConfigs" -Action {
+          ${{ github.action_path }}/SyncConfigs.ps1 -Token $env:_token -SecretsJson $env:_secretsJson -VariablesJson $env:_variablesJson
+        }
 branding:
   icon: terminal
   color: blue

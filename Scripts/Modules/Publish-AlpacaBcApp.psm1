@@ -1,7 +1,7 @@
-﻿Add-Type -AssemblyName System.Web
+Add-Type -AssemblyName System.Web
 
 function Publish-AlpacaBcApp {
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         [string] $ContainerUrl,
         [Parameter(Mandatory = $true)]
@@ -11,8 +11,8 @@ function Publish-AlpacaBcApp {
         [Parameter(Mandatory = $true)]
         [string] $Path,
         [Parameter(Mandatory = $false)]
-        [ValidateSet('Development','Clean','ForceSync')]
-        [string] $SyncMode='Development',
+        [ValidateSet('Development', 'Clean', 'ForceSync')]
+        [string] $SyncMode = 'Development',
         [Parameter(Mandatory = $false)]
         [string] $Tenant
     )
@@ -28,24 +28,24 @@ function Publish-AlpacaBcApp {
         throw "Container Url must use HTTPS to prevent credential exposure. Got: $(($ContainerUrl -split '\?')[0])"
     }
 
-    while (!$success -and $tries -lt $maxTries)
-    {
+    while (!$success -and $tries -lt $maxTries) {
         if ($tries -gt 0) {
             Write-AlpacaGroupStart "Publish attempt $($tries + 1) / $maxtries"
         }
 
         $handler = New-Object System.Net.Http.HttpClientHandler
-        $HttpClient = [System.Net.Http.HttpClient]::new($handler)
+        $httpClient = [System.Net.Http.HttpClient]::new($handler)
         $pair = "$($ContainerUser):$([System.Net.NetworkCredential]::new('', $ContainerPassword).Password)"
         $bytes = [System.Text.Encoding]::ASCII.GetBytes($pair)
         $base64 = [System.Convert]::ToBase64String($bytes)
-        $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Basic", $base64)
-        $HttpClient.Timeout = [System.Threading.Timeout]::InfiniteTimeSpan
-        $HttpClient.DefaultRequestHeaders.ExpectContinue = $false
+        $httpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Basic", $base64)
+        $httpClient.Timeout = [System.Threading.Timeout]::InfiniteTimeSpan
+        $httpClient.DefaultRequestHeaders.ExpectContinue = $false
         $schemaUpdateMode = "synchronize"
         if ($SyncMode -eq "Clean") {
             $schemaUpdateMode = "recreate";
-        } elseif ($SyncMode -eq "ForceSync") {
+        }
+        elseif ($SyncMode -eq "ForceSync") {
             $schemaUpdateMode = "forcesync"
         }
         $url, $query = $ContainerUrl.Split('?', 2)
@@ -59,17 +59,17 @@ function Publish-AlpacaBcApp {
         $devServerUrl = $url.TrimEnd('/') + "dev/dev/apps?SchemaUpdateMode=$schemaUpdateMode&tenant=$Tenant"
 
         $multipartContent = [System.Net.Http.MultipartFormDataContent]::new()
-        $FileStream = [System.IO.FileStream]::new($Path, [System.IO.FileMode]::Open)
+        $fileStream = [System.IO.FileStream]::new($Path, [System.IO.FileMode]::Open)
         try {
             $fileHeader = [System.Net.Http.Headers.ContentDispositionHeaderValue]::new("form-data")
             $fileHeader.Name = "$appName"
             $fileHeader.FileName = "$appName"
             $fileHeader.FileNameStar = "$appName"
-            $fileContent = [System.Net.Http.StreamContent]::new($FileStream)
+            $fileContent = [System.Net.Http.StreamContent]::new($fileStream)
             $fileContent.Headers.ContentDisposition = $fileHeader
             $multipartContent.Add($fileContent)
             Write-AlpacaOutput "Publishing $appName to $devServerUrl"
-            $result = $HttpClient.PostAsync($devServerUrl, $multipartContent).GetAwaiter().GetResult()
+            $result = $httpClient.PostAsync($devServerUrl, $multipartContent).GetAwaiter().GetResult()
             $status = $result.StatusCode
             Write-AlpacaOutput "Returned $status from $devServerUrl"
             if (!$result.IsSuccessStatusCode) {
@@ -104,7 +104,7 @@ function Publish-AlpacaBcApp {
             }
         }
         finally {
-            $FileStream.Close()
+            $fileStream.Close()
 
             Write-AlpacaGroupEnd
         }

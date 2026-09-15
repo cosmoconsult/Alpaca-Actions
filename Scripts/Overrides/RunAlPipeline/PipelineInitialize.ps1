@@ -35,7 +35,8 @@ try {
         Write-AlpacaDebug "Additional countries specified: $($additionalCountries -join ', ')"
         throw "The AL-Go setting 'additionalCountries' is not supported by COSMO Alpaca. Use 'buildModes' to validate additional countries instead. https://docs.cosmoconsult.com/en-en/cloud-service/alpaca/github/"
     }
-} finally {
+}
+finally {
     Write-AlpacaGroupEnd
 }
 
@@ -69,7 +70,8 @@ try {
     Write-AlpacaOutput "Get AL-Go Alpaca settings"
     $alpacaSettings = Get-AlpacaALGoSettings -Settings $settings
     Write-AlpacaDebug "AL-Go Alpaca settings: $($alpacaSettings | ConvertTo-Json -Depth 10 -Compress)"
-} finally {
+}
+finally {
     Write-AlpacaGroupEnd
 }
 
@@ -126,10 +128,12 @@ try {
 
         Write-AlpacaOutput "Set parent variable 'environment' to '$($container.Url)'"
         Set-ParentContextVariable -Name 'environment' -Value $container.Url
-    } finally {
+    }
+    finally {
         Write-AlpacaGroupEnd
     }
-} finally {
+}
+finally {
     Write-AlpacaGroupEnd
 }
 
@@ -149,7 +153,8 @@ try {
 
     Write-AlpacaOutput "Download COSMO Alpaca artifacts"
     Get-AlpacaDependencyApps -packagesFolder $packagesFolder -token $token
-} finally {
+}
+finally {
     Write-AlpacaGroupEnd
 }
 
@@ -178,12 +183,12 @@ try {
         Write-AlpacaDebug "AL-Go app version mask: $($appVersionMask.Major).$($appVersionMask.Minor).$($appVersionMask.Build).$($appVersionMask.Revision)"
 
         if ($appFolders -is [String]) { $appFolders = @($appFolders.Split(',').Trim() | Where-Object { $_ }) }
-        $appFolders  = @($appFolders |
+        $appFolders = @($appFolders |
             ForEach-Object { CheckRelativePath -baseFolder $baseFolder -sharedFolder $sharedFolder -path $_ -name "appFolders" } |
             Where-Object { Test-Path $_ })
         Write-AlpacaDebug "AL-Go app folders: $($appFolders -join ', ')"
 
-        foreach($appFolder in $appFolders) {
+        foreach ($appFolder in $appFolders) {
             # Download previous version for app folder
             Write-AlpacaGroupStart "Download previous version for app folder '$appFolder'"
 
@@ -210,10 +215,10 @@ try {
                 Write-AlpacaGroupStart "Download previous version from trusted NuGet feeds"
 
                 $downloadParams = @{
-                    packageName = $appJson.id
-                    version = "(,$($appJson.version))"
-                    select = 'Latest'
-                    folder = $previousVersionsFolder
+                    packageName          = $appJson.id
+                    version              = "(,$($appJson.version))"
+                    select               = 'Latest'
+                    folder               = $previousVersionsFolder
                     downloadDependencies = 'none'
                 }
                 Write-AlpacaDebug "Parameters: $($downloadParams | ConvertTo-Json -Depth 10 -Compress)"
@@ -225,7 +230,8 @@ try {
 
             if ($previousAppInfo) {
                 Write-AlpacaOutput "Previous Version: $($previousAppInfo.publisher), $($previousAppInfo.name), $($previousAppInfo.id), $($previousAppInfo.version)"
-            } else {
+            }
+            else {
                 Write-AlpacaWarning "No previous version for app folder '$appFolder' found."
             }
 
@@ -244,7 +250,8 @@ try {
                 Write-AlpacaOutput "No files found in previous versions folder '$previousVersionsFolder'"
             }
 
-        } finally {
+        }
+        finally {
             Write-AlpacaGroupEnd
         }
 
@@ -255,13 +262,16 @@ try {
             Write-AlpacaOutput "Set parent variable 'previousApps' to '$previousVersionsFolder'"
             Set-ParentContextVariable -Name 'previousApps' -Value @($previousVersionsFolder)
 
-        } finally {
+        }
+        finally {
             Write-AlpacaGroupEnd
         }
-    } else {
+    }
+    else {
         Write-AlpacaOutput "No download of previous versions for apps required based on settings"
     }
-} finally {
+}
+finally {
     Write-AlpacaGroupEnd
 }
 
@@ -298,7 +308,8 @@ try {
             else {
                 Write-AlpacaOutput "None"
             }
-        } finally {
+        }
+        finally {
             Write-AlpacaGroupEnd
         }
 
@@ -311,13 +322,15 @@ try {
 
             Write-AlpacaOutput "Set parent variable 'AlGo$ScriptName' to existing AL-Go override"
             Set-ParentContextVariable -Name "AlGo$scriptName" -Value $existingScriptBlock
-        } finally {
+        }
+        finally {
             Write-AlpacaGroupEnd
         }
 
         Write-AlpacaGroupEnd
     }
-} finally {
+}
+finally {
     Write-AlpacaGroupEnd
 }
 

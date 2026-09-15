@@ -1,5 +1,5 @@
 ﻿function Get-AlpacaDependencyApps {
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         [string] $PackagesFolder,
         [Parameter(Mandatory = $true)]
@@ -38,7 +38,6 @@
 
     foreach ($artifact in $artifacts) {
         if ($artifact.type -eq 'Url' -and $artifact.url -match '^https?://') {
-            $artifact.url = ConvertTo-AlpacaFileBrowserDownloadUrl -Uri $artifact.url
             Write-AlpacaGroupStart "Downloading $($artifact.name) from $(Get-SafeArtifactUri -Uri $artifact.url)"
 
             # Make a web request to get the content and headers
@@ -72,7 +71,7 @@
                     $fileType = 'zip'
                     break
                 }
-                Default {
+                default {
                     $fileType = 'unknown'
                 }
             }
@@ -134,7 +133,7 @@
                         Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue
                     }
                 }
-                Default {
+                default {
                     Write-AlpacaOutput "Unknown file type"
                 }
             }

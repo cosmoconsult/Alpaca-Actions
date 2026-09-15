@@ -1,4 +1,4 @@
-﻿Param(
+﻿param(
     [Parameter(HelpMessage = "The GitHub actor running the action", Mandatory = $false)]
     [string] $Actor,
     [Parameter(HelpMessage = "Base64 encoded GhTokenWorkflow secret", Mandatory = $false)]
@@ -86,7 +86,7 @@ try {
     $alpacaSource = Join-Path (Join-Path $templateFolder $subFolder) '.alpaca'
     $alpacaDest = Join-Path (Get-Location) '.alpaca'
 
-    if (-Not (Test-Path $alpacaSource)) {
+    if (-not (Test-Path $alpacaSource)) {
         OutputNotice -message "No COSMO Alpaca related files found in the template repository, nothing to update."
         exit 0
     }

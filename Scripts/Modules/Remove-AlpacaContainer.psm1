@@ -21,13 +21,16 @@
         Invoke-AlpacaApiRequest -Url $apiUrl -Method 'DELETE' -Headers $headers -Retries 3 -NoRetryStatusCodes @([System.Net.HttpStatusCode]::NotFound) | Out-Null
 
         Write-AlpacaOutput "Container '$($Container.Id)' deleted"
-    } catch {
+    }
+    catch {
         if ($_.Exception -is [System.Net.Http.HttpRequestException] -and $_.Exception.StatusCode -eq [System.Net.HttpStatusCode]::NotFound) {
             Write-AlpacaOutput "Container '$($Container.Id)' not found"
-        } else {
+        }
+        else {
             throw
         }
-    } finally {
+    }
+    finally {
         Write-AlpacaGroupEnd
     }
 }
