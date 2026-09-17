@@ -28,22 +28,23 @@ $deprecatedConfigFile = '.alpaca/alpaca.json'
 $output = gh api (Get-GitHubApiFileContentUrl -Repo $Repo -FilePath $deprecatedConfigFile -Ref $Ref) --silent 2>&1
 if ($LASTEXITCODE -eq 0) {
     Write-AlpacaWarning -Message "The configuration file '$($deprecatedConfigFile)' is deprecated.`nThis will become an error in the future.`n`nPlease migrate to AL-Go settings.`nSee: https://docs.cosmoconsult.com/en-us/cloud-service/alpaca/github/setup-al-go-settings.html#migrating-from-alpacajson"
-} elseif ($output -notmatch '404|Not Found') {
+}
+elseif ($output -notmatch '404|Not Found') {
     Write-AlpacaWarning -Message "Could not check '$($deprecatedConfigFile)': $output"
 }
 
 # Check 2: Expected workflow settings (only for relevant workflows)
 $expectedWorkflowSettings = @{
-    'Test Current'   = @{
-        artifact = '////latest'
+    'Test Current'    = @{
+        artifact           = '////latest'
         versioningStrategy = 15
     }
     'Test Next Minor' = @{
-        artifact = '////nextminor'
+        artifact           = '////nextminor'
         versioningStrategy = 15
     }
     'Test Next Major' = @{
-        artifact = '////nextmajor'
+        artifact           = '////nextmajor'
         versioningStrategy = 15
     }
 }.GetEnumerator() | Where-Object { $_.Key -eq $Workflow } | Select-Object -First 1 -ExpandProperty Value
@@ -54,10 +55,12 @@ if ($expectedWorkflowSettings) {
     if ($LASTEXITCODE -ne 0) {
         if ($output -match '404|Not Found') {
             Write-AlpacaWarning -Message "Settings file '$($settingsFile)' is missing."
-        } else {
+        }
+        else {
             Write-AlpacaWarning -Message "Could not check '$($settingsFile)': $output"
         }
-    } else {
+    }
+    else {
         try {
             $rawContent = ($output | ConvertFrom-Json).content -replace '\s', ''
             $settings = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($rawContent)) | ConvertFrom-Json
@@ -67,12 +70,14 @@ if ($expectedWorkflowSettings) {
                     if ($settings.$($property.Key) -ne $property.Value) {
                         Write-AlpacaWarning -Message "Settings file '$($settingsFile)': Property '$($property.Key)' has unexpected value '$($settings.$($property.Key))'. Expected value: '$($property.Value)'."
                     }
-                } else {
+                }
+                else {
                     Write-AlpacaWarning -Message "Settings file '$($settingsFile)': Property '$($property.Key)' is missing. Expected value: '$($property.Value)'."
                 }
             }
-        } catch {
-             Write-AlpacaWarning -Message "Settings file '$($settingsFile)': Could not parse settings content. $($_.Exception.Message)"
+        }
+        catch {
+            Write-AlpacaWarning -Message "Settings file '$($settingsFile)': Could not parse settings content. $($_.Exception.Message)"
         }
     }
 }
@@ -81,7 +86,8 @@ if ($expectedWorkflowSettings) {
 $treeOutput = gh api "repos/$Repo/git/trees/$([Uri]::EscapeDataString($Ref))?recursive=1" 2>&1
 if ($LASTEXITCODE -ne 0) {
     Write-AlpacaWarning -Message "Could not fetch repository tree to check for hyphen-prefix project directory conflicts: $treeOutput"
-} else {
+}
+else {
     $conflictingPairs = @()
 
     try {
@@ -94,10 +100,10 @@ if ($LASTEXITCODE -ne 0) {
         # Collect all AL-Go project directories that have a settings.json
         $projectDirs = @(
             $treeResponse.tree |
-                Where-Object { $_.path -match '/\.AL-Go/settings\.json$' } |
-                ForEach-Object {
-                    $_.path -replace '/\.AL-Go/settings\.json$', ''
-                }
+            Where-Object { $_.path -match '/\.AL-Go/settings\.json$' } |
+            ForEach-Object {
+                $_.path -replace '/\.AL-Go/settings\.json$', ''
+            }
         )
 
         # Detect pairs where one dir name is a hyphen-prefix of the other
@@ -110,7 +116,8 @@ if ($LASTEXITCODE -ne 0) {
                 }
             }
         }
-    } catch {
+    }
+    catch {
         Write-AlpacaWarning -Message "Could not parse repository tree to check for hyphen-prefix project directory conflicts: $($_.Exception.Message)"
     }
 

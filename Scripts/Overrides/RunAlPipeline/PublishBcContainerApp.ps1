@@ -5,8 +5,8 @@
 Write-AlpacaOutput "Using COSMO Alpaca override"
 
 #Create and Prepare TempDir
-$TempDir = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
-New-Item -Path $TempDir -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
+$tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
+New-Item -Path $tempDir -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
 
 
 if ($env:ALPACA_CONTAINER_IMAGE_READY) {
@@ -66,9 +66,9 @@ if (Test-Path $projectDependenciesFolder) {
 
 # Collect parameter app infos
 $appInfos = @()
-if ($parameters.appFile) {
+if ($Parameters.appFile) {
     $appFiles = @()
-    $appFiles += CopyAppFilesToFolder -appFiles $parameters.appFile -folder $TempDir
+    $appFiles += CopyAppFilesToFolder -appFiles $Parameters.appFile -folder $tempDir
     foreach ($appFile in $appFiles) {
         $appInfos += GetAppInfo -AppFiles $appFile -compilerFolder $compilerFolder
     }
@@ -129,9 +129,9 @@ if ($appInfos) {
     }
 
     foreach ($appFile in $appFiles) {
-        Publish-AlpacaBcApp -ContainerUrl $parameters.Environment `
-            -ContainerUser $parameters.bcAuthContext.username `
-            -ContainerPassword $parameters.bcAuthContext.Password `
+        Publish-AlpacaBcApp -ContainerUrl $Parameters.Environment `
+            -ContainerUser $Parameters.bcAuthContext.username `
+            -ContainerPassword $Parameters.bcAuthContext.Password `
             -Path $appFile
     }
 
@@ -141,10 +141,10 @@ if ($appInfos) {
 
 if ($AlGoPublishBcContainerApp) {
     Write-AlpacaOutput "Invoking AL-Go override"
-    Invoke-Command -ScriptBlock $AlGoPublishBcContainerApp -ArgumentList $parameters
+    Invoke-Command -ScriptBlock $AlGoPublishBcContainerApp -ArgumentList $Parameters
 }
 
-if (Test-Path "$TempDir") {
-    Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
+if (Test-Path "$tempDir") {
+    Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue
 }
 

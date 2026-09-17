@@ -25,7 +25,9 @@ runs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        ${{ github.action_path }}/CheckSettings.ps1
+        ${{ github.action_path }}/../../Scripts/Invoke-AlpacaAction.ps1 -ActionName "CheckSettings" -Action {
+          ${{ github.action_path }}/CheckSettings.ps1
+        }
 
     - id: Initialization
       name: COSMO Alpaca Initialization
@@ -34,7 +36,9 @@ runs:
         _actionRepo: ${{ github.action_repository }}
         _actionRef: ${{ github.action_ref }}
       run: |
-        ${{ github.action_path }}/Initialization.ps1 -ActionRepo $env:_actionRepo -ActionRef $env:_actionRef
+        ${{ github.action_path }}/../../Scripts/Invoke-AlpacaAction.ps1 -ActionName "Initialization" -Action {
+          ${{ github.action_path }}/Initialization.ps1 -ActionRepo $env:_actionRepo -ActionRef $env:_actionRef
+        }
 branding:
   icon: terminal
   color: blue
