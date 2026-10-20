@@ -27,7 +27,8 @@ function Get-GitHubApiFileContentUrl {
 $deprecatedConfigFile = '.alpaca/alpaca.json'
 $output = gh api (Get-GitHubApiFileContentUrl -Repo $Repo -FilePath $deprecatedConfigFile -Ref $Ref) --silent 2>&1
 if ($LASTEXITCODE -eq 0) {
-    Write-AlpacaWarning -Message "The configuration file '$($deprecatedConfigFile)' is deprecated.`nThis will become an error in the future.`n`nPlease migrate to AL-Go settings.`nSee: https://docs.cosmoconsult.com/en-us/cloud-service/alpaca/github/setup-al-go-settings.html#migrating-from-alpacajson"
+    Write-AlpacaError "The configuration file '$($deprecatedConfigFile)' is deprecated.`n`nPlease migrate to AL-Go settings.`nSee: https://docs.cosmoconsult.com/en-us/cloud-service/alpaca/github/setup-al-go-settings.html#migrating-from-alpacajson"
+    throw "The configuration file '$($deprecatedConfigFile)' is deprecated."
 }
 elseif ($output -notmatch '404|Not Found') {
     Write-AlpacaWarning -Message "Could not check '$($deprecatedConfigFile)': $output"
@@ -82,54 +83,7 @@ if ($expectedWorkflowSettings) {
     }
 }
 
-# Check 3: No two AL-Go project directories may share a hyphen-prefix relationship
-$treeOutput = gh api "repos/$Repo/git/trees/$([Uri]::EscapeDataString($Ref))?recursive=1" 2>&1
-if ($LASTEXITCODE -ne 0) {
-    Write-AlpacaWarning -Message "Could not fetch repository tree to check for hyphen-prefix project directory conflicts: $treeOutput"
-}
-else {
-    $conflictingPairs = @()
-
-    try {
-        $treeResponse = $treeOutput | ConvertFrom-Json -ErrorAction Stop
-
-        if ($treeResponse.truncated) {
-            Write-AlpacaWarning -Message "Repository tree was truncated. The hyphen-prefix project directory conflict check may be incomplete."
-        }
-
-        # Collect all AL-Go project directories that have a settings.json
-        $projectDirs = @(
-            $treeResponse.tree |
-            Where-Object { $_.path -match '/\.AL-Go/settings\.json$' } |
-            ForEach-Object {
-                $_.path -replace '/\.AL-Go/settings\.json$', ''
-            }
-        )
-
-        # Detect pairs where one dir name is a hyphen-prefix of the other
-        for ($i = 0; $i -lt $projectDirs.Count; $i++) {
-            for ($j = $i + 1; $j -lt $projectDirs.Count; $j++) {
-                $a = $projectDirs[$i]
-                $b = $projectDirs[$j]
-                if ($a.StartsWith("$($b)-") -or $b.StartsWith("$($a)-")) {
-                    $conflictingPairs += "'$a' and '$b'"
-                }
-            }
-        }
-    }
-    catch {
-        Write-AlpacaWarning -Message "Could not parse repository tree to check for hyphen-prefix project directory conflicts: $($_.Exception.Message)"
-    }
-
-    if ($conflictingPairs.Count -gt 0) {
-        $pairList = $conflictingPairs -join "`n  - "
-        Write-AlpacaError "The following AL-Go project directories have hyphen-prefix naming conflicts which can cause unexpected AL-Go behavior:`n  - $pairList`n`nDirectories whose names differ only by a hyphen-separated suffix must not coexist.`nConsider renaming the directories to use underscores or other non-hyphen separators."
-        throw "Hyphen-prefix project directory conflicts detected."
-
-    }
-}
-
-# Check 4: Ensure shell settings in AL-Go-Settings.json do not use powershell 5
+# Check 3: Ensure shell settings in AL-Go-Settings.json do not use powershell 5
 $alGoSettingsFile = '.github/AL-Go-Settings.json'
 $output = gh api (Get-GitHubApiFileContentUrl -Repo $Repo -FilePath $alGoSettingsFile -Ref $Ref) 2>&1
 if ($LASTEXITCODE -eq 0) {

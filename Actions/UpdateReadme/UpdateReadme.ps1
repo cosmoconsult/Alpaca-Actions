@@ -173,8 +173,7 @@ function GetHeaderBlock {
     $r += '<h1 align="center">{0}</h1>' -f $selectedApp.Name
     $r += ''
     $r += '<p align="center">'
-    $r += 'A Microsoft Dynamics 365 Business Central extension by <b>{0}</b>.' -f $selectedApp.Publisher
-    $r += ''
+    $r += 'A Microsoft Dynamics 365 Business Central extension by <b>{0}</b>.<br>' -f $selectedApp.Publisher
     $r += ($links -join ' | ')
     $r += '</p>'
     $r += ''
