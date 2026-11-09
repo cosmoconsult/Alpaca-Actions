@@ -56,6 +56,8 @@ function Wait-AlpacaContainerReady {
                 tailLines = 5000
             }
             $apiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "Container" -Ressource $ContainerName -RouteSuffix "logs" -QueryParams $queryParams
+            $statusApiUrl = Get-AlpacaEndpointUrlWithParam -Controller "Container" -Endpoint "Container" -Ressource $ContainerName
+            $nextStatusCheck = (Get-Date).AddMinutes(1)
 
             while ($waitForContainer) {
 
@@ -75,6 +77,17 @@ function Wait-AlpacaContainerReady {
                         Write-AlpacaError "Error while getting logs from container: $_"
                         $success = $false
                         return
+                    }
+                }
+
+                $containerInfo = $null
+                if ((Get-Date) -ge $nextStatusCheck) {
+                    $nextStatusCheck = (Get-Date).AddMinutes(1)
+                    try {
+                        $containerInfo = Invoke-AlpacaApiRequest -Url $statusApiUrl -Method 'Get' -Headers $headers -Retries 3
+                    }
+                    catch {
+                        Write-AlpacaDebug "Error while getting container status: $_"
                     }
                 }
 
@@ -105,6 +118,15 @@ function Wait-AlpacaContainerReady {
                     }
                 }
                 $takenLines = $content.Length - 1
+
+                if ($containerInfo -and $containerInfo.status.state -in @("Stopped", "Error")) {
+                    if (![string]::IsNullOrWhiteSpace($content[-1])) {
+                        Write-AlpacaOutput "$($content[-1])"
+                    }
+                    Write-AlpacaError "Container '$ContainerName' entered state '$($containerInfo.status.state)' during startup. $($containerInfo.status.statusMessage) $($containerInfo.status.errorMessage)"
+                    $success = $false
+                    break
+                }
 
                 if ($waitForContainer -and $SleepSeconds) {
                     Start-Sleep -Seconds $SleepSeconds

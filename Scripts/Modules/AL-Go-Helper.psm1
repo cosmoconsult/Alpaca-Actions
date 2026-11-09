@@ -314,7 +314,7 @@ function Get-AlpacaALGoSettings {
         $Settings
     )
 
-    $defaultAlpacaSettings = [ordered]@{
+    $alpacaSettingsDefaults = [ordered]@{
         useNuGetFeedsForUpgrade                = $false
         startupScriptUrl                       = ''
         actionOnMissingTests                   = 'Warning'
@@ -336,16 +336,56 @@ function Get-AlpacaALGoSettings {
     $alpacaProperty = ([pscustomobject]$Settings).PSObject.Properties['alpaca']
     if ($alpacaProperty -and $null -ne $alpacaProperty.Value) {
         $alpacaSettings = [pscustomobject]$alpacaProperty.Value
-        foreach ($keyValue in $defaultAlpacaSettings.GetEnumerator()) {
+        foreach ($keyValue in $alpacaSettingsDefaults.GetEnumerator()) {
             if (-not $alpacaSettings.PSObject.Properties[$keyValue.Key]) {
                 $alpacaSettings | Add-Member -NotePropertyName $keyValue.Key -NotePropertyValue $keyValue.Value
             }
         }
     }
     else {
-        $alpacaSettings = [pscustomobject]$defaultAlpacaSettings
+        $alpacaSettings = [pscustomobject]$alpacaSettingsDefaults
     }
+
+    Test-AlpacaALGoSettings -AlpacaSettings $alpacaSettings
 
     return $alpacaSettings
 }
 Export-ModuleMember -Function Get-AlpacaALGoSettings
+
+function Test-AlpacaALGoSettings {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [pscustomobject] $AlpacaSettings
+    )
+
+    $alpacaSettingsTypes = [ordered]@{
+        useNuGetFeedsForUpgrade                = [bool]
+        startupScriptUrl                       = [string]
+        actionOnMissingTests                   = [string]
+        enforceOrgBuildModesSettings           = [bool]
+        enableCodeCopForTestApps               = [bool]
+        enableUICopForTestApps                 = [bool]
+        enablePerTenantExtensionCopForTestApps = [bool]
+        enableAppSourceCopForTestApps          = [bool]
+        customCodeCopsForTestApps              = [array]
+        rulesetFileForTestApps                 = [string]
+        obsoleteTagVersion                     = [string]
+        obsoleteTagPattern                     = [string]
+        createTranslations                     = [bool]
+        translationLanguages                   = [array]
+        testTranslations                       = [bool]
+        testTranslationRules                   = [array]
+    }
+
+    foreach ($keyValue in $alpacaSettingsTypes.GetEnumerator()) {
+        $prop = $keyValue.Key
+        $type = $keyValue.Value
+        if ($alpacaSettings.PSObject.Properties[$prop] -and $null -ne $alpacaSettings.$prop) {
+            if ($alpacaSettings.$prop -isnot $type) {
+                throw "Setting 'alpaca' > '$prop' has an invalid type. Expected type: $type"
+            }
+        }
+    }
+}
+Export-ModuleMember -Function Test-AlpacaALGoSettings

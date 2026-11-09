@@ -36,109 +36,118 @@
     $artifacts = $projectConfig.artifacts
     $artifacts = $artifacts | Where-Object { $_.IgnoreIn -ne 'Build' }
 
+    $downloadFails = 0
+
     foreach ($artifact in $artifacts) {
         if ($artifact.type -eq 'Url' -and $artifact.url -match '^https?://') {
-            Write-AlpacaGroupStart "Downloading $($artifact.name) from $(Get-SafeArtifactUri -Uri $artifact.url)"
+            try {
+                Write-AlpacaGroupStart "Downloading $($artifact.name) from $(Get-SafeArtifactUri -Uri $artifact.url)"
 
-            # Make a web request to get the content and headers
-            $response = Invoke-WebRequest -Uri $artifact.url
+                # Make a web request to get the content and headers
+                $response = Invoke-WebRequest -Uri $artifact.url
 
-            # Determine file type based on Content-Disposition header or content signature
-            $fileType = ''
-            $contentDisposition = $response.Headers["Content-Disposition"]
-            if ($contentDisposition -is [string[]]) {
-                # If it's an array, take the first element. This is required for compatibility with PowerShell 5.1. Headers are return as array in pwsh 7 and return as string in Windows PowerShell 5.1
-                $contentDisposition = $contentDisposition[0]
-            }
-            switch ($true) {
-                { $contentDisposition -and $contentDisposition.EndsWith(".zip") } {
-                    Write-AlpacaOutput "Detected zip file from Content-Disposition header"
-                    $fileType = 'zip'
-                    break
+                # Determine file type based on Content-Disposition header or content signature
+                $fileType = ''
+                $contentDisposition = $response.Headers["Content-Disposition"]
+                if ($contentDisposition -is [string[]]) {
+                    # If it's an array, take the first element. This is required for compatibility with PowerShell 5.1. Headers are return as array in pwsh 7 and return as string in Windows PowerShell 5.1
+                    $contentDisposition = $contentDisposition[0]
                 }
-                { $contentDisposition -and $contentDisposition.EndsWith(".app") } {
-                    Write-AlpacaOutput "Detected .app file from Content-Disposition header"
-                    $fileType = 'app'
-                    break
+                switch ($true) {
+                    { $contentDisposition -and $contentDisposition.EndsWith(".zip") } {
+                        Write-AlpacaOutput "Detected zip file from Content-Disposition header"
+                        $fileType = 'zip'
+                        break
+                    }
+                    { $contentDisposition -and $contentDisposition.EndsWith(".app") } {
+                        Write-AlpacaOutput "Detected .app file from Content-Disposition header"
+                        $fileType = 'app'
+                        break
+                    }
+                    { ($response.Content.Length -ge 4) -and ([string]::new([char[]]($response.Content[0..3])) -eq "NAVX") } {
+                        Write-AlpacaOutput "Detected .app file from content signature"
+                        $fileType = 'app'
+                        break
+                    }
+                    { ($response.Content.Length -ge 2) -and ([string]::new([char[]]($response.Content[0..1])) -eq "PK") } {
+                        Write-AlpacaOutput "Detected zip file from content signature"
+                        $fileType = 'zip'
+                        break
+                    }
+                    default {
+                        $fileType = 'unknown'
+                    }
                 }
-                { ($response.Content.Length -ge 4) -and ([string]::new([char[]]($response.Content[0..3])) -eq "NAVX") } {
-                    Write-AlpacaOutput "Detected .app file from content signature"
-                    $fileType = 'app'
-                    break
-                }
-                { ($response.Content.Length -ge 2) -and ([string]::new([char[]]($response.Content[0..1])) -eq "PK") } {
-                    Write-AlpacaOutput "Detected zip file from content signature"
-                    $fileType = 'zip'
-                    break
-                }
-                default {
-                    $fileType = 'unknown'
-                }
-            }
 
-            switch ($fileType) {
-                'app' {
-                    # Extract filename from Content-Disposition or use artifact name
-                    $filename = "$($artifact.name).app"
-                    if ($contentDisposition -match 'filename\*?=(?:"?)([^";]+)(?:"?)') {
-                        $filename = $matches[1]
-                        # Remove UTF-8'' prefix if present (for filename*= format)
-                        if ($filename -like 'UTF-8''*') {
-                            $filename = $filename.Substring(7)
+                switch ($fileType) {
+                    'app' {
+                        # Extract filename from Content-Disposition or use artifact name
+                        $filename = "$($artifact.name).app"
+                        if ($contentDisposition -match 'filename\*?=(?:"?)([^";]+)(?:"?)') {
+                            $filename = $matches[1]
+                            # Remove UTF-8'' prefix if present (for filename*= format)
+                            if ($filename -like 'UTF-8''*') {
+                                $filename = $filename.Substring(7)
+                            }
+                            # Handle URL-encoded filenames (if filename*= was used)
+                            if ($contentDisposition -match 'filename\*=') {
+                                $filename = [System.Net.WebUtility]::UrlDecode($filename)
+                            }
                         }
-                        # Handle URL-encoded filenames (if filename*= was used)
-                        if ($contentDisposition -match 'filename\*=') {
-                            $filename = [System.Net.WebUtility]::UrlDecode($filename)
-                        }
-                    }
-                    $destinationPath = Join-Path $PackagesFolder $filename
+                        $destinationPath = Join-Path $PackagesFolder $filename
 
-                    if (-not (Test-Path $destinationPath)) {
-                        Write-AlpacaOutput "  Saving .app file directly to PackagesFolder..."
-                        [System.IO.File]::WriteAllBytes($destinationPath, $response.Content)
-                        Write-AlpacaOutput "- $destinationPath"
-                    }
-                    else {
-                        Write-AlpacaOutput "  Ignoring... file already exists in PackagesFolder"
-                    }
-                }
-                'zip' {
-                    # Save content to temporary zip file and extract
-                    $tempArchive = "$([System.IO.Path]::GetTempFileName()).zip"
-                    $tempFolder = ([System.IO.Path]::GetRandomFileName())
-                    [System.IO.File]::WriteAllBytes($tempArchive, $response.Content)
-                    Expand-Archive -Path $tempArchive -DestinationPath $tempFolder -Force
-
-                    Write-AlpacaOutput "Extracted files:"
-
-                    Get-ChildItem -Path $tempFolder -Recurse -File | ForEach-Object {
-                        Write-AlpacaOutput "- $($_.FullName)"
-
-                        # Move file to PackagesFolder
-                        $destinationPath = Join-Path $PackagesFolder $_.Name
                         if (-not (Test-Path $destinationPath)) {
-                            Write-AlpacaOutput "  Moving to PackagesFolder..."
-                            Move-Item -Path $_.FullName -Destination $destinationPath -Force
+                            Write-AlpacaOutput "  Saving .app file directly to PackagesFolder..."
+                            [System.IO.File]::WriteAllBytes($destinationPath, $response.Content)
+                            Write-AlpacaOutput "- $destinationPath"
                         }
                         else {
                             Write-AlpacaOutput "  Ignoring... file already exists in PackagesFolder"
                         }
                     }
+                    'zip' {
+                        # Save content to temporary zip file and extract
+                        $tempArchive = "$([System.IO.Path]::GetTempFileName()).zip"
+                        $tempFolder = ([System.IO.Path]::GetRandomFileName())
+                        [System.IO.File]::WriteAllBytes($tempArchive, $response.Content)
+                        Expand-Archive -Path $tempArchive -DestinationPath $tempFolder -Force
 
-                    # Clean up temporary files
-                    if (Test-Path $tempArchive) {
-                        Remove-Item -Path $tempArchive -Force -ErrorAction SilentlyContinue
+                        Write-AlpacaOutput "Extracted files:"
+
+                        Get-ChildItem -Path $tempFolder -Recurse -File | ForEach-Object {
+                            Write-AlpacaOutput "- $($_.FullName)"
+
+                            # Move file to PackagesFolder
+                            $destinationPath = Join-Path $PackagesFolder $_.Name
+                            if (-not (Test-Path $destinationPath)) {
+                                Write-AlpacaOutput "  Moving to PackagesFolder..."
+                                Move-Item -Path $_.FullName -Destination $destinationPath -Force
+                            }
+                            else {
+                                Write-AlpacaOutput "  Ignoring... file already exists in PackagesFolder"
+                            }
+                        }
+
+                        # Clean up temporary files
+                        if (Test-Path $tempArchive) {
+                            Remove-Item -Path $tempArchive -Force -ErrorAction SilentlyContinue
+                        }
+                        if (Test-Path $tempFolder) {
+                            Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue
+                        }
                     }
-                    if (Test-Path $tempFolder) {
-                        Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue
+                    default {
+                        Write-AlpacaOutput "Unknown file type"
                     }
-                }
-                default {
-                    Write-AlpacaOutput "Unknown file type"
                 }
             }
-
-            Write-AlpacaGroupEnd
+            catch {
+                Write-AlpacaError "Failed to download $($artifact.name) from $(Get-SafeArtifactUri -Uri $artifact.url): $_"
+                $downloadFails++
+            }
+            finally {
+                Write-AlpacaGroupEnd
+            }
         }
         elseif ($artifact.type -eq 'Url') {
             Write-AlpacaOutput "Url artifact $($artifact.name) can not be downloaded from $($artifact.url). Ignoring artifact."
@@ -157,6 +166,10 @@
         Write-AlpacaOutput "- $($file.Name)"
     }
     Write-AlpacaGroupEnd
+
+    if ($downloadFails -gt 0) {
+        throw "Failed to download $downloadFails COSMO Alpaca artifact(s)."
+    }
 }
 
 Export-ModuleMember -Function Get-AlpacaDependencyApps
