@@ -17,12 +17,18 @@ $script:AlGoHelperFiles = @(
     'AL-Go-Helper.ps1'
 ) + $script:DebugLogHelperFiles + $script:AlGoGitHubHelperFiles + $script:AlGoReadSettingsFiles | Select-Object -Unique
 
+$script:AlGoTelemetryHelperFiles = @(
+    'TelemetryHelper.psm1'
+    'Environment.Packages.proj'
+) + $script:DebugLogHelperFiles + $script:AlGoGitHubHelperFiles + $script:AlGoHelperFiles | Select-Object -Unique
+
 $script:AlGoCommandFileMap = @{
     'ReadSettings'              = $script:AlGoReadSettingsFiles
     'Get-ContentLF'             = $script:AlGoGitHubHelperFiles
     'Set-JsonContentLF'         = $script:AlGoGitHubHelperFiles
     'invoke-git'                = $script:AlGoGitHubHelperFiles
     'GetAccessToken'            = $script:AlGoGitHubHelperFiles
+    'Add-TelemetryProperty'     = $script:AlGoTelemetryHelperFiles
     'CloneIntoNewFolder'        = $script:AlGoHelperFiles
     'CommitFromNewFolder'       = $script:AlGoHelperFiles
     'ConvertTo-HashTable'       = $script:AlGoHelperFiles
