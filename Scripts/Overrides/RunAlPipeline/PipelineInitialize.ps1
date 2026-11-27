@@ -75,6 +75,21 @@ finally {
     Write-AlpacaGroupEnd
 }
 
+# Emit Telemetry
+try {
+    Write-AlpacaGroupStart "Emit Telemetry"
+    $minimizedSettings = Get-MinimizedSettings -Settings $settings
+
+    [System.Collections.Generic.Dictionary[[System.String], [System.String]]] $additionalData = @{}
+    Invoke-ALGoCommand -ScriptBlock { Add-TelemetryProperty -Hashtable $additionalData -Key 'Settings' -Value ($minimizedSettings | ConvertTo-Json -Depth 10 -Compress) }
+    Trace-AlpacaInformation -Message "Initializing Pipeline" -AdditionalData $additionalData
+}
+catch {
+    Write-AlpacaOutput "Error during telemetry emission: $_"
+}
+finally {
+    Write-AlpacaGroupEnd
+}
 
 
 # Handle COSMO Alpaca container

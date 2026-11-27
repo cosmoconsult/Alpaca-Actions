@@ -203,41 +203,51 @@ function Get-ALGoSettingsObjects {
         Write-AlpacaDebug "AL-Go Repo settings:`n$($alGoRepoSettingsObject | ConvertTo-Json -Depth 10)"
         $alGoRepoSettingsObject
 
-        Write-AlpacaGroupStart "Find AL-Go Settings Files"
-        $alGoSettingsFilePaths = @(Find-ALGoSettingsFiles -WorkspacePath $Path)
-        Write-AlpacaGroupEnd
 
-        Write-AlpacaGroupStart "Read AL-Go Settings Files"
-        foreach ($alGoSettingsFilePath in $alGoSettingsFilePaths) {
-            if (Test-Path $alGoSettingsFilePath -PathType Leaf) {
-                try {
-                    Write-AlpacaOutput "Read AL-Go Settings File: $alGoSettingsFilePath"
+        try {
+            Write-AlpacaGroupStart "Find AL-Go Settings Files"
+            $alGoSettingsFilePaths = @(Find-ALGoSettingsFiles -WorkspacePath $Path)
+        }
+        finally {
+            Write-AlpacaGroupEnd
+        }
 
-                    $alGoFileSettingsObjectParams = @{
-                        Source  = (Resolve-Path -Path $alGoSettingsFilePath -Relative -RelativeBasePath $Path).Replace('\', '/') # Make source path relative and use forward slashes for consistency
-                        Content = Read-ALGoSettingsFile -Path $alGoSettingsFilePath
+
+        try {
+            Write-AlpacaGroupStart "Read AL-Go Settings Files"
+            foreach ($alGoSettingsFilePath in $alGoSettingsFilePaths) {
+                if (Test-Path $alGoSettingsFilePath -PathType Leaf) {
+                    try {
+                        Write-AlpacaOutput "Read AL-Go Settings File: $alGoSettingsFilePath"
+
+                        $alGoFileSettingsObjectParams = @{
+                            Source  = (Resolve-Path -Path $alGoSettingsFilePath -Relative -RelativeBasePath $Path).Replace('\', '/') # Make source path relative and use forward slashes for consistency
+                            Content = Read-ALGoSettingsFile -Path $alGoSettingsFilePath
+                        }
+
+                        if ($alGoSettingsFilePath -like "*[\\/].github[\\/]AL-Go-TemplateRepoSettings.doNotEdit.json") {
+                            $alGoFileSettingsObjectParams.Immutable = $true
+                            $alGoFileSettingsObjectParams.RedirectTo = ".github/AL-Go-Settings.json" # Redirect to the repository settings file in the .github directory
+                        }
+                        if ($alGoSettingsFilePath -like "*[\\/].github[\\/]AL-Go-TemplateProjectSettings.doNotEdit.json") {
+                            $alGoFileSettingsObjectParams.Immutable = $true
+                            $alGoFileSettingsObjectParams.RedirectTo = "*.AL-Go/settings.json" # Redirect to the project settings files in the .AL-Go directories of all levels
+                        }
+
+                        $alGoFileSettingsObject = Get-ALGoSettingsObject @alGoFileSettingsObjectParams
+
+                        Write-AlpacaDebug "AL-Go File Settings:`n$($alGoFileSettingsObject | ConvertTo-Json -Depth 10)"
+                        $alGoFileSettingsObject
                     }
-
-                    if ($alGoSettingsFilePath -like "*[\\/].github[\\/]AL-Go-TemplateRepoSettings.doNotEdit.json") {
-                        $alGoFileSettingsObjectParams.Immutable = $true
-                        $alGoFileSettingsObjectParams.RedirectTo = ".github/AL-Go-Settings.json" # Redirect to the repository settings file in the .github directory
+                    catch {
+                        throw "Error reading AL-Go Settings file. Error was $($_.Exception.Message).`n$($_.ScriptStackTrace)"
                     }
-                    if ($alGoSettingsFilePath -like "*[\\/].github[\\/]AL-Go-TemplateProjectSettings.doNotEdit.json") {
-                        $alGoFileSettingsObjectParams.Immutable = $true
-                        $alGoFileSettingsObjectParams.RedirectTo = "*.AL-Go/settings.json" # Redirect to the project settings files in the .AL-Go directories of all levels
-                    }
-
-                    $alGoFileSettingsObject = Get-ALGoSettingsObject @alGoFileSettingsObjectParams
-
-                    Write-AlpacaDebug "AL-Go File Settings:`n$($alGoFileSettingsObject | ConvertTo-Json -Depth 10)"
-                    $alGoFileSettingsObject
-                }
-                catch {
-                    throw "Error reading AL-Go Settings file. Error was $($_.Exception.Message).`n$($_.ScriptStackTrace)"
                 }
             }
         }
-        Write-AlpacaGroupEnd
+        finally {
+            Write-AlpacaGroupEnd
+        }
     }
     finally {
         Write-AlpacaGroupEnd
@@ -315,72 +325,78 @@ function Update-ALGoSettingsObjectsWithOrgConditionalSettings {
         [Parameter(Mandatory = $true)]
         [bool] $EnforceOrgBuildModesSettings
     )
-    Write-AlpacaGroupStart "Update AL-Go Settings with organization-level conditional settings"
+    try {
+        Write-AlpacaGroupStart "Update AL-Go Settings with organization-level conditional settings"
 
-    $comment = 'DO NOT EDIT. Inherited from ALGoOrgSettings'
+        $comment = 'DO NOT EDIT. Inherited from ALGoOrgSettings'
 
-    $mutableAlGoSettingsObjects = @($AlGoSettingsObjects | Where-Object { -not $_.Immutable })
-    $immutableAlGoSettingsObjects = @($AlGoSettingsObjects | Where-Object { $_.Immutable })
+        $mutableAlGoSettingsObjects = @($AlGoSettingsObjects | Where-Object { -not $_.Immutable })
+        $immutableAlGoSettingsObjects = @($AlGoSettingsObjects | Where-Object { $_.Immutable })
 
-    $alGoOrgConditionalSettingsObjectsToInherit = @(Get-ALGoOrgConditionalSettingsObjectsToInherit -AlGoSettingsObjects $AlGoSettingsObjects -Repository $Repository -EnforceOrgBuildModesSettings:$EnforceOrgBuildModesSettings)
+        $alGoOrgConditionalSettingsObjectsToInherit = @(Get-ALGoOrgConditionalSettingsObjectsToInherit -AlGoSettingsObjects $AlGoSettingsObjects -Repository $Repository -EnforceOrgBuildModesSettings:$EnforceOrgBuildModesSettings)
 
-    foreach ($alGoSettingsObject in $mutableAlGoSettingsObjects) {
-        Write-AlpacaGroupStart "Update AL-Go Settings '$($alGoSettingsObject.Source)'"
+        foreach ($alGoSettingsObject in $mutableAlGoSettingsObjects) {
+            try {
+                Write-AlpacaGroupStart "Update AL-Go Settings '$($alGoSettingsObject.Source)'"
 
-        Write-AlpacaDebug "Current AL-Go Settings:`n$($alGoSettingsObject.Settings | ConvertTo-Json -Depth 10)"
+                Write-AlpacaDebug "Current AL-Go Settings:`n$($alGoSettingsObject.Settings | ConvertTo-Json -Depth 10)"
 
-        # Get keys from the AL-Go Settings object
-        $keys = @($alGoSettingsObject.Keys)
-        # Add keys from conditional Settings entries that are not inherited from the organization-level AL-Go Settings (i.e. do not have the inherited comment)
-        $keys += @(Get-ALGoConditionalSettingsKeys -Settings $alGoSettingsObject.Settings -Repository $Repository -ExcludeComment $comment)
-        # Add keys of immutable AL-Go Settings objects that redirect to this mutable AL-Go Settings object
-        $immutableAlGoSettingsObjects |
-        Where-Object { $alGoSettingsObject.Source -like $_.RedirectTo } |
-        ForEach-Object {
-            Write-AlpacaOutput "Include redirection from immutable AL-Go Settings '$($_.Source)'"
-            # Add keys from the AL-Go Settings object
-            $keys += $_.Keys
-            # Add keys from conditional Settings entries that are not inherited from the organization-level AL-Go Settings (i.e. do not have the inherited comment)
-            $keys += @(Get-ALGoConditionalSettingsKeys -Settings $_.Settings -Repository $Repository -ExcludeComment $comment)
-        }
-        $keys = @($keys | Select-Object -Unique)
-        Write-AlpacaDebug "Keys: $($keys -join ', ')"
-
-        # Collect existing conditional settings that are inherited from the organization-level AL-Go Settings (i.e. have the inherited comment)
-        $oldAlGoOrgConditionalSettingsObjects = @(Get-ALGoConditionalSettingsObjects -Settings $alGoSettingsObject.Settings -IncludeComment $comment)
-        Write-AlpacaDebug "Existing inherited conditional settings:`n$($oldAlGoOrgConditionalSettingsObjects | ConvertTo-Json -Depth 10)"
-        # Collect new conditional settings to be inherited from the organization-level AL-Go Settings based on the defined settings keys
-        $newAlGoOrgConditionalSettingsObjects = @($alGoOrgConditionalSettingsObjectsToInherit | Where-Object { $_.Keys | Where-Object { $keys -contains $_ } })
-        Write-AlpacaDebug "New inherited conditional settings to apply:`n$($newAlGoOrgConditionalSettingsObjects | ConvertTo-Json -Depth 10)"
-
-        # Determine if the conditional settings of the AL-Go Settings need to be updated
-        if (-not (Compare-ALGoConditionalSettingsObjects -ReferenceObjects $oldAlGoOrgConditionalSettingsObjects -DifferenceObjects $newAlGoOrgConditionalSettingsObjects)) {
-            Write-AlpacaOutput "Updating conditional settings"
-            # Recreate the conditional settings property of the AL-Go settings with the conditional settings that are not inherited from the organization-level AL-Go Settings (i.e. do not have the inherited comment)
-            $alGoSettingsObject.Settings |
-            Add-Member -MemberType NoteProperty -Name "conditionalSettings" -Value @(Get-ALGoConditionalSettings -Settings $alGoSettingsObject.Settings -ExcludeComment $comment) -Force
-            # Add new conditional settings that are inherited from the organization-level AL-Go Settings
-            foreach ($newAlGoOrgConditionalSettingsObject in $newAlGoOrgConditionalSettingsObjects) {
-                # Create a new object with the inherited comment property and copy all properties from the new conditional settings object to be inherited from the organization-level AL-Go Settings
-                $newAlGoOrgConditionalSettings = [pscustomobject][ordered]@{
-                    $script:CommentPropertyName = $comment
+                # Get keys from the AL-Go Settings object
+                $keys = @($alGoSettingsObject.Keys)
+                # Add keys from conditional Settings entries that are not inherited from the organization-level AL-Go Settings (i.e. do not have the inherited comment)
+                $keys += @(Get-ALGoConditionalSettingsKeys -Settings $alGoSettingsObject.Settings -Repository $Repository -ExcludeComment $comment)
+                # Add keys of immutable AL-Go Settings objects that redirect to this mutable AL-Go Settings object
+                $immutableAlGoSettingsObjects |
+                Where-Object { $alGoSettingsObject.Source -like $_.RedirectTo } |
+                ForEach-Object {
+                    Write-AlpacaOutput "Include redirection from immutable AL-Go Settings '$($_.Source)'"
+                    # Add keys from the AL-Go Settings object
+                    $keys += $_.Keys
+                    # Add keys from conditional Settings entries that are not inherited from the organization-level AL-Go Settings (i.e. do not have the inherited comment)
+                    $keys += @(Get-ALGoConditionalSettingsKeys -Settings $_.Settings -Repository $Repository -ExcludeComment $comment)
                 }
-                foreach ($prop in $newAlGoOrgConditionalSettingsObject.Entry.PSObject.Properties) {
-                    $newAlGoOrgConditionalSettings | Add-Member -MemberType NoteProperty -Name $prop.Name -Value $prop.Value
+                $keys = @($keys | Select-Object -Unique)
+                Write-AlpacaDebug "Keys: $($keys -join ', ')"
+
+                # Collect existing conditional settings that are inherited from the organization-level AL-Go Settings (i.e. have the inherited comment)
+                $oldAlGoOrgConditionalSettingsObjects = @(Get-ALGoConditionalSettingsObjects -Settings $alGoSettingsObject.Settings -IncludeComment $comment)
+                Write-AlpacaDebug "Existing inherited conditional settings:`n$($oldAlGoOrgConditionalSettingsObjects | ConvertTo-Json -Depth 10)"
+                # Collect new conditional settings to be inherited from the organization-level AL-Go Settings based on the defined settings keys
+                $newAlGoOrgConditionalSettingsObjects = @($alGoOrgConditionalSettingsObjectsToInherit | Where-Object { $_.Keys | Where-Object { $keys -contains $_ } })
+                Write-AlpacaDebug "New inherited conditional settings to apply:`n$($newAlGoOrgConditionalSettingsObjects | ConvertTo-Json -Depth 10)"
+
+                # Determine if the conditional settings of the AL-Go Settings need to be updated
+                if (-not (Compare-ALGoConditionalSettingsObjects -ReferenceObjects $oldAlGoOrgConditionalSettingsObjects -DifferenceObjects $newAlGoOrgConditionalSettingsObjects)) {
+                    Write-AlpacaOutput "Updating conditional settings"
+                    # Recreate the conditional settings property of the AL-Go settings with the conditional settings that are not inherited from the organization-level AL-Go Settings (i.e. do not have the inherited comment)
+                    $alGoSettingsObject.Settings |
+                    Add-Member -MemberType NoteProperty -Name "conditionalSettings" -Value @(Get-ALGoConditionalSettings -Settings $alGoSettingsObject.Settings -ExcludeComment $comment) -Force
+                    # Add new conditional settings that are inherited from the organization-level AL-Go Settings
+                    foreach ($newAlGoOrgConditionalSettingsObject in $newAlGoOrgConditionalSettingsObjects) {
+                        # Create a new object with the inherited comment property and copy all properties from the new conditional settings object to be inherited from the organization-level AL-Go Settings
+                        $newAlGoOrgConditionalSettings = [pscustomobject][ordered]@{
+                            $script:CommentPropertyName = $comment
+                        }
+                        foreach ($prop in $newAlGoOrgConditionalSettingsObject.Entry.PSObject.Properties) {
+                            $newAlGoOrgConditionalSettings | Add-Member -MemberType NoteProperty -Name $prop.Name -Value $prop.Value
+                        }
+                        $alGoSettingsObject.Settings.conditionalSettings += $newAlGoOrgConditionalSettings
+                    }
+                    $alGoSettingsObject.Updated = $true
+                    $alGoSettingsObject.Updates += "Updated inherited conditional settings from organization-level AL-Go Settings"
                 }
-                $alGoSettingsObject.Settings.conditionalSettings += $newAlGoOrgConditionalSettings
+                else {
+                    Write-AlpacaOutput "No updates of conditional settings needed."
+                }
+
+                Write-AlpacaDebug "Updated AL-Go Settings:`n$($alGoSettingsObject.Settings | ConvertTo-Json -Depth 10)"
             }
-            $alGoSettingsObject.Updated = $true
-            $alGoSettingsObject.Updates += "Updated inherited conditional settings from organization-level AL-Go Settings"
+            finally {
+                Write-AlpacaGroupEnd
+            }
         }
-        else {
-            Write-AlpacaOutput "No updates of conditional settings needed."
-        }
-
-        Write-AlpacaDebug "Updated AL-Go Settings:`n$($alGoSettingsObject.Settings | ConvertTo-Json -Depth 10)"
-
+    }
+    finally {
         Write-AlpacaGroupEnd
     }
-
-    Write-AlpacaGroupEnd
 }

@@ -4,7 +4,9 @@ param(
     [Parameter(Mandatory = $false)]
     [string] $ActionName = "$($env:GITHUB_ACTION)",
     [Parameter(Mandatory = $true)]
-    [scriptblock]$Action
+    [scriptblock]$Action,
+    [Parameter(Mandatory = $false)]
+    [System.Collections.Generic.Dictionary[[System.String], [System.String]]] $AdditionalData = @{}
 )
 
 
@@ -24,9 +26,20 @@ catch {
 }
 
 try {
+    $startTime = Get-Date
+    Invoke-ALGoCommand -ScriptBlock { Add-TelemetryProperty -Hashtable $AdditionalData -Key 'CosmoAlpacaVersion' -Value (Get-AlpacaActionVersion) }
+
     Invoke-Command -ScriptBlock $Action
+
+    Write-AlpacaDebug "Emit telemetry on successful action run."
+    $AdditionalData["ActionDuration"] = (((Get-Date) - $startTime).TotalSeconds).ToString()
+    Trace-AlpacaInformation -ActionName $ActionName -AdditionalData $AdditionalData
 }
 catch {
+    Write-AlpacaDebug "Emit telemetry on failed action run."
+    $AdditionalData["ActionDuration"] = (((Get-Date) - $startTime).TotalSeconds).ToString()
+    Trace-AlpacaException -ActionName $ActionName -ErrorRecord $_ -AdditionalData $AdditionalData
+
     Write-AlpacaError "Unexpected error when running action '$ActionName':`n$_"
     throw
 }
